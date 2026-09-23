@@ -1,0 +1,49 @@
+# =============================================================================
+# ENVIRONMENTALSENSING MONOREPO .GITIGNORE
+# =============================================================================
+
+# --- AI & Private Context (Pilar 4: Internal Knowledge Base) ---
+AGENT.md
+
+# --- Kredensial & Secrets (Pilar 5: Zero Hardcoding) ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*firebase-adminsdk*.json
+serviceAccountKey*.json
+
+# --- Hardware / PlatformIO / Wokwi Build Artifacts ---
+hardware/.pio/
+hardware/.vscode/
+.pio/
+*.bin
+*.elf
+*.hex
+
+# --- Backend / Python Cache & Environments ---
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/venv/
+backend/.venv/
+backend/env/
+__pycache__/
+*.pyc
+
+# --- Frontend / Flutter & Web Build Artifacts ---
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/build/
+frontend/.packages
+frontend/android/.gradle/
+frontend/android/local.properties
+
+# --- OS / Editor Artifacts ---
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*~

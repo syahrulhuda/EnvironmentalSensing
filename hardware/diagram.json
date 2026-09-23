@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "author": "Syahrul Huda",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-c3-devkitm-1",
+      "id": "esp",
+      "top": 40,
+      "left": 100,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": 80,
+      "left": -70,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd",
+      "top": 80,
+      "left": 300,
+      "attrs": { "pins": "i2c" }
+    },
+    {
+      "type": "wokwi-gas-sensor",
+      "id": "gas1",
+      "top": -50,
+      "left": 60,
+      "attrs": { "ppm": "0.1" }
+    },
+    {
+      "type": "wokwi-gas-sensor",
+      "id": "gas2",
+      "top": -50,
+      "left": 200,
+      "attrs": { "ppm": "0.1" }
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "rgb1",
+      "top": 190,
+      "left": 100,
+      "attrs": { "common": "cathode" }
+    }
+  ],
+  "connections": [
+    [ "gas1:VCC", "esp:5V.1", "red", [ "v20", "h40" ] ],
+    [ "gas1:GND", "esp:GND.1", "black", [ "v30", "h40" ] ],
+    [ "gas1:AOUT", "esp:0", "green", [ "v40", "h30" ] ],
+    [ "gas2:VCC", "esp:5V.1", "red", [ "v20", "h-60" ] ],
+    [ "gas2:GND", "esp:GND.1", "black", [ "v30", "h-60" ] ],
+    [ "gas2:AOUT", "esp:1", "orange", [ "v40", "h-70" ] ],
+    [ "dht:VCC", "esp:3V3.1", "red", [ "v40", "h120" ] ],
+    [ "dht:GND", "esp:GND.1", "black", [ "v50", "h120" ] ],
+    [ "dht:SDA", "esp:10", "yellow", [ "v60", "h130" ] ],
+    [ "lcd:VCC", "esp:5V.1", "red", [ "h-20", "v-30", "h-140" ] ],
+    [ "lcd:GND", "esp:GND.1", "black", [ "h-30", "v-20", "h-130" ] ],
+    [ "lcd:SDA", "esp:8", "cyan", [ "h-40", "v10", "h-120" ] ],
+    [ "lcd:SCL", "esp:9", "purple", [ "h-50", "v20", "h-110" ] ],
+    [ "rgb1:COM", "esp:GND.1", "black", [ "v20", "h-20" ] ],
+    [ "rgb1:R", "esp:4", "red", [ "v10", "h-10" ] ],
+    [ "rgb1:G", "esp:3", "green", [ "v15", "h0" ] ],
+    [ "rgb1:B", "esp:2", "blue", [ "v20", "h10" ] ]
+  ],
+  "dependencies": {}
+}
