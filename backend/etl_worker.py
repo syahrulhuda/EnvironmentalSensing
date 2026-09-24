@@ -29,7 +29,7 @@ SUPABASE_KEY = os.getenv(
     "SUPABASE_KEY", 
     "sb_secret_hRgIlTrbGIwPl_iM87P2xg_uMB82nAW"
 )
-SUPABASE_REST_ENDPOINT = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs"
+SUPABASE_REST_ENDPOINT = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs?on_conflict=device_id,recorded_at"
 
 # Konfigurasi Retensi Buffer (Sliding Window)
 RETENTION_HOURS = 2.0
