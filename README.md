@@ -2,7 +2,6 @@
 > **Sistem Monitoring K3 & Deteksi Gas Beracun Cerdas Berbasis IoT, Tiered Cloud Storage, dan AI Assistant**  
 > *Lokasi Penelitian: Laboratorium & Bengkel Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM)*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: ESP32](https://img.shields.io/badge/Hardware-ESP32--WROOM%20%7C%20C3-red.svg)](https://espressif.com/)
 [![Database: Firebase RTDB + Supabase](https://img.shields.io/badge/Database-RTDB%20%2B%20PostgreSQL-orange.svg)](https://supabase.com/)
 [![AI: Google Gemini Flash](https://img.shields.io/badge/AI-Gemini%20Flash%20Agent-purple.svg)](https://aistudio.google.com/)
@@ -121,9 +120,3 @@ uvicorn main:app --reload --port 8000
 
 ### Menjalankan Firmware Hardware:
 Buka folder `hardware/` menggunakan VS Code dengan ekstensi **PlatformIO**, lalu klik **Upload** ke board ESP32 kamu.
-
----
-
-## 📄 Lisensi & Hak Cipta
-Dikembangkan untuk Laporan Praktik Kerja Lapangan / Magang Industri & Penelitian Akademik  
-**Jurusan Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM)**
