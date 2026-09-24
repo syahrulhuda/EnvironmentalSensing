@@ -20,7 +20,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 *Log arsip ide abadi. Jangan menghapus catatan di bagian ini sebagai jejak rekam rekayasa sistem.*
 
 ### [Status: DITERIMA] Arsitektur Hybrid Hot-Warm Tiered Storage (RTDB + Supabase)
-- **Tanggal & Inisiator:** `[21-09-2026]` - Huda (Lead Researcher) & Antigravity (AI Architect)
+- **Tanggal & Inisiator:** `[21-09-2026]` - Huda
 - **Ide:** Menggabungkan Firebase RTDB sebagai buffer cepat (Hot Storage 2 jam terakhir) dan Supabase PostgreSQL sebagai gudang analitik permanen (Warm Storage).
 - **Diskusi:**
   - RTDB gratis memiliki batas 1 GB. Jika menyimpan data per 3 detik selamanya, kuota akan habis dalam beberapa bulan.
@@ -28,7 +28,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Keputusan:** `[21-09-2026]` - **[DITERIMA]** Berhasil diuji coba secara fisik dengan 1.661 data mentah terkonversi menjadi 84 baris di PostgreSQL.
 
 ### [Status: DITERIMA] FIFO Continuous Sliding Window 2 Jam di RTDB
-- **Tanggal & Inisiator:** `[22-09-2026]` - Huda (Lead Researcher)
+- **Tanggal & Inisiator:** `[22-09-2026]` - Huda
 - **Ide:** Mekanisme pemangkasan (*pruning*) RTDB tidak boleh menghapus seluruh data secara berkala (*flush & refill*), melainkan mempertahankan rentang waktu bergerak 2 jam terakhir (`now - 2 hours`) secara kontinu.
 - **Diskusi:**
   - Jika data dihapus total, pengguna yang mengakses chatbot sesaat setelah pembersihan akan kehilangan konteks data.
@@ -36,17 +36,17 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Keputusan:** `[22-09-2026]` - **[DITERIMA]** Diadopsi sebagai standar algoritma pruning ETL.
 
 ### [Status: DITERIMA] Flutter sebagai Thin Client Multiplatform (Web & Mobile)
-- **Tanggal & Inisiator:** `[22-09-2026]` - Pengawas Lapangan & Huda
+- **Tanggal & Inisiator:** `[22-09-2026]` - Pak Amin & Huda
 - **Ide:** Antarmuka pengguna dibangun menggunakan Flutter agar dari satu basis kode dapat dihasilkan versi Web (Firebase Hosting) dan versi Android (.apk). Seluruh logika berat dan kunci API diisolasi di backend FastAPI (Hugging Face).
 - **Keputusan:** `[22-09-2026]` - **[DITERIMA]** Diadopsi untuk layer antarmuka pengguna.
 
 ### [Status: DITERIMA] Isolasi Kredensial Hardware via secrets.h (Compile-Time)
-- **Tanggal & Inisiator:** `[24-09-2026]` - Huda (Lead Researcher) & Antigravity
+- **Tanggal & Inisiator:** `[24-09-2026]` - Huda
 - **Ide:** Kredensial Wi-Fi dan token perangkat keras dipisahkan ke dalam file `secrets.h` lokal yang diabaikan oleh `.gitignore`. Repositori Git hanya menyimpan `secrets.example.h`.
 - **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi untuk menjamin zero credential leakage di GitHub publik tanpa membebani flash NVS mikrokontroler.
 
 ### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
-- **Tanggal & Inisiator:** `[24-09-2026]` - Huda (Security Critique) & Antigravity
+- **Tanggal & Inisiator:** `[24-09-2026]` - Huda
 - **Ide:** Untuk mencegah perangkat palsu / rogue MAC membanjiri database Supabase, setiap node baru yang terdeteksi akan masuk ke status `QUARANTINE / PENDING`. Pengawas bengkel harus menekan tombol "Approve / Claim" di aplikasi Flutter sebelum data node tersebut dimasukkan ke analitik K3 utama.
 - **Diskusi:**
   - Menghindari kerentanan MAC spoofing dan menjamin integritas data K3.
