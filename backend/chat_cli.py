@@ -1,22 +1,13 @@
-"""
-Interactive CLI Client for ESI AI Agent
-Laboratorium & Bengkel Politeknik Kota Malang (POLTEKOM)
-"""
-
 import sys
-import os
-from dotenv import load_dotenv
+from app.services.ai_service import ask_esi
 
 if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8')
-
-load_dotenv()
-from ai_agent import process_chat_message
+    sys.stdout.reconfigure(encoding="utf-8")
 
 def main():
     print("=" * 65)
-    print("🤖 ESI - Environmental Safety Intelligence (K3 POLTEKOM)")
-    print("Ketik pertanyaan Anda (misal: 'Bagaimana kondisi bengkel saat ini?')")
+    print("🤖 ESI - Environmental Sensing Intelligence (ESS POLTEKOM)")
+    print("Ketik pertanyaan Anda (misal: 'Bagaimana kondisi bengkel jam 12 tadi?')")
     print("Ketik 'exit' atau 'keluar' untuk mengakhiri percakapan.")
     print("=" * 65)
 
@@ -29,8 +20,8 @@ def main():
                 print("\n👋 Sampai jumpa! Tetap utamakan Safety First di bengkel.")
                 break
 
-            print("\n⏳ ESI sedang menganalisis data sensor...")
-            res = process_chat_message(user_input)
+            print("\n⏳ ESI sedang menganalisis data sensor ESS...")
+            res = ask_esi(user_input)
             print(f"\n🤖 ESI:\n{res['reply']}\n")
             print("-" * 65)
         except (KeyboardInterrupt, EOFError):

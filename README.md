@@ -26,22 +26,22 @@ Sistem **Environmental Sensing** ini dikembangkan untuk menjawab tantangan terse
 ```
 [Layer 5: Presentation Tier]
      Aplikasi Flutter Multiplatform (Web & Android)
-     • Dashboard Real-time (Gauges, Visual Alert K3)
-     • Asisten Chatbot K3 Interaktif
+     • ESS Dashboard (Gauges, Visual Alert K3)
+     • Chat with ESI (AI Assistant)
             ▲
             │ (REST HTTPS: POST /api/chat)
             ▼
 [Layer 4: Intelligence & API Gateway Tier]
-     FastAPI Backend Container (Hugging Face Spaces)
-     • Google Gemini Flash ReAct Agent (Tool Calling)
+     FastAPI Backend (Local / Raspberry Pi 3B / Cloud)
+     • ESI Agent (Gemini Flash-Lite ReAct Tool Calling)
      • Proteksi Kredensial & Secrets Management
             ▲
-            │ (Kueri Status & Tren K3)
+            │ (Kueri Telemetri & Tren ESS)
             ▼
 [Layer 3: Processing & Analytical Tier]
      Background Worker ETL (APScheduler Tiap 15 Menit)
      • Pembersihan data & Agregasi 1-menitan
-     • Penyimpanan Permanen: Supabase PostgreSQL (Tabel workshop_k3_logs)
+     • Penyimpanan Permanen: Supabase PostgreSQL (Tabel ess_logs & ess_anomalies)
             ▲
             │ (Ekstrak Buffer & Pruning > 2 Jam)
             ▼
@@ -52,11 +52,11 @@ Sistem **Environmental Sensing** ini dikembangkan untuk menjawab tantangan terse
             │ (HTTPS POST Telemetri Tiap 3 Detik)
             ▼
 [Layer 1: Perception & Edge Sensing Tier]
-     ESP32 DevKit V1 (WROOM-32 / ESP32-C3)
+     ESP32 DevKit V1 (WROOM-32 / ESP32-C3 Super Mini)
      • Sensor Gas Karbon Monoksida (MQ-7)
      • Sensor Gas & Asap (MQ-2)
      • Sensor Suhu & Kelembapan (DHT22)
-     • Indikator Visual LED RGB K3
+     • Indikator Visual LED RGB & Kipas Ekstraktor
 ```
 
 ---
@@ -72,14 +72,20 @@ environmentalsensing/
 │
 ├── hardware/              # Layer 1: Edge Sensing Node (ESP32)
 │   ├── src/               # Kode sumber C++ (PlatformIO / Arduino)
+│   ├── test_bench/        # Skrip uji bangku tes WROOM-32
 │   ├── platformio.ini     # Konfigurasi build PlatformIO
 │   └── diagram.json       # Simulasi rangkaian Wokwi
 │
-├── backend/               # Layer 3 & 4: FastAPI, ETL Worker & AI Gemini
-│   ├── main.py            # API Server & background scheduler
-│   ├── ai_agent.py        # Gemini ReAct Tool Calling Agent
-│   ├── etl_worker.py      # Worker sinkronisasi RTDB -> Supabase
-│   ├── Dockerfile         # Konfigurasi container deploy Hugging Face
+├── backend/               # Layer 3 & 4: FastAPI, ETL Worker & AI ESI
+│   ├── app/               # Modul Python Terstruktur
+│   │   ├── core/          # Konfigurasi terpusat & client database
+│   │   ├── data/          # Basis pengetahuan SOP keselamatan
+│   │   ├── tools/         # ReAct tools (telemetry, analytics, sop)
+│   │   ├── services/      # Pipeline ETL & ESI Reasoning engine
+│   │   └── api/           # Endpoint router (/api/chat, /health)
+│   ├── deploy/            # Konfigurasi deployment Raspberry Pi 3B (systemd & setup script)
+│   ├── main.py            # Server entrypoint sangat ringkas (< 40 baris)
+│   ├── chat_cli.py        # Terminal interactive client
 │   ├── requirements.txt   # Dependensi Python
 │   └── .env.example       # Template variabel lingkungan
 │
