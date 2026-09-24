@@ -51,6 +51,8 @@ int hitungMq7Ppm(int rawAdc) {
   return map(constrainedAdc, 400, 4095, 5, 400);
 }
 
+#define NODE_ID "NODE-MRS01"
+
 // =============================================================================
 // 5. FUNGSI PENGIRIMAN DATA KE FIREBASE RTDB (HTTPS REST)
 // =============================================================================
@@ -70,6 +72,7 @@ void kirimKeFirebase(float temp, float hum, int rawAdc, float volt, int ppm, con
 
     // Bentuk JSON payload secara manual (ringan tanpa butuh library JSON tambahan)
     String jsonPayload = "{";
+    jsonPayload += "\"node_id\":\"" + String(NODE_ID) + "\",";
     jsonPayload += "\"temp\":" + (isnan(temp) ? "null" : String(temp, 1)) + ",";
     jsonPayload += "\"hum\":" + (isnan(hum) ? "null" : String(hum, 1)) + ",";
     jsonPayload += "\"mq7_raw\":" + String(rawAdc) + ",";
