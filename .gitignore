@@ -2,7 +2,7 @@
 # ENVIRONMENTALSENSING MONOREPO .GITIGNORE
 # =============================================================================
 
-# --- AI & Private Context (Pilar 4: Internal Knowledge Base) ---
+# --- Private Context & Agent Memory ---
 AGENT.md
 
 # --- Kredensial & Secrets (Pilar 5: Zero Hardcoding) ---

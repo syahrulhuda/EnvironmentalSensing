@@ -43,7 +43,6 @@ Setiap file dokumentasi memiliki tanggung jawab spesifik dan tidak boleh saling 
 1. `README.md` = **Wajah Proyek.** Dokumentasi publik, gambaran umum arsitektur 5-Layer, panduan setup, dan spesifikasi sistem.
 2. `WHITEBOARD.md` = **Dapur Kotor.** Dokumen kerja aktif untuk mencatat fokus saat ini (*Grand Plan*), log arsip ide (*Ideas Log*), dan audit berkala (*The Ruthless Audit*).
 3. `RULEBOOK.md` = **Kitab Hukum.** Dokumen ini. Tempat di mana seluruh standar teknis dan batasan arsitektur disepakati.
-4. `AGENT.md` = **Private Shared Memory AI.** Konteks internal untuk asisten AI (masuk ke dalam `.gitignore`).
 
 ---
 
