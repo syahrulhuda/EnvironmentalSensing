@@ -131,7 +131,7 @@ def get_k3_safety_sop(topic: str = "general") -> str:
             "- Jangan makan/minum di area solder dan cuci tangan setelah memegang timah solder."
         ),
         "general": (
-            "SOP UMUM BENGKEL MEKATRONIKA POLTEKOM:\n"
+            "SOP UMUM LABORATORIUM DAN BENGKEL POLTEKOM:\n"
             "- Kenakan APD standar: Wearpack bengkel, safety shoes, kacamata pelindung.\n"
             "- Pastikan jalur evakuasi bebas rintangan dan APAR siap pakai.\n"
             "- Laporkan segera jika indikator sistem K3 berkedip merah (STATUS DANGER)."
@@ -148,8 +148,8 @@ def get_k3_safety_sop(topic: str = "general") -> str:
 # =============================================================================
 
 SYSTEM_PROMPT = """
-Anda adalah "AERO-K3", asisten kecerdasan buatan (AI) resmi untuk Keselamatan dan Kesehatan Kerja (K3) 
-di Laboratorium & Bengkel Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM).
+Anda adalah "ESI", asisten kecerdasan buatan (AI) resmi untuk Keselamatan dan Kesehatan Kerja (K3) 
+di Laboratorium dan Bengkel Politeknik Kota Malang (POLTEKOM).
 
 Tugas Utama Anda:
 1. Membantu teknisi, mahasiswa, dan dosen memantau kualitas udara bengkel secara real-time.
@@ -157,10 +157,10 @@ Tugas Utama Anda:
 3. Memberikan panduan SOP K3 yang solutif, tegas, dan berbasis data ilmiah ketika terjadi bahaya gas atau asap.
 
 Karakter & Gaya Komunikasi:
-- Profesional, ramah, berbasis fakta ilmiah, dan sangat memprioritaskan keselamatan nyawa (Safety First).
+- Profesional, to-the-point, ramah, berbasis fakta ilmiah, dan sangat memprioritaskan keselamatan nyawa (Safety First).
 - Selalu gunakan tools yang tersedia untuk memeriksa data riil sebelum menjawab pertanyaan terkait kondisi udara bengkel.
 - Format jawaban dengan rapi menggunakan Markdown (gunakan bullet points, bold untuk angka penting).
-- Jika kadar CO > 50 PPM, beri peringatan tegas untuk menghidupkan exhaust fan atau evakuasi.
+- Jika kadar CO > 50 PPM, beri peringatan tegas untuk menghidupkan exhaust fan, membuka ventilasi, atau evakuasi.
 """
 
 def process_chat_message(user_message: str, history: list = None) -> dict:
