@@ -1,17 +1,17 @@
 # 📜 RULEBOOK (The Constitution of Environmental Sensing)
 
-Dokumen ini adalah konstitusi dan aturan main tertinggi dalam pengembangan sistem **Environmental Sensing & K3 Intelligent Monitoring** (Bengkel Mekatronika POLTEKOM). Setiap kontributor (baik programmer manusia maupun asisten AI) **WAJIB** mematuhi 5 pilar di bawah ini.
+Dokumen ini adalah konstitusi dan aturan main tertinggi dalam pengembangan sistem **Smart Environmental Sensing System (ESS)** (Bengkel Mekatronika POLTEKOM). Setiap kontributor (baik programmer manusia maupun asisten AI) **WAJIB** mematuhi 5 pilar di bawah ini.
 
 ---
 
-## 🏛️ Pilar 1: Filosofi Pengembangan (Core Philosophy)
-1. **Safety & K3-First Mindset:** Keakuratan data sensor gas beracun (CO / MQ-7) dan asap/fume (MQ-2) menyangkut keselamatan nyawa teknisi di bengkel. Jangan pernah memanipulasi atau menyembunyikan lonjakan (*peak spikes*) anomali bahaya demi estetika grafik.
+## 🏛️ Pilar 1: Filosofi Pengembangan
+1. **Safety & ESS-First Mindset:** Keakuratan data sensor gas beracun (CO / MQ-7) dan asap/fume (MQ-2) menyangkut keselamatan nyawa teknisi di bengkel. Jangan pernah memanipulasi atau menyembunyikan lonjakan (*peak spikes*) anomali bahaya demi estetika grafik.
 2. **Pragmatism over Perfection:** Lebih baik sistem berjalan stabil, teruji di hardware fisik, dan tercatat di `WHITEBOARD.md`, daripada mengejar kesempurnaan teori tetapi tidak pernah selesai diuji di lapangan.
 3. **Decoupled Architecture:** Setiap layer (`hardware/`, `backend/`, `frontend/`) harus berdiri sendiri tanpa ketergantungan erat (*tight coupling*). Rusaknya satu komponen tidak boleh merobohkan keseluruhan sistem.
 
 ---
 
-## 🌿 Pilar 2: Aturan Manajemen Versi (Git & Commits)
+## 🌿 Pilar 2: Aturan Manajemen Versi
 *(SANGAT KETAT: Komit yang tidak rapi wajib disusun ulang)*
 1. **Atomic Commits:** Lakukan commit untuk satu tujuan logis yang terisolasi. Jangan campur aduk perubahan hardware dengan perubahan backend dalam satu commit.
 2. **Conventional Commits:** Penamaan commit wajib mengikuti standar industri:
@@ -24,21 +24,21 @@ Dokumen ini adalah konstitusi dan aturan main tertinggi dalam pengembangan siste
 
 ---
 
-## 💻 Pilar 3: Standar Penulisan Kode (Coding Standards)
+## 💻 Pilar 3: Standar Penulisan Kode
 1. **Hardware (C++ / PlatformIO / Arduino):**
    - **Dilarang keras memakai `delay()`** di dalam fungsi `loop()`. Wajib menggunakan non-blocking timer berbasis `millis()`.
    - Pisahkan logika menjadi fungsi-fungsi modular (sensor reading, display, telemetri HTTPS).
 2. **Backend (Python & FastAPI):**
    - Wajib menyertakan *type hints* standar Python.
    - Tangani error secara eksplisit (*try-except* dengan logging jelas; dilarang menggunakan *silent pass*).
-   - Logika ETL wajib idempotent: gunakan `ON CONFLICT (recorded_at) DO UPDATE / DO NOTHING` saat menyimpan ke database relasional.
+   - Logika ETL wajib idempotent: gunakan `ON CONFLICT (device_id, recorded_at) DO UPDATE / DO NOTHING` saat menyimpan ke database relasional.
 3. **Frontend (Flutter & Dart):**
    - Utamakan *StatelessWidget* dan pemisahan komponen modular. Dilarang membuat satu file UI raksasa monolitik (> 250 baris).
    - Gunakan layout responsif yang adaptif terhadap layar Web (desktop) dan Mobile (smartphone).
 
 ---
 
-## 📚 Pilar 4: Aturan Dokumentasi (The Holy Trinity of Docs)
+## 📚 Pilar 4: Aturan Dokumentasi
 Setiap file dokumentasi memiliki tanggung jawab spesifik dan tidak boleh saling tumpang tindih:
 1. `README.md` = **Wajah Proyek.** Dokumentasi publik, gambaran umum arsitektur 5-Layer, panduan setup, dan spesifikasi sistem.
 2. `WHITEBOARD.md` = **Dapur Kotor.** Dokumen kerja aktif untuk mencatat fokus saat ini (*Grand Plan*), log arsip ide (*Ideas Log*), dan audit berkala (*The Ruthless Audit*).
@@ -46,7 +46,7 @@ Setiap file dokumentasi memiliki tanggung jawab spesifik dan tidak boleh saling 
 
 ---
 
-## 🔒 Pilar 5: Aturan Keamanan & Kredensial (Security & Zero Hardcoding)
+## 🔒 Pilar 5: Aturan Keamanan & Kredensial
 1. **Zero Hardcoded Secrets:** DILARANG KERAS menuliskan API Key Gemini, Service Role Key Supabase, maupun Firebase Private Key langsung di dalam file kode sumber publik.
 2. **Environment Variables:** Semua kredensial wajib dibaca melalui variabel lingkungan (`.env` di backend) dan hanya file `.env.example` yang boleh di-commit ke Git.
 3. **Client-Side Protection:** Aplikasi frontend (Flutter) tidak boleh memegang kredensial admin database. Seluruh interaksi AI dan database historis wajib melalui backend API (FastAPI Gateway).

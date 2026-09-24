@@ -1,22 +1,22 @@
-# 🏭 Environmental Sensing & K3 Intelligent Monitoring System
-> **Sistem Monitoring K3 & Deteksi Gas Beracun Cerdas Berbasis IoT, Tiered Cloud Storage, dan AI Assistant**  
+# 🏭 Smart Environmental Sensing System (ESS)
+> **Sistem Monitoring Kualitas Udara & Deteksi Gas Berbahaya Berbasis IoT, Tiered Cloud Storage, dan ESI AI Assistant**  
 > *Lokasi Penelitian: Laboratorium & Bengkel Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM)*
 
 [![Platform: ESP32](https://img.shields.io/badge/Hardware-ESP32--WROOM%20%7C%20C3-red.svg)](https://espressif.com/)
 [![Database: Firebase RTDB + Supabase](https://img.shields.io/badge/Database-RTDB%20%2B%20PostgreSQL-orange.svg)](https://supabase.com/)
-[![AI: Google Gemini Flash](https://img.shields.io/badge/AI-Gemini%20Flash%20Agent-purple.svg)](https://aistudio.google.com/)
+[![AI: ESI Agent](https://img.shields.io/badge/AI-ESI%20(Gemini%20Flash)--Lite-purple.svg)](https://aistudio.google.com/)
 [![Frontend: Flutter Multiplatform](https://img.shields.io/badge/Frontend-Flutter%20Web%20%26%20Mobile-02569B.svg)](https://flutter.dev/)
 
 ---
 
 ## 📌 Ringkasan Eksekutif (Executive Summary)
 
-Dalam aktivitas praktikum bengkel mekatronika (khususnya proses pengelasan /*welding* dan pematerian /*soldering*), gas beracun Karbon Monoksida (**CO**) dan asap pekat kerap terakumulasi tanpa disadari oleh teknisi. Paparan gas CO di atas ambang batas K3 (**50 PPM**) dapat menyebabkan pusing, keracunan fatal, hingga penurunan performa kerja.
+Dalam aktivitas praktikum bengkel mekatronika (khususnya proses pengelasan /*welding* dan pematerian /*soldering*), gas beracun Karbon Monoksida (**CO**) dan asap pekat kerap terakumulasi tanpa disadari oleh teknisi. Paparan gas CO di atas ambang batas keselamatan ESS (**50 PPM**) dapat menyebabkan pusing, keracunan fatal, hingga penurunan performa kerja.
 
-Sistem **Environmental Sensing** ini dikembangkan untuk menjawab tantangan tersebut melalui arsitektur multi-layer modern:
+Sistem **Smart Environmental Sensing System (ESS)** ini dikembangkan untuk menjawab tantangan tersebut melalui arsitektur multi-layer modern:
 1. **Edge Node (ESP32)** mengakuisisi kadar gas CO (MQ-7), asap (MQ-2), serta suhu dan kelembapan (DHT22) dengan transmisi HTTPS non-blocking.
 2. **Tiered Cloud Storage** menggabungkan **Firebase RTDB** sebagai *Hot Buffer* (sliding window 2 jam terakhir) dan **Supabase PostgreSQL** sebagai *Warm Storage* permanen (agregasi 1-menitan berindeks).
-3. **AI Brain (Google Gemini)** di backend FastAPI bertindak sebagai asisten K3 cerdas yang mampu menganalisis kondisi udara detik ini sekaligus riwayat mingguan menggunakan metode *Tool Calling (ReAct)*.
+3. **AI Brain (ESI via Google Gemini)** di backend FastAPI bertindak sebagai asisten cerdas yang mampu menganalisis kondisi udara detik ini sekaligus riwayat mingguan menggunakan metode *Tool Calling (ReAct)*.
 4. **Multiplatform Client (Flutter)** menyajikan dashboard visual real-time dan antarmuka percakapan interaktif baik di peramban Web maupun aplikasi Android.
 
 ---
@@ -26,7 +26,7 @@ Sistem **Environmental Sensing** ini dikembangkan untuk menjawab tantangan terse
 ```
 [Layer 5: Presentation Tier]
      Aplikasi Flutter Multiplatform (Web & Android)
-     • ESS Dashboard (Gauges, Visual Alert K3)
+     • ESS Dashboard (Gauges, Visual Alert Status)
      • Chat with ESI (AI Assistant)
             ▲
             │ (REST HTTPS: POST /api/chat)
