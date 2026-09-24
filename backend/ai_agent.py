@@ -14,6 +14,7 @@ import google.generativeai as genai
 # KONFIGURASI KREDENSIAL & INITIALISASI GEMINI
 # =============================================================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
 FIREBASE_RTDB_URL = os.getenv(
     "FIREBASE_RTDB_URL",
     "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
@@ -174,7 +175,7 @@ def process_chat_message(user_message: str, history: list = None) -> dict:
         tools_list = [get_live_telemetry, get_historical_k3_stats, get_k3_safety_sop]
 
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name=GEMINI_MODEL_NAME,
             tools=tools_list,
             system_instruction=SYSTEM_PROMPT
         )
