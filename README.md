@@ -96,8 +96,8 @@ environmentalsensing/
 
 ### 1. Kloning Repositori
 ```bash
-git clone https://github.com/username/environmentalsensing.git
-cd environmentalsensing
+git clone https://github.com/syahrulhuda/EnvironmentalSensing.git
+cd EnvironmentalSensing
 ```
 
 ### 2. Standar Commit (Conventional Commits)
@@ -126,5 +126,4 @@ Buka folder `hardware/` menggunakan VS Code dengan ekstensi **PlatformIO**, lalu
 
 ## 📄 Lisensi & Hak Cipta
 Dikembangkan untuk Laporan Praktik Kerja Lapangan / Magang Industri & Penelitian Akademik  
-**Jurusan Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM)**  
-Peneliti Utama: **Syahrul Huda**
+**Jurusan Teknik Mekatronika, Politeknik Kota Malang (POLTEKOM)**
