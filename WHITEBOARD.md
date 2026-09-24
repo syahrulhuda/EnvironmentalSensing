@@ -61,10 +61,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - `[22-09-2026]` Pipeline ETL Python berhasil mengekstrak 1.661 data mentah dan meng-upsert 84 baris agregasi ke Supabase dengan status HTTP 201 Created.
 - `[23-09-2026]` Monorepo GitHub resmi terhubung dan ter-push dengan sanitasi kredensial 100% aman.
 - `[24-09-2026]` Skema relasional Supabase (`zones`, `devices`, `workshop_k3_logs`, `safety_incidents`) berhasil dirancang dan di-seed dengan `NODE-MRS01`.
+- `[24-09-2026]` Uji ketahanan continuous running 2 jam penuh berhasil gemilang: **2.826 titik data mentah** terkirim dari hardware ke Firebase RTDB tanpa putus.
+- `[24-09-2026]` Pipeline ETL 2-dimensi berhasil memadatkan 2.826 data menjadi **142 baris analitik 1-menitan** di Supabase (HTTP 201) dan memangkas 429 titik data usang (> 2 jam) via HTTP PATCH sliding window.
+- `[24-09-2026]` AI Agent "ESI" (`gemini-flash-lite-latest`) berhasil terintegrasi dengan ReAct Tool Calling ganda: sukses menarik data telemetri live detik ini dari Firebase dan data historis analitik dari Supabase PostgreSQL.
 
 ### ⚠️ The Bad / Technical Debt to Address
-- `[24-09-2026]` Script `backend/etl_worker.py` masih menggunakan pengelompokan 1-dimensi (menit saja) dan belum menyertakan kolom `device_id` serta pruning otomatis sliding window 2 jam.
+- `[24-09-2026]` Layanan cloud hosting publik (Render) meminta verifikasi kartu kredit/debit meskipun pada paket Free Tier ($0), sehingga untuk saat ini backend dijalankan secara lokal (`backend/venv`) dengan opsi migrasi ke Vercel + GitHub Actions Cron saat siap dideploy publik.
 
 ### 🚀 The Next Action
-- Sesuaikan `backend/etl_worker.py` agar mengelompokkan data per `(device_id, minute_bucket)` dan menjalankan pruning sliding window 2 jam via HTTP PATCH.
-- Bangun kerangka `backend/` berbasis FastAPI (REST API + Scheduler 15-menitan) dan Gemini ReAct Tool Calling Agent.
+- Lakukan validasi pengujian respon gas fisik (uji tiup asap rokok/korek gas/solder) untuk memverifikasi transisi status K3 dari `NORMAL` ke `WARNING` / `DANGER`.
+- Siapkan kontrak API (`/api/chat`, `/health`, query Supabase) untuk diserahkan ke Zaki dalam rangka peletakan fondasi antarmuka Flutter (Web & Android).
