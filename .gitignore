@@ -13,6 +13,9 @@ AGENT.md
 *.key
 *firebase-adminsdk*.json
 serviceAccountKey*.json
+secrets.h
+hardware/secrets.h
+hardware/test_bench/secrets.h
 
 # --- Hardware / PlatformIO / Wokwi Build Artifacts ---
 hardware/.pio/

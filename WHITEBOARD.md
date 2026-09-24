@@ -40,6 +40,18 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Ide:** Antarmuka pengguna dibangun menggunakan Flutter agar dari satu basis kode dapat dihasilkan versi Web (Firebase Hosting) dan versi Android (.apk). Seluruh logika berat dan kunci API diisolasi di backend FastAPI (Hugging Face).
 - **Keputusan:** `[22-09-2026]` - **[DITERIMA]** Diadopsi untuk layer antarmuka pengguna.
 
+### [Status: DITERIMA] Isolasi Kredensial Hardware via secrets.h (Compile-Time)
+- **Tanggal & Inisiator:** `[24-09-2026]` - Huda (Lead Researcher) & Antigravity
+- **Ide:** Kredensial Wi-Fi dan token perangkat keras dipisahkan ke dalam file `secrets.h` lokal yang diabaikan oleh `.gitignore`. Repositori Git hanya menyimpan `secrets.example.h`.
+- **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi untuk menjamin zero credential leakage di GitHub publik tanpa membebani flash NVS mikrokontroler.
+
+### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
+- **Tanggal & Inisiator:** `[24-09-2026]` - Huda (Security Critique) & Antigravity
+- **Ide:** Untuk mencegah perangkat palsu / rogue MAC membanjiri database Supabase, setiap node baru yang terdeteksi akan masuk ke status `QUARANTINE / PENDING`. Pengawas bengkel harus menekan tombol "Approve / Claim" di aplikasi Flutter sebelum data node tersebut dimasukkan ke analitik K3 utama.
+- **Diskusi:**
+  - Menghindari kerentanan MAC spoofing dan menjamin integritas data K3.
+- **Keputusan:** `[24-09-2026]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
+
 ---
 
 # 🔍 Section 3: Audit Plan (The Ruthless Audit)
@@ -47,12 +59,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 ### 🌟 The Good
 - `[22-09-2026]` Pengujian hardware fisik ESP32 + MQ-7 + DHT22 berjalan 1 jam penuh (**1.188 sampel**) dengan **0% packet loss** dan **0 null errors**.
 - `[22-09-2026]` Pipeline ETL Python berhasil mengekstrak 1.661 data mentah dan meng-upsert 84 baris agregasi ke Supabase dengan status HTTP 201 Created.
-- `[22-09-2026]` Sensor MQ-7 menunjukkan kurva stabilisasi preheating yang sangat baik (ADC turun dari 420 ke 260 dengan noise deviasi < 0.22%).
+- `[23-09-2026]` Monorepo GitHub resmi terhubung dan ter-push dengan sanitasi kredensial 100% aman.
+- `[24-09-2026]` Skema relasional Supabase (`zones`, `devices`, `workshop_k3_logs`, `safety_incidents`) berhasil dirancang dan di-seed dengan `NODE-MRS01`.
 
 ### ⚠️ The Bad / Technical Debt to Address
-- `[23-09-2026]` Kredensial Supabase dan Firebase saat ini masih tersimpan langsung di dalam file uji coba `tes/etl_worker.py`. Wajib segera dimigrasikan ke variabel lingkungan `.env` sebelum di-push ke GitHub publik.
-- `[23-09-2026]` Proyek Flutter di folder `frontend/` belum diinisialisasi (masih kosong menunggu pembuatan backend).
+- `[24-09-2026]` Script `backend/etl_worker.py` masih menggunakan pengelompokan 1-dimensi (menit saja) dan belum menyertakan kolom `device_id` serta pruning otomatis sliding window 2 jam.
 
 ### 🚀 The Next Action
-- Inisialisasi repositori Git lokal monorepo dan hubungkan ke GitHub remote.
-- Bangun kerangka `backend/` berbasis FastAPI dengan konfigurasi Dockerfile siap deploy ke Hugging Face Spaces.
+- Sesuaikan `backend/etl_worker.py` agar mengelompokkan data per `(device_id, minute_bucket)` dan menjalankan pruning sliding window 2 jam via HTTP PATCH.
+- Bangun kerangka `backend/` berbasis FastAPI (REST API + Scheduler 15-menitan) dan Gemini ReAct Tool Calling Agent.
