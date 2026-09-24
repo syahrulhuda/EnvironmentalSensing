@@ -37,10 +37,13 @@ def get_live_telemetry(device_id: str = "NODE-MRS01") -> str:
     """
     Mengambil data sensor lingkungan dan kadar gas terkini (real-time detik ini) 
     dari Firebase RTDB untuk node tertentu.
-    Gunakan tool ini ketika user menanyakan kondisi bengkel saat ini, apakah aman bekerja sekarang,
-    atau suhu/gas terkini.
+    Argumen:
+        device_id (str): ID node perangkat IoT (default: "NODE-MRS01"). Selalu gunakan "NODE-MRS01" kecuali user menyebutkan ID node spesifik lain.
     """
     try:
+        if not device_id or device_id.lower() in ["bengkel", "bengkel-mekatronika-01", "bengkel_mekatronika_01", "default", "none"]:
+            device_id = "NODE-MRS01"
+
         req = urllib.request.Request(FIREBASE_RTDB_URL, headers={'User-Agent': 'K3-AI-Agent'})
         with urllib.request.urlopen(req, timeout=8) as res:
             if res.status != 200:
@@ -79,10 +82,14 @@ def get_live_telemetry(device_id: str = "NODE-MRS01") -> str:
 def get_historical_k3_stats(device_id: str = "NODE-MRS01", limit: int = 15) -> str:
     """
     Mengambil riwayat data agregasi historis per-menit dari database relasional Supabase PostgreSQL.
-    Gunakan tool ini saat user menanyakan tren jam lalu, rekap harian, rata-rata konsentrasi gas,
-    atau apakah ada lonjakan bahaya K3 dalam rentang waktu sebelumnya.
+    Argumen:
+        device_id (str): ID perangkat IoT (default: "NODE-MRS01"). Selalu gunakan "NODE-MRS01" kecuali user secara eksplisit menyebut ID spesifik lain.
+        limit (int): Jumlah record agregasi menit terakhir yang diambil (default: 15).
     """
     try:
+        if not device_id or device_id.lower() in ["bengkel", "bengkel-mekatronika-01", "bengkel_mekatronika_01", "default", "none"]:
+            device_id = "NODE-MRS01"
+
         endpoint = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs?device_id=eq.{device_id}&order=recorded_at.desc&limit={limit}"
         headers = {
             "apikey": SUPABASE_KEY,
@@ -94,6 +101,9 @@ def get_historical_k3_stats(device_id: str = "NODE-MRS01", limit: int = 15) -> s
             if res.status not in (200, 206):
                 return json.dumps({"status": "error", "message": f"HTTP {res.status} dari Supabase"})
             rows = json.loads(res.read().decode('utf-8'))
+            if not rows and device_id != "NODE-MRS01":
+                # Fallback: jika query custom device_id kosong, ambil dari NODE-MRS01
+                return get_historical_k3_stats(device_id="NODE-MRS01", limit=limit)
             if not rows:
                 return json.dumps({"status": "empty", "message": "Belum ada catatan historis di Supabase."})
             return json.dumps({
