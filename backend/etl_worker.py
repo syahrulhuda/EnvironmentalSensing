@@ -9,6 +9,9 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =============================================================================
 # KONFIGURASI ENDPOINT & KREDENSIAL

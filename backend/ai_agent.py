@@ -9,12 +9,15 @@ import json
 import urllib.request
 from datetime import datetime, timezone
 import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =============================================================================
 # KONFIGURASI KREDENSIAL & INITIALISASI GEMINI
 # =============================================================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-3.6-flash")
 FIREBASE_RTDB_URL = os.getenv(
     "FIREBASE_RTDB_URL",
     "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
