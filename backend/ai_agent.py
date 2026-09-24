@@ -7,7 +7,7 @@ Laboratorium Mekatronika POLTEKOM - K3 Environmental Sensing Assistant
 import os
 import json
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -64,33 +64,62 @@ def get_live_telemetry(device_id: str = "NODE-MRS01") -> str:
             else:
                 latest = matching_samples[-1]
 
+            ts_ms = latest.get("created_at")
+            waktu_wib = "Unknown"
+            if ts_ms:
+                dt = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone(timedelta(hours=7)))
+                waktu_wib = dt.strftime("%Y-%m-%d %H:%M:%S WIB")
+
             return json.dumps({
                 "status": "success",
                 "device_id": device_id,
+                "waktu_lokal_wib": waktu_wib,
                 "temperature_celsius": latest.get("temp"),
                 "humidity_percent": latest.get("hum"),
                 "mq7_raw_adc": latest.get("mq7_raw"),
                 "mq7_voltage": latest.get("mq7_volt"),
                 "mq7_co_ppm": latest.get("mq7_ppm"),
-                "k3_status": latest.get("status"),
-                "timestamp_ms": latest.get("created_at")
+                "k3_status": latest.get("status")
             })
     except Exception as e:
         return json.dumps({"status": "error", "message": str(e)})
 
 
-def get_historical_k3_stats(device_id: str = "NODE-MRS01", limit: int = 15) -> str:
+def get_historical_k3_stats(device_id: str = "NODE-MRS01", limit: int = 30, hour_wib: int = None) -> str:
     """
     Mengambil riwayat data agregasi historis per-menit dari database relasional Supabase PostgreSQL.
+    Gunakan tool ini ketika user menanyakan kondisi ruangan di waktu lampau, tren data, atau jam tertentu.
     Argumen:
-        device_id (str): ID perangkat IoT (default: "NODE-MRS01"). Selalu gunakan "NODE-MRS01" kecuali user secara eksplisit menyebut ID spesifik lain.
-        limit (int): Jumlah record agregasi menit terakhir yang diambil (default: 15).
+        device_id (str): ID perangkat IoT (default: "NODE-MRS01").
+        limit (int): Jumlah baris record menit yang diambil (default: 30).
+        hour_wib (int, opsional): Jam tertentu dalam waktu lokal WIB (0 s.d 23) jika user menanyakan jam spesifik.
+                                  Contoh: jika user bertanya "jam 12 tadi siang gimana?", isi hour_wib=12.
     """
     try:
         if not device_id or device_id.lower() in ["bengkel", "bengkel-mekatronika-01", "bengkel_mekatronika_01", "default", "none"]:
             device_id = "NODE-MRS01"
 
-        endpoint = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs?device_id=eq.{device_id}&order=recorded_at.desc&limit={limit}"
+        tz_wib = timezone(timedelta(hours=7))
+        now_wib = datetime.now(tz_wib)
+
+        if hour_wib is not None:
+            # Hitung rentang jam target dalam UTC
+            # Jam target WIB hari ini dikonversi ke UTC
+            target_dt_start = now_wib.replace(hour=hour_wib, minute=0, second=0, microsecond=0)
+            target_dt_end = now_wib.replace(hour=hour_wib, minute=59, second=59, microsecond=0)
+            
+            # Jika jam yang diminta lebih besar dari jam sekarang, asumsikan hari kemarin
+            if target_dt_start > now_wib:
+                target_dt_start -= timedelta(days=1)
+                target_dt_end -= timedelta(days=1)
+
+            utc_start = target_dt_start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            utc_end = target_dt_end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            endpoint = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs?device_id=eq.{device_id}&recorded_at=gte.{utc_start}&recorded_at=lte.{utc_end}&order=recorded_at.asc&limit={limit}"
+        else:
+            endpoint = f"{SUPABASE_URL}/rest/v1/workshop_k3_logs?device_id=eq.{device_id}&order=recorded_at.desc&limit={limit}"
+
         headers = {
             "apikey": SUPABASE_KEY,
             "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -102,15 +131,26 @@ def get_historical_k3_stats(device_id: str = "NODE-MRS01", limit: int = 15) -> s
                 return json.dumps({"status": "error", "message": f"HTTP {res.status} dari Supabase"})
             rows = json.loads(res.read().decode('utf-8'))
             if not rows and device_id != "NODE-MRS01":
-                # Fallback: jika query custom device_id kosong, ambil dari NODE-MRS01
-                return get_historical_k3_stats(device_id="NODE-MRS01", limit=limit)
+                return get_historical_k3_stats(device_id="NODE-MRS01", limit=limit, hour_wib=hour_wib)
             if not rows:
-                return json.dumps({"status": "empty", "message": "Belum ada catatan historis di Supabase."})
+                msg = f"Tidak ditemukan catatan data untuk pukul {hour_wib}:00 WIB." if hour_wib is not None else "Belum ada catatan historis di Supabase."
+                return json.dumps({"status": "empty", "message": msg})
+
+            # Tambahkan format waktu lokal WIB di setiap record agar model memahami waktu nyata
+            formatted_records = []
+            for r in rows:
+                rec = dict(r)
+                if "recorded_at" in rec:
+                    dt_utc = datetime.fromisoformat(rec["recorded_at"].replace("Z", "+00:00"))
+                    rec["waktu_lokal_wib"] = dt_utc.astimezone(tz_wib).strftime("%H:%M WIB")
+                formatted_records.append(rec)
+
             return json.dumps({
                 "status": "success",
                 "device_id": device_id,
-                "total_records": len(rows),
-                "records": rows
+                "total_records": len(formatted_records),
+                "target_hour_wib": hour_wib,
+                "records": formatted_records
             })
     except Exception as e:
         return json.dumps({"status": "error", "message": str(e)})
@@ -187,10 +227,23 @@ def process_chat_message(user_message: str, history: list = None) -> dict:
         # Gunakan tools yang didefinisikan
         tools_list = [get_live_telemetry, get_historical_k3_stats, get_k3_safety_sop]
 
+        # Injeksi waktu lokal saat ini agar ESI memiliki persepsi waktu yang tepat
+        tz_wib = timezone(timedelta(hours=7))
+        current_wib = datetime.now(tz_wib).strftime("%A, %d %B %Y pukul %H:%M:%S WIB")
+
+        dynamic_system_instruction = f"""{SYSTEM_PROMPT}
+
+Konteks Waktu & Penanganan Waktu Saat Ini:
+- Waktu Anda saat ini: {current_wib} (Zona Waktu: WIB / UTC+7).
+- Laboratorium POLTEKOM beroperasi di zona waktu WIB (Indonesia Barat).
+- Jika pengguna menanyakan kondisi pada jam tertentu (misal: "jam 12 tadi siang gimana?"), gunakan parameter `hour_wib=12` pada tool `get_historical_k3_stats`.
+- Field `waktu_lokal_wib` pada hasil tool sudah langsung menunjukkan jam lokal WIB, gunakan nilai tersebut untuk menjawab pengguna.
+"""
+
         model = genai.GenerativeModel(
             model_name=GEMINI_MODEL_NAME,
             tools=tools_list,
-            system_instruction=SYSTEM_PROMPT
+            system_instruction=dynamic_system_instruction
         )
 
         chat = model.start_chat(enable_automatic_function_calling=True)
