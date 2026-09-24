@@ -45,14 +45,30 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Ide:** Kredensial Wi-Fi dan token perangkat keras dipisahkan ke dalam file `secrets.h` lokal yang diabaikan oleh `.gitignore`. Repositori Git hanya menyimpan `secrets.example.h`.
 - **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi untuk menjamin zero credential leakage di GitHub publik tanpa membebani flash NVS mikrokontroler.
 
+### [Status: DITERIMA] Self-Hosting Backend di Raspberry Pi 3B On-Premise via Cloudflare Tunnel
+- **Tanggal & Inisiator:** `[24-09-2026]` - Huda
+- **Ide:** Menjalankan backend FastAPI, APScheduler, dan ESI AI Agent secara mandiri 24/7 di Raspberry Pi 3B (1 GB RAM, 32 GB MicroSD) di laboratorium POLTEKOM dengan mengekspos API publik melalui Cloudflare Tunnel (`cloudflared`).
+- **Diskusi:**
+  - Mengeliminasi kebutuhan kartu kredit pada cloud hosting publik (Render).
+  - Konsumsi memori sangat hemat (~100 MB dari 1.000 MB RAM terpakai).
+  - MicroSD aman dari kerusakan (wear-out) karena data mentah dan analitik tetap disimpan di Firebase RTDB & Supabase PostgreSQL (arsitektur Hybrid).
+  - Flutter (Zaki) dapat mengakses endpoint `/api/chat` dari internet publik via URL HTTPS aman tanpa buka port router (*no port forwarding*).
+- **Implementasi Setup:**
+  - Service daemon: `backend/deploy/ess-backend.service` (auto-restart on boot).
+  - Skrip 1-klik: `backend/deploy/setup_raspi.sh` (instalasi paket sistem, venv, dan registrasi systemd).
+  - Perintah tunnel: `cloudflared tunnel --url http://localhost:8000`.
+- **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi sebagai blueprint backend on-premise utama.
+
 ### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
 - **Tanggal & Inisiator:** `[24-09-2026]` - Huda
-- **Ide:** Untuk mencegah perangkat palsu / rogue MAC membanjiri database Supabase, setiap node baru yang terdeteksi akan masuk ke status `QUARANTINE / PENDING`. Pengawas bengkel harus menekan tombol "Approve / Claim" di aplikasi Flutter sebelum data node tersebut dimasukkan ke analitik K3 utama.
+- **Ide:** Untuk mencegah perangkat palsu / rogue MAC membanjiri database Supabase, setiap node baru yang terdeteksi akan masuk ke status `QUARANTINE / PENDING`. Pengawas bengkel harus menekan tombol "Approve / Claim" di aplikasi Flutter sebelum data node tersebut dimasukkan ke analitik K3/ESS utama.
 - **Diskusi:**
-  - Menghindari kerentanan MAC spoofing dan menjamin integritas data K3.
-- **Keputusan:** `[24-09-2026]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
+  - Menghindari kerentanan MAC spoofing dan menjamin integritas data K3/ESS.
+- **Keputusan:** `[24-09-24]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
 
 ---
+
+
 
 # 🔍 Section 3: Audit Plan (The Ruthless Audit)
 
