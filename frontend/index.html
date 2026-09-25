@@ -61,19 +61,23 @@
       <div>
         <div class="flex items-center gap-2.5">
           <h1 class="font-bold text-base lg:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-            AeroSense AI
+            Smart Environmental Sensing (ESS)
           </h1>
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-            IoT Safety
+            POLTEKOM
           </span>
         </div>
         <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-mono">
           <span class="flex items-center gap-1 text-slate-300">
-            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> ESP32-C3 Super Mini
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> Node: NODE-MRS01
           </span>
           <span class="text-slate-600">•</span>
           <span class="flex items-center gap-1 text-slate-300">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Firebase RTDB
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Hot Buffer RTDB
+          </span>
+          <span class="text-slate-600">•</span>
+          <span class="flex items-center gap-1 text-slate-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> ESI AI Gateway
           </span>
         </div>
       </div>
@@ -385,15 +389,15 @@
             </div>
             <div>
               <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-                AeroAI Safety Assistant
+                ESI Safety Assistant
               </h3>
               <div class="flex items-center gap-1 text-[11px] text-emerald-400 font-mono">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Gemini Core Active
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> FastAPI &amp; Gemini ReAct
               </div>
             </div>
           </div>
           <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
-            Realtime Analysis
+            ReAct Tool Calling
           </span>
         </div>
 
@@ -401,9 +405,9 @@
         <div id="aiChatFeed" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1 text-xs">
           <!-- Initial AI greeting -->
           <div class="flex gap-2.5 items-start">
-            <div class="w-6 h-6 rounded-md bg-purple-600/30 border border-purple-400/40 flex-shrink-0 flex items-center justify-center text-[10px] text-purple-300 font-bold font-mono">AI</div>
+            <div class="w-6 h-6 rounded-md bg-purple-600/30 border border-purple-400/40 flex-shrink-0 flex items-center justify-center text-[10px] text-purple-300 font-bold font-mono">ESI</div>
             <div class="bg-slate-800/80 rounded-2xl rounded-tl-none p-3 border border-white/5 text-slate-200 max-w-[90%] leading-relaxed">
-              Halo! Saya <strong>AeroAI</strong>, asisten pemantau lingkungan pintar Anda. Saya secara kontinu menganalisis data sensor <em>DHT22, MQ-2,</em> dan <em>MQ-7</em> untuk memastikan keselamatan tempat Anda. Semua parameter saat ini berada di ambang batas aman. Ada yang bisa saya bantu?
+              Halo! Saya <strong>ESI</strong>, asisten keselamatan bengkel mekatronika POLTEKOM. Saya terhubung ke backend FastAPI dan model Gemini Flash-Lite untuk memantau data sensor <em>DHT22, MQ-2,</em> dan <em>MQ-7</em> secara real-time. Ada yang bisa saya bantu terkait keselamatan kerja atau prosedur bengkel?
             </div>
           </div>
         </div>
@@ -477,13 +481,19 @@
       <!-- Cloud Configuration Fields -->
       <div class="space-y-3.5 text-xs font-mono">
         <div>
-          <label class="block text-slate-300 mb-1">Firebase Realtime Database URL</label>
-          <input id="cfgDbUrl" type="url" placeholder="https://aerosense-iot-default-rtdb.firebaseio.com" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs" value="https://aerosense-safety-default-rtdb.firebaseio.com">
+          <label class="block text-slate-300 mb-1">Firebase RTDB Hot Buffer URL</label>
+          <input id="cfgDbUrl" type="url" placeholder="https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs" value="https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json">
         </div>
 
-        <div>
-          <label class="block text-slate-300 mb-1">Firebase Secret / Auth Token (Optional)</label>
-          <input id="cfgDbToken" type="password" placeholder="••••••••••••••••••••••••" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1">FastAPI Gateway URL</label>
+            <input id="cfgBackendUrl" type="url" placeholder="http://localhost:8000" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs" value="http://localhost:8000">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1">Default Node ID</label>
+            <input id="cfgNodeId" type="text" placeholder="NODE-MRS01" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs" value="NODE-MRS01">
+          </div>
         </div>
 
         <div class="pt-2 border-t border-white/10">
