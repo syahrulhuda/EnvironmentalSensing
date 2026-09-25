@@ -6,12 +6,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Validasi respon gas fisik ke status anomali (`ess_anomalies`), penyelarasan kontrak integrasi API untuk frontend Flutter (Zaki), dan implementasi on-premise Raspberry Pi 3B (Cloudflare Tunnel).
-> **Affected Areas:** `backend/`, `hardware/test_bench/`, `frontend/`, deployment on-premise.
+> **Fokus Utama Saat Ini:** Penyambungan integrasi frontend (Web Dashboard & Flutter) ke backend on-premise Raspi 3B via Ngrok (`https://entrap-glamour-spectrum.ngrok-free.dev`), pengujian respon fisik anomali gas, dan persiapan refactoring hardware.
+> **Affected Areas:** `frontend/`, `backend/`, `hardware/test_bench/`.
 > **Success Criteria:** 
-> 1. Terujinya respon lonjakan gas/asap fisik sehingga terpicu status WARNING/DANGER dan tercatat di `ess_anomalies`.
-> 2. Kontrak integrasi API backend (`POST /api/chat`, `GET /health`, dan akses kueri `ess_logs`) siap dikonsumsi oleh Flutter client.
-> 3. Layanan backend berjalan stabil sebagai systemd daemon di Raspberry Pi 3B via Cloudflare Tunnel.
+> 1. Chatbot frontend terhubung secara riil ke endpoint `POST /api/chat` ESI AI Agent di Raspi (bukan simulasi string).
+> 2. Dashboard menampilkan data real-time RTDB sekaligus tren agregat historis dari Supabase `ess_logs`.
+> 3. Terujinya respon lonjakan gas/asap fisik sehingga terpicu status WARNING/DANGER dan tercatat di `ess_anomalies`.
 > 4. Persiapan refactor hardware edge node saat komponen ESP32-C3 Super Mini + MQ-2 + Kipas + RGB LED tiba.
 
 ---
@@ -37,7 +37,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### [Status: DITERIMA] Flutter sebagai Thin Client Multiplatform (Web & Mobile)
 - **Tanggal & Inisiator:** `[22-09-2026]` - Pak Amin & Huda
-- **Ide:** Antarmuka pengguna dibangun menggunakan Flutter agar dari satu basis kode dapat dihasilkan versi Web (Firebase Hosting) dan versi Android (.apk). Seluruh logika berat dan kunci API diisolasi di backend FastAPI (Raspberry Pi 3B On-Premise via Cloudflare Tunnel).
+- **Ide:** Antarmuka pengguna dibangun menggunakan Flutter agar dari satu basis kode dapat dihasilkan versi Web (Firebase Hosting) dan versi Android (.apk). Seluruh logika berat dan kunci API diisolasi di backend FastAPI (Raspberry Pi 3B On-Premise via Cloudflare Tunnel / Ngrok).
 - **Keputusan:** `[22-09-2026]` - **[DITERIMA]** Diadopsi untuk layer antarmuka pengguna.
 
 ### [Status: DITERIMA] Isolasi Kredensial Hardware via secrets.h (Compile-Time)
@@ -45,19 +45,22 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Ide:** Kredensial Wi-Fi dan token perangkat keras dipisahkan ke dalam file `secrets.h` lokal yang diabaikan oleh `.gitignore`. Repositori Git hanya menyimpan `secrets.example.h`.
 - **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi untuk menjamin zero credential leakage di GitHub publik tanpa membebani flash NVS mikrokontroler.
 
-### [Status: DITERIMA] Self-Hosting Backend di Raspberry Pi 3B On-Premise via Cloudflare Tunnel
+### [Status: DITERIMA] Self-Hosting Backend di Raspberry Pi 3B On-Premise
 - **Tanggal & Inisiator:** `[24-09-2026]` - Huda
-- **Ide:** Menjalankan backend FastAPI, APScheduler, dan ESI AI Agent secara mandiri 24/7 di Raspberry Pi 3B (1 GB RAM, 32 GB MicroSD) di laboratorium POLTEKOM dengan mengekspos API publik melalui Cloudflare Tunnel (`cloudflared`).
+- **Ide:** Menjalankan backend FastAPI, APScheduler, dan ESI AI Agent secara mandiri 24/7 di Raspberry Pi 3B (1 GB RAM, 16 GB MicroSD) di laboratorium POLTEKOM dengan daemon systemd `ess-backend.service`.
 - **Diskusi:**
   - Mengeliminasi kebutuhan kartu kredit pada cloud hosting publik (Render).
   - Konsumsi memori sangat hemat (~100 MB dari 1.000 MB RAM terpakai).
   - MicroSD aman dari kerusakan (wear-out) karena data mentah dan analitik tetap disimpan di Firebase RTDB & Supabase PostgreSQL (arsitektur Hybrid).
-  - Flutter (Zaki) dapat mengakses endpoint `/api/chat` dari internet publik via URL HTTPS aman tanpa buka port router (*no port forwarding*).
-- **Implementasi Setup:**
-  - Service daemon: `backend/deploy/ess-backend.service` (auto-restart on boot).
-  - Skrip 1-klik: `backend/deploy/setup_raspi.sh` (instalasi paket sistem, venv, dan registrasi systemd).
-  - Perintah tunnel: `cloudflared tunnel --url http://localhost:8000`.
 - **Keputusan:** `[24-09-2026]` - **[DITERIMA]** Diadopsi sebagai blueprint backend on-premise utama.
+
+### [Status: DITERIMA] Ngrok Free Static Domain sebagai Solusi Zero-Cost Tunnel Tanpa Custom Domain
+- **Tanggal & Inisiator:** `[25-09-2026]` - Huda
+- **Ide:** Menggunakan Ngrok Free Tier untuk mendapatkan 1 Static Domain permanen gratis selamanya (`entrap-glamour-spectrum.ngrok-free.dev`) tanpa perlu membeli custom domain dan tanpa kartu kredit. Dijalankan sebagai daemon systemd `ess-tunnel.service` di Raspberry Pi 3B.
+- **Diskusi:**
+  - Cloudflare Named Tunnel mewajibkan kepemilikan domain pribadi yang diarahkan ke NS Cloudflare.
+  - Ngrok memberikan 1 static domain permanen gratis tanpa domain pribadi, langsung tembus NAT/firewall kampus POLTEKOM via HTTPS aman.
+- **Keputusan:** `[25-09-2026]` - **[DITERIMA]** Diadopsi sebagai public API gateway endpoint resmi untuk client frontend.
 
 ### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
 - **Tanggal & Inisiator:** `[24-09-2026]` - Huda
@@ -68,8 +71,6 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ---
 
-
-
 # 🔍 Section 3: Audit Plan (The Ruthless Audit)
 
 ### 🌟 The Good
@@ -78,13 +79,23 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - `[23-09-2026]` Monorepo GitHub resmi terhubung dan ter-push dengan sanitasi kredensial 100% aman.
 - `[24-09-2026]` Skema relasional Supabase di-rebrand secara bersih menjadi prefix `ess_` (`ess_zones`, `ess_devices`, `ess_logs`, `ess_anomalies`).
 - `[24-09-2026]` Uji ketahanan continuous running 2 jam penuh berhasil gemilang: **2.826 titik data mentah** terkirim dari hardware ke Firebase RTDB tanpa putus.
-- `[24-09-2026]` Pipeline ETL 2-dimensi berhasil memadatkan 2.826 data menjadi **142 baris analitik 1-menitan** di Supabase (HTTP 201) dan memangkas 429 titik data usang (> 2 jam) via HTTP PATCH sliding window.
-- `[24-09-2026]` AI Agent "ESI" (`gemini-flash-lite-latest`) berhasil terintegrasi dengan ReAct Tool Calling ganda: sukses menarik data telemetri live detik ini dari Firebase dan data historis analitik dari Supabase PostgreSQL.
-- `[24-09-2026]` Refactoring Backend Clean Architecture selesai: kode dipecah modular ke dalam `app/core/`, `app/data/`, `app/tools/`, `app/services/`, dan `app/api/` dengan eliminasi duplikasi konfigurasi dan persiapan deployment Raspberry Pi 3B (`deploy/`).
+- `[24-09-2026]` Sensor MQ-7 berhasil mendeteksi aktivitas pematerian (*soldering*) riil di lab: konsentrasi gas naik mulus dari 5 PPM ke 21–25 PPM dengan puncak 35 PPM (ADC 682).
+- `[25-09-2026]` Backend FastAPI + APScheduler berjalan sukses sebagai systemd daemon di Raspberry Pi 3B Debian 13 (`aarch64`).
+- `[25-09-2026]` Eksekusi ETL perdana di Raspi sukses: 187 baris agregat ter-upsert ke Supabase `ess_logs` dan 3.337 data usang RTDB terpotong otomatis via sliding window.
+- `[25-09-2026]` Ngrok static tunnel online dengan HTTPS permanen `https://entrap-glamour-spectrum.ngrok-free.dev` (`GET /health` dan `POST /api/chat` terverifikasi 200 OK dari internet publik).
 
 ### ⚠️ The Bad / Technical Debt to Address
-- `[24-09-2026]` **[TERSELESAIKAN]** Layanan cloud hosting publik (Render) meminta verifikasi kartu kredit/debit ($1 hold). Solusi: resmi beralih ke self-host on-premise di Raspberry Pi 3B via Cloudflare Tunnel (`cloudflared`) dengan biaya operasional murni Rp 0 dan 0 kartu kredit.
+- `[25-09-2026]` Chatbot di Web Frontend (`frontend/app.js`) masih menggunakan simulasi kecocokan string lokal, belum memanggil `POST /api/chat` ke gateway backend publik.
 
-### 🚀 The Next Action
-- Lakukan validasi pengujian respon gas fisik (uji tiup asap rokok/korek gas/solder) untuk memverifikasi transisi status ESS dari `NORMAL` ke `WARNING` / `DANGER`.
-- Hubungkan Zaki ke endpoint backend `/api/chat`, `/health`, dan tabel `ess_logs` Supabase untuk pembangunan UI Flutter.
+### 🚀 The Next Action (Rencana Aksi Selanjutnya)
+
+**1. Sisi Frontend (Zaki & Web/Flutter Client):**
+- Perbarui `frontend/config.js` agar `BACKEND_API_URL` mengarah ke URL publik: `https://entrap-glamour-spectrum.ngrok-free.dev`.
+- Sambungkan logika chat di `frontend/app.js` dengan memanggil `fetch(`${CONFIG.BACKEND_API_URL}/api/chat`)` (sertakan header `ngrok-skip-browser-warning: true` dan `Content-Type: application/json`) agar chat dijawab langsung oleh AI ESI Gemini Flash-Lite.
+- Integrasikan pembacaan tren historis menit lampau langsung dari Supabase `ess_logs` (via Supabase JS / Flutter Supabase SDK).
+- Mulai inisialisasi struktur Flutter monorepo (`frontend/lib/`).
+
+**2. Sisi Backend & Edge Hardware (Huda):**
+- Lakukan validasi pengujian respon gas fisik (uji tiup asap/korek gas/solder) untuk memverifikasi transisi status ESS dari `NORMAL` ke `WARNING` / `DANGER` dan pencatatan anomali ke `ess_anomalies`.
+- Pantau kestabilan dua service systemd di Raspberry Pi (`ess-backend.service` dan `ess-tunnel.service`).
+- Tunggu kedatangan komponen ESP32-C3 Super Mini + MQ-2 + Kipas + Driver Transistor + RGB LED untuk refactor rangkaian fisik edge node.
