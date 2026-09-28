@@ -23,7 +23,45 @@ Gaya Komunikasi:
 - Jika kadar CO > 50 PPM, beri peringatan tegas untuk menyalakan exhaust fan, buka ventilasi, atau evakuasi.
 """
 
-def ask_esi(user_message: str, history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+def _sanitize_history(raw_history: List[Any]) -> List[Dict[str, Any]]:
+    if not raw_history:
+        return []
+
+    sanitized: List[Dict[str, Any]] = []
+    expected_role = "user"
+
+    for item in raw_history[-10:]:
+        role = ""
+        content = ""
+        if isinstance(item, dict):
+            role = item.get("role", "user")
+            content = item.get("content") or item.get("text") or item.get("message") or ""
+            if not content and "parts" in item:
+                parts = item["parts"]
+                content = parts[0] if isinstance(parts, list) and parts else str(parts)
+        else:
+            role = getattr(item, "role", "user")
+            content = getattr(item, "content", "")
+
+        content = str(content).strip()
+        if not content:
+            continue
+
+        normalized_role = "model" if role.lower() in ["model", "assistant", "esi", "bot"] else "user"
+
+        if normalized_role == expected_role:
+            sanitized.append({
+                "role": normalized_role,
+                "parts": [content]
+            })
+            expected_role = "model" if expected_role == "user" else "user"
+
+    if sanitized and sanitized[-1]["role"] == "user":
+        sanitized.pop()
+
+    return sanitized
+
+def ask_esi(user_message: str, history: Optional[List[Any]] = None) -> Dict[str, Any]:
     if not settings.GEMINI_API_KEY:
         return {
             "reply": "⚠️ [KONFIGURASI]: GEMINI_API_KEY belum disetel di environment backend.",
@@ -49,8 +87,18 @@ Konteks Waktu Saat Ini:
             system_instruction=dynamic_prompt
         )
 
-        chat = model.start_chat(enable_automatic_function_calling=True)
-        response = chat.send_message(user_message)
+        formatted_history = _sanitize_history(history) if history else []
+
+        try:
+            chat = model.start_chat(
+                history=formatted_history,
+                enable_automatic_function_calling=True
+            )
+            response = chat.send_message(user_message)
+        except Exception as chat_err:
+            print(f"[ESI AI WARNING] Gagal start_chat dengan riwayat ({chat_err}), fallback ke chat baru.")
+            chat = model.start_chat(enable_automatic_function_calling=True)
+            response = chat.send_message(user_message)
 
         return {
             "reply": response.text,

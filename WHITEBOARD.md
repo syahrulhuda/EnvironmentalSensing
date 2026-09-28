@@ -64,15 +64,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Ngrok memberikan 1 static domain permanen gratis tanpa domain pribadi, langsung tembus NAT/firewall kampus POLTEKOM via HTTPS aman.
 - **Keputusan:** `[25-09-2026]` - **[DITERIMA]** Diadopsi sebagai public API gateway endpoint resmi untuk client frontend.
 
-### [Status: DITERIMA] Perbaikan Multi-turn Conversation & Dukungan Riwayat Chat ESI
+### [Status: DITERIMA & SELESAI] Perbaikan Multi-turn Conversation & Dukungan Riwayat Chat ESI
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda & Zaki
 - **Ide:** Memperbaiki penanganan konteks percakapan multi-turn di mana frontend (Web & Flutter) mengelola array riwayat pesan (`history`) dan mengirimkannya bersama prompt user ke `POST /api/chat`, sementara backend Gemini mengonversi riwayat tersebut ke dalam session context.
-- **Keputusan:** `[28-09-2026]` - **[DITERIMA & IMPLEMENTED DI FRONTEND]** Zaki telah selesai mengintegrasikan state tracking `history` di Web (`frontend/app.js`) dan Flutter (`EsiChatService` & `EsiChatBottomSheet`). Backend (Huda) tinggal menyelaraskan ekstraksi `history` di `ai_service.py`.
+- **Keputusan:** `[28-09-2026]` - **[DITERIMA & IMPLEMENTED DI BACKEND & FRONTEND]** Huda telah mengimplementasikan fungsi `_sanitize_history()` dan passing riwayat ke `model.start_chat()` di `ai_service.py` lengkap dengan skema `ChatMessage` di `routes.py`. Zaki telah mengintegrasikan state tracking di sisi frontend.
 
-### [Status: DISETUJUI FRONTEND] Ekspansi REST API Endpoints Backend untuk Kesiapan Flutter Dashboard
+### [Status: DITERIMA & SELESAI] Ekspansi REST API Endpoints Backend untuk Kesiapan Flutter Dashboard
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda & Zaki
 - **Ide:** Menambahkan endpoint `GET /api/telemetry/latest` dan `GET /api/logs` di FastAPI agar Flutter memiliki opsi single-gateway tanpa harus bergantung pada banyak SDK database di sisi client.
-- **Keputusan:** `[28-09-2026]` - **[DISETUJUI FRONTEND]** Zaki menyetujui pendekatan single-gateway ini demi simplisitas Flutter Thin Client. Sembari menunggu backend Raspi mengimplementasikannya, frontend tetap memantau Firebase RTDB Hot Buffer secara langsung.
+- **Keputusan:** `[28-09-2026]` - **[DITERIMA & IMPLEMENTED DI BACKEND]** Huda telah menambahkan endpoint `GET /api/telemetry/latest` dan `GET /api/logs` di `routes.py`, siap dikonsumsi langsung oleh Flutter Thin Client.
 
 ### [Status: DITERIMA] Standarisasi Header Bypass Ngrok pada Client Frontend
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda & Zaki
@@ -117,22 +117,27 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Toolchain Flutter & Android SDK berhasil dikonfigurasi: `Android SDK 36.0.0 (cmdline-tools)`, lisensi Android disetujui, dan seluruh status `flutter doctor` centang hijau (`[✓] Flutter`, `[✓] Android toolchain`, `[✓] Chrome`, `[✓] Android Studio`).
   - Audit kode Flutter (`flutter analyze`): **No issues found!** (0 error, 0 warning) pada 15 file arsitektur modular yang 100% mematuhi batas < 250 baris Pilar 3 RULEBOOK.md.
   - Uji koneksi Hot Buffer Firebase RTDB live: **4.591 data telemetri riil** dari `NODE-MRS01` terbaca sempurna.
+- `[28-09-2026]` **Pembaruan Backend Gateway Layer 4 (Huda) selesai & terverifikasi:**
+  - Fungsi `_sanitize_history()` dan multi-turn conversation memory Gemini Flash-Lite aktif di `backend/app/services/ai_service.py`.
+  - Endpoint REST baru aktif di `backend/app/api/routes.py`: `GET /api/telemetry/latest` (Hot Buffer RTDB) dan `GET /api/logs` (Warm Analytics Supabase).
+  - Skema Pydantic `ChatMessage` terdaftar rapi pada dokumentasi OpenAPI/Swagger (`/docs`).
 
 ### ⚠️ The Bad / Technical Debt to Address
 - `[25-09-2026]` **[TERSELESAIKAN]** Chatbot di Web Frontend (`frontend/app.js`) resmi terhubung ke `POST /api/chat` Ngrok publik dan dilengkapi smart local fallback jika server sedang offline.
 - `[28-09-2026]` Tunnel Ngrok di Raspberry Pi saat ini berstatus offline sementara (`ERR_NGROK_3200`) selama proses maintenance service backend oleh Huda di lab. Frontend otomatis fallback ke local reasoning hingga daemon `ess-tunnel.service` di Raspi online kembali.
-- `[28-09-2026]` Parameter `history` pada `POST /api/chat` di backend masih perlu diselaraskan di `ai_service.py` oleh Huda agar session memory Gemini aktif.
-- `[28-09-2026]` Backend belum menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter jika tidak mengakses direct database.
+- `[28-09-2026]` **[TERSELESAIKAN]** Parameter `history` pada `POST /api/chat` di backend telah diselaraskan di `ai_service.py` sehingga memori percakapan bertingkat Gemini aktif.
+- `[28-09-2026]` **[TERSELESAIKAN]** Backend telah menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter.
 - `[28-09-2026]` Daemon systemd di Raspi belum memiliki `PYTHONUNBUFFERED=1`, menyebabkan log output tertahan di buffer 4KB.
 
 ### 🚀 The Next Action (Rencana Aksi Selanjutnya)
 
 **1. Sisi Backend (Huda):**
-- [ ] Perbaiki bug multi-turn conversation di `backend/app/services/ai_service.py` dengan mengonversi list `history` ke format pesan Gemini (`role: user / model`).
-- [ ] Tambahkan endpoint data di `backend/app/api/routes.py`:
-  - `GET /api/telemetry/latest`: pembacaan real-time buffer RTDB untuk gauges Flutter.
-  - `GET /api/logs`: pembacaan riwayat agregasi menit Supabase untuk grafik Flutter.
+- [x] Perbaiki bug multi-turn conversation di `backend/app/services/ai_service.py` dengan mengonversi list `history` ke format pesan Gemini (`role: user / model`). *(Selesai)*
+- [x] Tambahkan endpoint data di `backend/app/api/routes.py`:
+  - `GET /api/telemetry/latest`: pembacaan real-time buffer RTDB untuk gauges Flutter. *(Selesai)*
+  - `GET /api/logs`: pembacaan riwayat agregasi menit Supabase untuk grafik Flutter. *(Selesai)*
 - [ ] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi.
+- [ ] Tarik perubahan terbaru di Raspi (`git pull`), restart service backend dan tunnel di Raspi.
 - [ ] Nyalakan kembali daemon `ess-tunnel.service` di Raspberry Pi agar public gateway Ngrok aktif.
 
 **2. Sisi Frontend (Zaki & Web/Flutter Client):**
