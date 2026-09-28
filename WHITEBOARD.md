@@ -6,13 +6,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Penyambungan integrasi frontend (Web Dashboard & Flutter) ke backend on-premise Raspi 3B via Ngrok (`https://entrap-glamour-spectrum.ngrok-free.dev`), pengujian respon fisik anomali gas, dan persiapan refactoring hardware.
-> **Affected Areas:** `frontend/`, `backend/`, `hardware/test_bench/`.
+> **Fokus Utama Saat Ini:** Penyempurnaan backend untuk integrasi Flutter (perbaikan bug multi-turn ESI, ekspansi endpoint REST data telemetri/log, `PYTHONUNBUFFERED=1` di daemon Raspi), penyambungan Web Frontend ke Ngrok, dan pengujian fisik respon anomali gas.
+> **Affected Areas:** `backend/`, `frontend/`, `deploy/`.
 > **Success Criteria:** 
-> 1. Chatbot frontend terhubung secara riil ke endpoint `POST /api/chat` ESI AI Agent di Raspi (bukan simulasi string).
-> 2. Dashboard menampilkan data real-time RTDB sekaligus tren agregat historis dari Supabase `ess_logs`.
-> 3. Terujinya respon lonjakan gas/asap fisik sehingga terpicu status WARNING/DANGER dan tercatat di `ess_anomalies`.
-> 4. Persiapan refactor hardware edge node saat komponen ESP32-C3 Super Mini + MQ-2 + Kipas + RGB LED tiba.
+> 1. ESI AI Agent (`POST /api/chat`) mampu mengingat konteks percakapan bertingkat (*multi-turn conversation*) dari array `history`.
+> 2. Backend menyediakan endpoint data siap pakai untuk Flutter (`GET /api/telemetry/latest` dan `GET /api/logs`).
+> 3. Daemon systemd `ess-backend.service` di Raspberry Pi terkonfigurasi `PYTHONUNBUFFERED=1` agar log journal real-time.
+> 4. Chatbot frontend terhubung secara riil ke endpoint `POST /api/chat` ESI AI Agent di Raspi (bukan simulasi string).
+> 5. Dashboard menampilkan data real-time RTDB sekaligus tren agregat historis dari Supabase `ess_logs`.
+> 6. Terujinya respon lonjakan gas/asap fisik sehingga terpicu status WARNING/DANGER dan tercatat di `ess_anomalies`.
 
 ---
 
@@ -62,6 +64,21 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Ngrok memberikan 1 static domain permanen gratis tanpa domain pribadi, langsung tembus NAT/firewall kampus POLTEKOM via HTTPS aman.
 - **Keputusan:** `[25-09-2026]` - **[DITERIMA]** Diadopsi sebagai public API gateway endpoint resmi untuk client frontend.
 
+### [Status: DITERIMA] Perbaikan Multi-turn Conversation & Dukungan Riwayat Chat ESI
+- **Tanggal & Inisiator:** `[28-09-2026]` - Huda
+- **Ide:** Memperbaiki bug pada `ai_service.py` di mana parameter `history` diabaikan, sehingga ESI dapat mengingat percakapan sebelumnya dari payload Flutter/Web.
+- **Keputusan:** `[28-09-2026]` - **[DITERIMA]** Disetujui untuk diimplementasikan, menunggu eksekusi perbaikan kode.
+
+### [Status: DIAJUKAN] Ekspansi REST API Endpoints Backend untuk Kesiapan Flutter Dashboard
+- **Tanggal & Inisiator:** `[28-09-2026]` - Huda
+- **Ide:** Menambahkan endpoint `GET /api/telemetry/latest` dan `GET /api/logs` di FastAPI agar Flutter memiliki opsi single-gateway tanpa harus bergantung pada banyak SDK database di sisi client.
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Membutuhkan koordinasi dan insight lebih lanjut dari Zaki terkait arsitektur konsumsi data di sisi frontend.
+
+### [Status: DIAJUKAN] Konfigurasi PYTHONUNBUFFERED=1 pada Service Daemon Systemd Raspi
+- **Tanggal & Inisiator:** `[28-09-2026]` - Huda
+- **Ide:** Mencegah output log ETL tertahan di block buffer 4KB Python saat berjalan sebagai daemon background systemd di Raspi.
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Disiapkan untuk diterapkan pada jadwal pemeliharaan Raspberry Pi berikutnya.
+
 ### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
 - **Tanggal & Inisiator:** `[24-09-2026]` - Huda
 - **Ide:** Untuk mencegah perangkat palsu / rogue MAC membanjiri database Supabase, setiap node baru yang terdeteksi akan masuk ke status `QUARANTINE / PENDING`. Pengawas bengkel harus menekan tombol "Approve / Claim" di aplikasi Flutter sebelum data node tersebut dimasukkan ke analitik ESS utama.
@@ -86,16 +103,24 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### ⚠️ The Bad / Technical Debt to Address
 - `[25-09-2026]` Chatbot di Web Frontend (`frontend/app.js`) masih menggunakan simulasi kecocokan string lokal, belum memanggil `POST /api/chat` ke gateway backend publik.
+- `[28-09-2026]` Parameter `history` pada `POST /api/chat` diabaikan oleh `ask_esi`, menyebabkan percakapan multi-turn di Flutter kehilangan memori konteks percakapan lampau.
+- `[28-09-2026]` Backend belum menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter jika tidak mengakses direct database.
+- `[28-09-2026]` Daemon systemd di Raspi belum memiliki `PYTHONUNBUFFERED=1`, menyebabkan log output tertahan di buffer 4KB.
 
 ### 🚀 The Next Action (Rencana Aksi Selanjutnya)
 
-**1. Sisi Frontend (Zaki & Web/Flutter Client):**
-- Perbarui `frontend/config.js` agar `BACKEND_API_URL` mengarah ke URL publik: `https://entrap-glamour-spectrum.ngrok-free.dev`.
-- Sambungkan logika chat di `frontend/app.js` dengan memanggil `fetch(`${CONFIG.BACKEND_API_URL}/api/chat`)` (sertakan header `ngrok-skip-browser-warning: true` dan `Content-Type: application/json`) agar chat dijawab langsung oleh AI ESI Gemini Flash-Lite.
-- Integrasikan pembacaan tren historis menit lampau langsung dari Supabase `ess_logs` (via Supabase JS / Flutter Supabase SDK).
-- Mulai inisialisasi struktur Flutter monorepo (`frontend/lib/`).
+**1. Sisi Backend (Huda):**
+- [ ] Perbaiki bug multi-turn conversation di `backend/app/services/ai_service.py` dengan mengonversi list `history` ke format pesan Gemini (`role: user / model`).
+- [ ] Tambahkan endpoint data di `backend/app/api/routes.py`:
+  - `GET /api/telemetry/latest`: pembacaan real-time buffer RTDB untuk gauges Flutter.
+  - `GET /api/logs`: pembacaan riwayat agregasi menit Supabase untuk grafik Flutter.
+- [ ] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi.
 
-**2. Sisi Backend & Edge Hardware (Huda):**
-- Lakukan validasi pengujian respon gas fisik (uji tiup asap/korek gas/solder) untuk memverifikasi transisi status ESS dari `NORMAL` ke `WARNING` / `DANGER` dan pencatatan anomali ke `ess_anomalies`.
-- Pantau kestabilan dua service systemd di Raspberry Pi (`ess-backend.service` dan `ess-tunnel.service`).
-- Tunggu kedatangan komponen ESP32-C3 Super Mini + MQ-2 + Kipas + Driver Transistor + RGB LED untuk refactor rangkaian fisik edge node.
+**2. Sisi Frontend (Zaki & Web/Flutter Client):**
+- [ ] Perbarui `frontend/config.js` agar `BACKEND_API_URL` mengarah ke URL publik: `https://entrap-glamour-spectrum.ngrok-free.dev`.
+- [ ] Sambungkan logika chat di `frontend/app.js` dengan memanggil `POST /api/chat` (sertakan header `ngrok-skip-browser-warning: true` dan `Content-Type: application/json`).
+- [ ] Mulai inisialisasi struktur Flutter monorepo (`frontend/lib/`).
+
+**3. Sisi Edge Hardware & Pengujian (Huda):**
+- [ ] Validasi pengujian respon gas fisik (uji tiup asap/korek gas/solder) untuk verifikasi transisi status ESS dari `NORMAL` ke `WARNING` / `DANGER` dan pencatatan anomali ke `ess_anomalies`.
+- [ ] Tunggu kedatangan komponen ESP32-C3 Super Mini + MQ-2 + Kipas + Driver Transistor + RGB LED untuk refactor rangkaian fisik edge node.
