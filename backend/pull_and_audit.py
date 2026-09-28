@@ -42,6 +42,8 @@ def audit_and_analyze(data):
     hums = []
     mq7_adcs = []
     mq7_ppms = []
+    mq2_adcs = []
+    mq2_ppms = []
     statuses = {"NORMAL": 0, "WARNING": 0, "DANGER": 0, "OTHER": 0}
     null_dht_count = 0
     timestamps = []
@@ -63,6 +65,14 @@ def audit_and_analyze(data):
             mq7_adcs.append(int(raw_adc))
         if ppm is not None:
             mq7_ppms.append(int(ppm))
+
+        # MQ-2 validation
+        raw_mq2 = r.get("mq2_raw")
+        ppm_mq2 = r.get("mq2_ppm")
+        if raw_mq2 is not None:
+            mq2_adcs.append(int(raw_mq2))
+        if ppm_mq2 is not None:
+            mq2_ppms.append(int(ppm_mq2))
 
         # Status counts
         st = r.get("status", "OTHER")
@@ -100,6 +110,8 @@ def audit_and_analyze(data):
     hum_stat = stats(hums)
     adc_stat = stats(mq7_adcs)
     ppm_stat = stats(mq7_ppms)
+    mq2_adc_stat = stats(mq2_adcs)
+    mq2_ppm_stat = stats(mq2_ppms)
 
     print("\n[3/4] ================== LAPORAN AUDIT ANOMALI ==================")
     print(f"1. INTEGRITAS PENGIRIMAN DATA:")
@@ -115,7 +127,12 @@ def audit_and_analyze(data):
     print(f"   - Raw ADC (0-4095): Min={adc_stat['min']} | Max={adc_stat['max']} | Rata-rata={adc_stat['avg']} | Deviasi={adc_stat['std']}")
     print(f"   - Estimasi CO PPM : Min={ppm_stat['min']} | Max={ppm_stat['max']} | Rata-rata={ppm_stat['avg']} | Deviasi={ppm_stat['std']}")
 
-    print(f"\n4. DISTRIBUSI STATUS K3:")
+    if mq2_adcs:
+        print(f"\n4. STATISTIK SENSOR ASAP & GAS (MQ-2):")
+        print(f"   - Raw ADC (0-4095): Min={mq2_adc_stat['min']} | Max={mq2_adc_stat['max']} | Rata-rata={mq2_adc_stat['avg']} | Deviasi={mq2_adc_stat['std']}")
+        print(f"   - Est. Gas/Asap   : Min={mq2_ppm_stat['min']} | Max={mq2_ppm_stat['max']} | Rata-rata={mq2_ppm_stat['avg']} | Deviasi={mq2_ppm_stat['std']}")
+
+    print(f"\n5. DISTRIBUSI STATUS K3:")
     print(f"   - NORMAL  : {statuses['NORMAL']} sampel")
     print(f"   - WARNING : {statuses['WARNING']} sampel")
     print(f"   - DANGER  : {statuses['DANGER']} sampel")

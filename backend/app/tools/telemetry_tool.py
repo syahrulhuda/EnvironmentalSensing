@@ -32,5 +32,8 @@ def get_telemetry(device_id: str = settings.DEFAULT_NODE_ID) -> str:
         "mq7_raw_adc": latest.get("mq7_raw"),
         "mq7_voltage": latest.get("mq7_volt"),
         "mq7_co_ppm": latest.get("mq7_ppm"),
+        "mq2_raw_adc": latest.get("mq2_raw"),
+        "mq2_voltage": latest.get("mq2_volt"),
+        "mq2_smoke_ppm": latest.get("mq2_ppm"),
         "status_lingkungan": latest.get("status")
     })
