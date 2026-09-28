@@ -112,7 +112,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - `[25-09-2026]` Ngrok static tunnel online dengan HTTPS permanen `https://entrap-glamour-spectrum.ngrok-free.dev` (`GET /health` dan `POST /api/chat` terverifikasi 200 OK dari internet publik).
 - `[28-09-2026]` **Progres Toolchain Frontend Client (Zaki di lokal):**
   - Toolchain Flutter & Android SDK berhasil dikonfigurasi di lokal: `Android SDK 36.0.0 (cmdline-tools)`, lisensi Android disetujui, dan status `flutter doctor` centang hijau (`[✓] Flutter`, `[✓] Android toolchain`, `[✓] Chrome`, `[✓] Android Studio`).
-  - *Catatan Audit:* Berkas fisik kode Flutter (`frontend/lib/`) serta revisi `frontend/app.js` dan `frontend/config.js` **belum di-push ke remote Git**.
+  - *Catatan Audit:* Seluruh berkas kode Flutter (`frontend/lib/` 15 file modular < 188 baris), revisi `frontend/app.js`, `frontend/config.js`, dan APK release (20.9MB) **resmi terkomit & ter-push ke branch main**.
 - `[28-09-2026]` **Pembaruan Backend Gateway Layer 4 (Huda) selesai & terverifikasi:**
   - Fungsi `_sanitize_history()` dan multi-turn conversation memory Gemini Flash-Lite aktif di `backend/app/services/ai_service.py`.
   - Endpoint REST baru aktif di `backend/app/api/routes.py`: `GET /api/telemetry/latest` (Hot Buffer RTDB) dan `GET /api/logs` (Warm Analytics Supabase).
@@ -146,9 +146,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] Nyalakan kembali daemon `ess-tunnel.service` di Raspberry Pi agar public gateway Ngrok aktif.
 
 **2. Sisi Frontend (Zaki & Web/Flutter Client):**
-- [ ] **[PRIORITAS UTAMA]** Lakukan commit & push kode aktual `frontend/app.js` & `frontend/config.js` yang sudah memuat header bypass Ngrok, timeout 20s, dan payload history.
-- [ ] **[PRIORITAS UTAMA]** Lakukan commit & push seluruh berkas struktur Flutter monorepo (`frontend/lib/`) ke remote Git.
-- [ ] Lakukan uji coba build Android APK (`flutter build apk`) dan tes rendering Web di Chrome.
+- [x] **[PRIORITAS UTAMA]** Lakukan commit & push kode aktual `frontend/app.js` & `frontend/config.js` yang sudah memuat header bypass Ngrok, timeout 20s, dan payload history. *(Selesai)*
+- [x] **[PRIORITAS UTAMA]** Lakukan commit & push seluruh berkas struktur Flutter monorepo (`frontend/lib/`) ke remote Git. *(Selesai)*
+- [x] Lakukan uji coba build Android APK (`flutter build apk`) dan tes rendering Web di Chrome. *(Selesai - APK 20.9MB terkompilasi sukses)*
 - [ ] Verifikasi live call end-to-end `POST /api/chat` setelah daemon tunnel Ngrok diaktifkan kembali oleh Huda.
 
 **3. Sisi Edge Hardware & Pengujian (Huda):**
