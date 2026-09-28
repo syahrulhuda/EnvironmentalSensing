@@ -64,15 +64,25 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Ngrok memberikan 1 static domain permanen gratis tanpa domain pribadi, langsung tembus NAT/firewall kampus POLTEKOM via HTTPS aman.
 - **Keputusan:** `[25-09-2026]` - **[DITERIMA]** Diadopsi sebagai public API gateway endpoint resmi untuk client frontend.
 
-### [Status: DITERIMA] Perbaikan Multi-turn Conversation & Dukungan Riwayat Chat ESI
+### [Status: DIAJUKAN] Perbaikan Multi-turn Conversation & Dukungan Riwayat Chat ESI
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda
-- **Ide:** Memperbaiki bug pada `ai_service.py` di mana parameter `history` diabaikan, sehingga ESI dapat mengingat percakapan sebelumnya dari payload Flutter/Web.
-- **Keputusan:** `[28-09-2026]` - **[DITERIMA]** Disetujui untuk diimplementasikan, menunggu eksekusi perbaikan kode.
+- **Ide:** Memperbaiki bug pada `ai_service.py` di mana parameter `history` diabaikan, serta mengimplementasikan state management chat di frontend (Web & Flutter) untuk mengirimkan array percakapan sebelumnya ke `POST /api/chat`.
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Disiapkan untuk dieksekusi setelah penyelarasan format model `ChatMessage` antara frontend dan backend.
 
 ### [Status: DIAJUKAN] Ekspansi REST API Endpoints Backend untuk Kesiapan Flutter Dashboard
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda
 - **Ide:** Menambahkan endpoint `GET /api/telemetry/latest` dan `GET /api/logs` di FastAPI agar Flutter memiliki opsi single-gateway tanpa harus bergantung pada banyak SDK database di sisi client.
-- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Membutuhkan koordinasi dan insight lebih lanjut dari Zaki terkait arsitektur konsumsi data di sisi frontend.
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Membutuhkan koordinasi dan insight lebih lanjut dari Zaki terkait preferensi arsitektur konsumsi data di sisi frontend.
+
+### [Status: DIAJUKAN] Standarisasi Header Bypass Ngrok pada Client Frontend
+- **Tanggal & Inisiator:** `[28-09-2026]` - Huda
+- **Ide:** Mewajibkan penyisipan header `'ngrok-skip-browser-warning': 'true'` pada setiap HTTP request dari Web dan Flutter ke domain tunnel publik untuk mencegah pencegatan halaman HTML Ngrok Free.
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Menjadi aturan baku implementasi network client frontend saat mengarah ke domain publik Ngrok.
+
+### [Status: DIAJUKAN] Penanganan Latensi ReAct AI & UX Loading State pada Frontend Client
+- **Tanggal & Inisiator:** `[28-09-2026]` - Huda
+- **Ide:** Menyetel HTTP timeout minimal 15–20 detik dan mengimplementasikan indikator visual loading/typing bubble di UI Flutter/Web selama proses ReAct Function Calling berlangsung (2–5 detik).
+- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Menjadi panduan desain UX dan network client frontend untuk mencegah timeout dan kebingungan pengguna.
 
 ### [Status: DIAJUKAN] Konfigurasi PYTHONUNBUFFERED=1 pada Service Daemon Systemd Raspi
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda
