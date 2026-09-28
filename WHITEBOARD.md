@@ -120,19 +120,17 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### ⚠️ The Bad / Technical Debt to Address
 - `[25-09-2026]` **[TERSELESAIKAN]** Chatbot di Web Frontend (`frontend/app.js`) resmi terhubung ke `POST /api/chat` Ngrok publik dan dilengkapi smart local fallback jika server sedang offline.
-- `[28-09-2026]` Tunnel Ngrok di Raspberry Pi saat ini berstatus offline sementara (`ERR_NGROK_3200`) selama proses maintenance service backend oleh Huda di lab. Frontend otomatis fallback ke local reasoning hingga daemon `ess-tunnel.service` di Raspi online kembali.
+- `[28-09-2026]` **[TERSELESAIKAN]** Tunnel Ngrok & Backend di Raspberry Pi 3B (`pikos`) telah aktif kembali secara permanen melalui `ess-backend.service` dan `ess-tunnel.service` (`https://entrap-glamour-spectrum.ngrok-free.dev`).
 - `[28-09-2026]` **[TERSELESAIKAN]** Parameter `history` pada `POST /api/chat` di backend telah diselaraskan di `ai_service.py` sehingga memori percakapan bertingkat Gemini aktif.
 - `[28-09-2026]` **[TERSELESAIKAN]** Backend telah menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter.
 - `[28-09-2026]` Daemon systemd di Raspi belum memiliki `PYTHONUNBUFFERED=1`, menyebabkan log output tertahan di buffer 4KB.
-- `[28-09-2026]` **[AUDIT REPO - KRITIS] Kesenjangan Status Repositori (Ghost Milestone oleh Zaki):** Klaim selesai di `WHITEBOARD.md` pada commit `79dc53c` tidak disertai push kode aktual. Berkas `frontend/app.js` dan `frontend/config.js` di Git remote masih versi lama (timeout 6s, tanpa header bypass Ngrok, tanpa payload history), serta direktori Flutter `frontend/lib/` sama sekali belum di-commit ke Git.
+- `[28-09-2026]` **[TERSELESAIKAN] Kesenjangan Status Repositori:** Zaki telah melakukan push kode aktual via 3 atomic commits (`feff43a`, `943e491`, `eb8dfbc`).
 - `[28-09-2026]` **[AUDIT REPO] Pelanggaran Batas Ukuran File UI (Pilar 3 RULEBOOK.md):** Berkas `frontend/app.js` (765 baris) dan `frontend/index.html` (552 baris) melanggar batas maksimal toleransi 250 baris monolitik. Perlu diagendakan modularisasi.
-- `[28-09-2026]` **[AUDIT REPO] Pelanggaran Konvensi Commit (Pilar 2 RULEBOOK.md):** Commit Zaki `4ad8452` menggunakan web upload langsung dengan pesan non-standar (`Add files via upload`) tanpa atomic commits.
 
 > [!WARNING]
 > **PERINGATAN & INSTRUKSI LEAD ARCHITECT UNTUK ZAKI:**
-> 1. **Segera Lakukan Push Kode Aktual**: Jangan hanya mencentang selesai di `WHITEBOARD.md`. Pastikan seluruh berkas Flutter di `frontend/lib/` serta pembaruan `frontend/app.js` dan `frontend/config.js` segera di-commit dan di-push ke branch `main`.
-> 2. **Tegakkan Disiplin Atomic Commits (Pilar 2)**: Pisahkan commit berkas Web dan Flutter secara terpisah dengan pesan konvensional terstandar (`feat(web): ...` dan `feat(flutter): ...`), bukan commit gelondongan apalagi GitHub Web upload.
-> 3. **Patuhi Batas 250 Baris (Pilar 3)**: Pastikan setiap berkas komponen Flutter di `frontend/lib/` mematuhi batas < 250 baris per file.
+> 1. **Tegakkan Disiplin Atomic Commits (Pilar 2)**: Pisahkan commit secara terpisah dengan pesan konvensional terstandar, hindari commit gelondongan atau upload via web GitHub.
+> 2. **Patuhi Batas 250 Baris (Pilar 3)**: Berkas monolitik `frontend/app.js` dan `frontend/index.html` harus dimodularisasi sesuai arsitektur komponen.
 
 ### 🚀 The Next Action (Rencana Aksi Selanjutnya)
 
@@ -141,16 +139,19 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Tambahkan endpoint data di `backend/app/api/routes.py`:
   - `GET /api/telemetry/latest`: pembacaan real-time buffer RTDB untuk gauges Flutter. *(Selesai)*
   - `GET /api/logs`: pembacaan riwayat agregasi menit Supabase untuk grafik Flutter. *(Selesai)*
+- [x] Tarik perubahan terbaru di Raspi (`git pull`), restart service backend dan tunnel di Raspi. *(Selesai - Status Active Running)*
+- [x] Verifikasi live call end-to-end `POST /api/chat`, `GET /health`, `GET /api/telemetry/latest`, `GET /api/logs` via domain Ngrok. *(Selesai - HTTP 200 OK)*
 - [ ] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi.
-- [ ] Tarik perubahan terbaru di Raspi (`git pull`), restart service backend dan tunnel di Raspi.
-- [ ] Nyalakan kembali daemon `ess-tunnel.service` di Raspberry Pi agar public gateway Ngrok aktif.
 
 **2. Sisi Frontend (Zaki & Web/Flutter Client):**
 - [x] **[PRIORITAS UTAMA]** Lakukan commit & push kode aktual `frontend/app.js` & `frontend/config.js` yang sudah memuat header bypass Ngrok, timeout 20s, dan payload history. *(Selesai)*
 - [x] **[PRIORITAS UTAMA]** Lakukan commit & push seluruh berkas struktur Flutter monorepo (`frontend/lib/`) ke remote Git. *(Selesai)*
 - [x] Lakukan uji coba build Android APK (`flutter build apk`) dan tes rendering Web di Chrome. *(Selesai - APK 20.9MB terkompilasi sukses)*
-- [ ] Verifikasi live call end-to-end `POST /api/chat` setelah daemon tunnel Ngrok diaktifkan kembali oleh Huda.
+- [x] Verifikasi live call end-to-end `POST /api/chat` setelah daemon tunnel Ngrok diaktifkan kembali. *(Selesai)*
 
 **3. Sisi Edge Hardware & Pengujian (Huda):**
-- [ ] Validasi pengujian respon gas fisik (uji tiup asap/korek gas/solder) untuk verifikasi transisi status ESS dari `NORMAL` ke `WARNING` / `DANGER` dan pencatatan anomali ke `ess_anomalies`.
-- [ ] Tunggu kedatangan komponen ESP32-C3 Super Mini + MQ-2 + Kipas + Driver Transistor + RGB LED untuk refactor rangkaian fisik edge node.
+- [x] Integrasikan sensor MQ-2 (Gas/Asap) pada test bench ESP32 DevKit V1: Pin D35 (GPIO 35, ADC1_CH7). *(Selesai - Quick Code di `hardware/test_bench/tes_wroom/tes_wroom.ino` dan `tes/tes.ino`)*
+- [ ] Flash sketch `tes_wroom.ino` ke ESP32 dan verifikasi pembacaan ganda (MQ-7 CO & MQ-2 Gas/Asap) di Serial Monitor 115200 baud.
+- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM dan transisi status K3 (`NORMAL` $\rightarrow$ `WARNING` / `DANGER`).
+- [ ] Tunggu kedatangan komponen ESP32-C3 Super Mini + Kipas + Driver Transistor + RGB LED untuk refactor arsitektur hardware final.
+
