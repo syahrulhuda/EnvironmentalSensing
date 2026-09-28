@@ -110,13 +110,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - `[25-09-2026]` Backend FastAPI + APScheduler berjalan sukses sebagai systemd daemon di Raspberry Pi 3B Debian 13 (`aarch64`).
 - `[25-09-2026]` Eksekusi ETL perdana di Raspi sukses: 187 baris agregat ter-upsert ke Supabase `ess_logs` dan 3.337 data usang RTDB terpotong otomatis via sliding window.
 - `[25-09-2026]` Ngrok static tunnel online dengan HTTPS permanen `https://entrap-glamour-spectrum.ngrok-free.dev` (`GET /health` dan `POST /api/chat` terverifikasi 200 OK dari internet publik).
-- `[28-09-2026]` **Integrasi Layer 5 Frontend Client (Zaki) selesai 100%:**
-  - Web Frontend (`frontend/app.js` & `frontend/config.js`) resmi terhubung ke gateway Ngrok dengan header bypass `'ngrok-skip-browser-warning': 'true'`.
-  - Penanganan latensi AI ESI berhasil diterapkan: timeout dinaikkan ke 20 detik dan animasi loading / typing bubble ("ESI sedang menganalisis sensor...") aktif di UI Web dan Flutter.
-  - Multi-turn conversation state (`history`) aktif di Web dan Flutter Client.
-  - Toolchain Flutter & Android SDK berhasil dikonfigurasi: `Android SDK 36.0.0 (cmdline-tools)`, lisensi Android disetujui, dan seluruh status `flutter doctor` centang hijau (`[✓] Flutter`, `[✓] Android toolchain`, `[✓] Chrome`, `[✓] Android Studio`).
-  - Audit kode Flutter (`flutter analyze`): **No issues found!** (0 error, 0 warning) pada 15 file arsitektur modular yang 100% mematuhi batas < 250 baris Pilar 3 RULEBOOK.md.
-  - Uji koneksi Hot Buffer Firebase RTDB live: **4.591 data telemetri riil** dari `NODE-MRS01` terbaca sempurna.
+- `[28-09-2026]` **Progres Toolchain Frontend Client (Zaki di lokal):**
+  - Toolchain Flutter & Android SDK berhasil dikonfigurasi di lokal: `Android SDK 36.0.0 (cmdline-tools)`, lisensi Android disetujui, dan status `flutter doctor` centang hijau (`[✓] Flutter`, `[✓] Android toolchain`, `[✓] Chrome`, `[✓] Android Studio`).
+  - *Catatan Audit:* Berkas fisik kode Flutter (`frontend/lib/`) serta revisi `frontend/app.js` dan `frontend/config.js` **belum di-push ke remote Git**.
 - `[28-09-2026]` **Pembaruan Backend Gateway Layer 4 (Huda) selesai & terverifikasi:**
   - Fungsi `_sanitize_history()` dan multi-turn conversation memory Gemini Flash-Lite aktif di `backend/app/services/ai_service.py`.
   - Endpoint REST baru aktif di `backend/app/api/routes.py`: `GET /api/telemetry/latest` (Hot Buffer RTDB) dan `GET /api/logs` (Warm Analytics Supabase).
@@ -128,6 +124,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - `[28-09-2026]` **[TERSELESAIKAN]** Parameter `history` pada `POST /api/chat` di backend telah diselaraskan di `ai_service.py` sehingga memori percakapan bertingkat Gemini aktif.
 - `[28-09-2026]` **[TERSELESAIKAN]** Backend telah menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter.
 - `[28-09-2026]` Daemon systemd di Raspi belum memiliki `PYTHONUNBUFFERED=1`, menyebabkan log output tertahan di buffer 4KB.
+- `[28-09-2026]` **[AUDIT REPO - KRITIS] Kesenjangan Status Repositori (Ghost Milestone oleh Zaki):** Klaim selesai di `WHITEBOARD.md` pada commit `79dc53c` tidak disertai push kode aktual. Berkas `frontend/app.js` dan `frontend/config.js` di Git remote masih versi lama (timeout 6s, tanpa header bypass Ngrok, tanpa payload history), serta direktori Flutter `frontend/lib/` sama sekali belum di-commit ke Git.
+- `[28-09-2026]` **[AUDIT REPO] Pelanggaran Batas Ukuran File UI (Pilar 3 RULEBOOK.md):** Berkas `frontend/app.js` (765 baris) dan `frontend/index.html` (552 baris) melanggar batas maksimal toleransi 250 baris monolitik. Perlu diagendakan modularisasi.
+- `[28-09-2026]` **[AUDIT REPO] Pelanggaran Konvensi Commit (Pilar 2 RULEBOOK.md):** Commit Zaki `4ad8452` menggunakan web upload langsung dengan pesan non-standar (`Add files via upload`) tanpa atomic commits.
+
+> [!WARNING]
+> **PERINGATAN & INSTRUKSI LEAD ARCHITECT UNTUK ZAKI:**
+> 1. **Segera Lakukan Push Kode Aktual**: Jangan hanya mencentang selesai di `WHITEBOARD.md`. Pastikan seluruh berkas Flutter di `frontend/lib/` serta pembaruan `frontend/app.js` dan `frontend/config.js` segera di-commit dan di-push ke branch `main`.
+> 2. **Tegakkan Disiplin Atomic Commits (Pilar 2)**: Pisahkan commit berkas Web dan Flutter secara terpisah dengan pesan konvensional terstandar (`feat(web): ...` dan `feat(flutter): ...`), bukan commit gelondongan apalagi GitHub Web upload.
+> 3. **Patuhi Batas 250 Baris (Pilar 3)**: Pastikan setiap berkas komponen Flutter di `frontend/lib/` mematuhi batas < 250 baris per file.
 
 ### 🚀 The Next Action (Rencana Aksi Selanjutnya)
 
@@ -141,9 +146,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] Nyalakan kembali daemon `ess-tunnel.service` di Raspberry Pi agar public gateway Ngrok aktif.
 
 **2. Sisi Frontend (Zaki & Web/Flutter Client):**
-- [x] Perbarui `frontend/config.js` agar `BACKEND_API_URL` mengarah ke URL publik: `https://entrap-glamour-spectrum.ngrok-free.dev`. *(Selesai)*
-- [x] Sambungkan logika chat di `frontend/app.js` dengan memanggil `POST /api/chat` (sertakan header `ngrok-skip-browser-warning: true`, payload `history`, timeout 20s, dan typing bubble). *(Selesai)*
-- [x] Selesaikan inisialisasi struktur Flutter monorepo (`frontend/lib/`) dan konfigurasi toolchain Android APK (`cmdline-tools`). *(Selesai)*
+- [ ] **[PRIORITAS UTAMA]** Lakukan commit & push kode aktual `frontend/app.js` & `frontend/config.js` yang sudah memuat header bypass Ngrok, timeout 20s, dan payload history.
+- [ ] **[PRIORITAS UTAMA]** Lakukan commit & push seluruh berkas struktur Flutter monorepo (`frontend/lib/`) ke remote Git.
 - [ ] Lakukan uji coba build Android APK (`flutter build apk`) dan tes rendering Web di Chrome.
 - [ ] Verifikasi live call end-to-end `POST /api/chat` setelah daemon tunnel Ngrok diaktifkan kembali oleh Huda.
 
