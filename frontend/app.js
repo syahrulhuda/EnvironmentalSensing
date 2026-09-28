@@ -550,6 +550,8 @@ function exportCSVData() {
 }
 
 // --- AI ASSISTANT CHATBOT LOGIC (ESI AGENT) ---
+let chatHistory = [];
+
 function appendUserMessage(text) {
   const feed = document.getElementById('aiChatFeed');
   if (!feed) return;
@@ -564,7 +566,35 @@ function appendUserMessage(text) {
   feed.scrollTop = feed.scrollHeight;
 }
 
+function showAITypingIndicator() {
+  const feed = document.getElementById('aiChatFeed');
+  if (!feed) return;
+  removeAITypingIndicator();
+  const indicator = document.createElement('div');
+  indicator.id = 'aiTypingIndicator';
+  indicator.className = 'flex gap-2.5 items-start animate-fadeIn';
+  indicator.innerHTML = `
+    <div class="w-6 h-6 rounded-md bg-purple-600/30 border border-purple-400/40 flex-shrink-0 flex items-center justify-center text-[10px] text-purple-300 font-bold font-mono">ESI</div>
+    <div class="bg-slate-800/80 rounded-2xl rounded-tl-none p-3 border border-white/5 text-slate-400 max-w-[90%] flex items-center gap-2 text-xs">
+      <span>ESI sedang menganalisis sensor...</span>
+      <span class="inline-flex gap-1 items-center">
+        <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></span>
+        <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse [animation-delay:200ms]"></span>
+        <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse [animation-delay:400ms]"></span>
+      </span>
+    </div>
+  `;
+  feed.appendChild(indicator);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function removeAITypingIndicator() {
+  const ind = document.getElementById('aiTypingIndicator');
+  if (ind) ind.remove();
+}
+
 function appendAIMessage(text) {
+  removeAITypingIndicator();
   const feed = document.getElementById('aiChatFeed');
   if (!feed) return;
   const msg = document.createElement('div');
@@ -597,18 +627,25 @@ function sendQuickPrompt(promptText) {
 
 // Terhubung ke Layer 4 FastAPI Gateway (POST /api/chat)
 async function processAIQuery(query) {
+  showAITypingIndicator();
   const baseBackend = (typeof CONFIG !== 'undefined' && CONFIG.BACKEND_API_URL) ? CONFIG.BACKEND_API_URL.replace(/\/+$/, "") : "";
 
-  // 1. Coba kirim ke Backend FastAPI ESI Agent
+  // 1. Coba kirim ke Backend FastAPI ESI Agent dengan timeout 20 detik & payload history
   if (baseBackend) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const res = await fetch(`${baseBackend}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: query }),
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: JSON.stringify({
+          message: query,
+          history: chatHistory
+        }),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -616,7 +653,10 @@ async function processAIQuery(query) {
       if (res.ok) {
         const json = await res.json();
         if (json && json.reply) {
+          removeAITypingIndicator();
           appendAIMessage(json.reply);
+          chatHistory.push({ role: 'user', content: query });
+          chatHistory.push({ role: 'model', content: json.reply });
           return;
         }
       }
@@ -627,6 +667,7 @@ async function processAIQuery(query) {
 
   // 2. Fallback cerdas lokal (jika Raspberry Pi / backend offline)
   setTimeout(() => {
+    removeAITypingIndicator();
     const q = query.toLowerCase();
     let reply = "";
     if (q.includes('suhu') || q.includes('temp') || q.includes('kelembapan') || q.includes('dht22')) {
@@ -652,7 +693,9 @@ async function processAIQuery(query) {
       reply = `Telemetri real-time saat ini: Suhu: <strong>${state.temp}°C</strong>, MQ-7 (CO): <strong>${state.mq7} PPM</strong>, MQ-2 (Asap): <strong>${state.mq2} PPM</strong>. Semua sensor terpantau oleh edge node <code>${state.nodeId}</code>. Silakan pilih tombol pertanyaan cepat di atas atau tanyakan parameter keselamatan lainnya.`;
     }
     appendAIMessage(reply);
-  }, 350);
+    chatHistory.push({ role: 'user', content: query });
+    chatHistory.push({ role: 'model', content: reply });
+  }, 450);
 }
 
 // --- CONFIGURATION MODAL CONTROLS ---

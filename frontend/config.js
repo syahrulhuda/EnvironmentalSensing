@@ -10,8 +10,8 @@ const CONFIG = {
   // 1. Layer 2 Transport: Hot Buffer Firebase Realtime Database
   FIREBASE_DATABASE_URL: "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json",
 
-  // 2. Layer 4 Intelligence: FastAPI Gateway & ESI AI Agent (Raspberry Pi 3B / Cloudflare Tunnel / Local)
-  BACKEND_API_URL: "http://localhost:8000",
+  // 2. Layer 4 Intelligence: FastAPI Gateway & ESI AI Agent (Raspberry Pi 3B on-premise via Ngrok)
+  BACKEND_API_URL: "https://entrap-glamour-spectrum.ngrok-free.dev",
 
   // 3. Identitas Perangkat Edge Default
   DEFAULT_NODE_ID: "NODE-MRS01",
