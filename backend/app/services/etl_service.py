@@ -1,7 +1,33 @@
+import re
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Tuple
 from app.core.config import settings
-from app.core.database import fetch_rtdb, upsert_logs, patch_rtdb
+from app.core.database import (
+    fetch_rtdb, upsert_logs, patch_rtdb,
+    upsert_anomaly, query_active_anomaly
+)
+
+def calc_hazard_priority(mq7_ppm: int, mq2_ppm: int) -> Tuple[str, int, float]:
+    """
+    Menghitung gas paling berbahaya berdasarkan rasio ambang batas K3:
+    - MQ-7 (CO): Warn=50, Danger=150
+    - MQ-2 (Gas/Smoke): Warn=150, Danger=400
+    Returns: (sensor_name, peak_ppm, hazard_score)
+    """
+    tier_mq7 = 2 if mq7_ppm >= 150 else (1 if mq7_ppm >= 50 else 0)
+    tier_mq2 = 2 if mq2_ppm >= 400 else (1 if mq2_ppm >= 150 else 0)
+    h_mq7 = mq7_ppm / 50.0
+    h_mq2 = mq2_ppm / 150.0
+
+    if tier_mq7 > tier_mq2:
+        return "MQ-7", mq7_ppm, tier_mq7 * 100.0 + h_mq7
+    elif tier_mq2 > tier_mq7:
+        return "MQ-2", mq2_ppm, tier_mq2 * 100.0 + h_mq2
+    else:
+        if h_mq7 >= h_mq2:
+            return "MQ-7", mq7_ppm, tier_mq7 * 100.0 + h_mq7
+        else:
+            return "MQ-2", mq2_ppm, tier_mq2 * 100.0 + h_mq2
 
 def aggregate_telemetry(raw_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     buckets: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
@@ -95,6 +121,94 @@ def prune_buffer(raw_data: Dict[str, Any], retention_hours: float = settings.RET
         return len(stale_keys)
     return 0
 
+def process_incident_sessions(upserted_rows: List[Dict[str, Any]]) -> None:
+    if not upserted_rows:
+        return
+
+    sorted_logs = sorted(upserted_rows, key=lambda x: x.get("recorded_at", ""))
+    active_anomaly = query_active_anomaly()
+
+    for log in sorted_logs:
+        status = log.get("worst_status", "NORMAL")
+        peak_co = log.get("max_mq7_ppm") or 0
+        peak_gas = log.get("max_mq2_ppm") or 0
+        log_id = log["id"]
+        rec_at = log["recorded_at"]
+
+        if status in ("WARNING", "DANGER"):
+            sensor, peak_val, _ = calc_hazard_priority(peak_co, peak_gas)
+            if active_anomaly is None:
+                desc = f"{status}: PEAK {peak_val} (MQ-7: {peak_co}, MQ-2: {peak_gas})"
+                new_anomaly = {
+                    "id": log_id,
+                    "incident_type": status,
+                    "peak_log_id": log_id,
+                    "end_log_id": None,
+                    "duration_minutes": 1,
+                    "peak_ppm": peak_val,
+                    "description": desc,
+                    "resolved": False,
+                    "started_at": rec_at,
+                    "ended_at": None,
+                    "created_at": rec_at
+                }
+                if upsert_anomaly(new_anomaly):
+                    active_anomaly = new_anomaly
+                    print(f"[ESS ETL] Insiden baru #{log_id} ({status}) dibuka pada {rec_at} [Peak: {peak_val} PPM by {sensor}].")
+            else:
+                updated = False
+                match = re.search(r"MQ-7:\s*(\d+),\s*MQ-2:\s*(\d+)", active_anomaly.get("description", ""))
+                prev_mq7 = int(match.group(1)) if match else 0
+                prev_mq2 = int(match.group(2)) if match else 0
+                
+                sess_mq7 = max(prev_mq7, peak_co)
+                sess_mq2 = max(prev_mq2, peak_gas)
+                win_sensor, new_peak, new_score = calc_hazard_priority(sess_mq7, sess_mq2)
+                
+                _, _, old_score = calc_hazard_priority(prev_mq7, prev_mq2)
+                if new_score > old_score:
+                    active_anomaly["peak_ppm"] = new_peak
+                    active_anomaly["peak_log_id"] = log_id
+                    updated = True
+
+                if status == "DANGER" and active_anomaly.get("incident_type") != "DANGER":
+                    active_anomaly["incident_type"] = "DANGER"
+                    updated = True
+
+                new_desc = f"{active_anomaly['incident_type']}: PEAK {new_peak} (MQ-7: {sess_mq7}, MQ-2: {sess_mq2})"
+                if active_anomaly.get("description") != new_desc:
+                    active_anomaly["description"] = new_desc
+                    updated = True
+
+                try:
+                    start_str = active_anomaly.get("started_at") or active_anomaly.get("created_at")
+                    dt_start = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                    dt_cur = datetime.fromisoformat(rec_at.replace("Z", "+00:00"))
+                    dur = max(1, int((dt_cur - dt_start).total_seconds() / 60.0) + 1)
+                    active_anomaly["duration_minutes"] = dur
+                    updated = True
+                except Exception:
+                    pass
+
+                if updated:
+                    upsert_anomaly(active_anomaly)
+        else:
+            if active_anomaly is not None:
+                active_anomaly["end_log_id"] = log_id
+                active_anomaly["ended_at"] = rec_at
+                try:
+                    start_str = active_anomaly.get("started_at") or active_anomaly.get("created_at")
+                    dt_start = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                    dt_end = datetime.fromisoformat(rec_at.replace("Z", "+00:00"))
+                    dur = max(1, int((dt_end - dt_start).total_seconds() / 60.0))
+                    active_anomaly["duration_minutes"] = dur
+                except Exception:
+                    pass
+
+                upsert_anomaly(active_anomaly)
+                print(f"[ESS ETL] Insiden #{active_anomaly['id']} resmi ditutup (udara normal kembali pada {rec_at}, durasi {active_anomaly.get('duration_minutes')} m).")
+                active_anomaly = None
+
 def run_etl() -> bool:
     print(f"[ESS ETL] Siklus dimulai pada {datetime.now(timezone.utc).isoformat()}")
     raw_data = fetch_rtdb()
@@ -107,9 +221,12 @@ def run_etl() -> bool:
         print("[ESS ETL] Tidak ada data valid setelah agregasi.")
         return False
 
-    if not upsert_logs(records):
+    upserted_rows = upsert_logs(records)
+    if not upserted_rows:
         print("[ESS ETL ERROR] Gagal menyimpan ke Supabase. Pruning dibatalkan.")
         return False
+
+    process_incident_sessions(upserted_rows)
 
     pruned = prune_buffer(raw_data)
     print(f"[ESS ETL] Sukses mengagregasi {len(records)} baris & memangkas {pruned} data usang.")
