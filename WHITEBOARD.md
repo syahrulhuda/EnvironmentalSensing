@@ -98,60 +98,242 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ---
 
-# 🔍 Section 3: Audit Plan (The Ruthless Audit)
+# 🔍 Section 3: Deep Audit (The Ruthless Audit)
+> `[30-09-2026]` **Full Codebase Deep Audit** — Frontend (Flutter + Web JS), Backend (FastAPI + Python), Hardware (ESP32 C++), Endpoints, Security, Tech Debt — Huda.
 
-### 🌟 The Good
+---
+
+## 🌟 THE GOOD — Apa yang Sudah Benar & Kokoh
+
+### Arsitektur & Design
+- `[30-09-2026]` **Decoupled 5-Layer Architecture berhasil diimplementasikan secara nyata.** Hardware, Backend, dan Frontend berdiri independen. Matinya satu layer tidak menghancurkan keseluruhan sistem (ada fallback simulasi di Flutter `telemetry_service.dart:49` dan local response di `esi_chat_service.dart:41`).
+- `[30-09-2026]` **Hybrid Hot-Warm Storage Pattern teruji produksi.** Firebase RTDB sebagai buffer 2 jam + Supabase sebagai gudang analitik permanen. ETL sliding window (`etl_service.py`) beroperasi idempotent dengan `ON CONFLICT` upsert — **sesuai Pilar 1 RULEBOOK**.
+- `[30-09-2026]` **Non-blocking millis() pattern dipatuhi di seluruh firmware** — baik `main.cpp` (Wokwi C3) maupun `tes_wroom.ino` (WROOM-32 test bench). Tidak ada `delay()` di `loop()` — **patuh Pilar 3 RULEBOOK**.
+
+### Backend Quality
+- `[30-09-2026]` **Modularisasi backend sangat rapi.** Struktur `app/core/`, `app/api/`, `app/services/`, `app/tools/`, `app/data/` masing-masing punya tanggung jawab jelas (Single Responsibility). Total 10 file Python aktif, masing-masing < 170 baris.
+- `[30-09-2026]` **Type hints Python terpasang konsisten** di seluruh fungsi: `config.py`, `database.py`, `etl_service.py`, `telemetry_tool.py`, `analytics_tool.py`. Sesuai **Pilar 3 RULEBOOK**.
+- `[30-09-2026]` **Error handling eksplisit** di semua fungsi database (`fetch_rtdb`, `upsert_logs`, `query_logs`) — tidak ada silent pass. Pesan error tercetak ke stdout dengan label `[ESS DB]`.
+- `[30-09-2026]` **Backward-compatible shim files** (`ai_agent.py`, `etl_worker.py`) memastikan skrip lama tidak patah saat arsitektur direfaktor ke modular — pendekatan profesional.
+- `[30-09-2026]` **Pydantic model validation** pada `ChatRequest` dan `ChatResponse` di `routes.py` menjamin skema API terdokumentasi otomatis di Swagger/OpenAPI.
+- `[30-09-2026]` **ETL pipeline robust:** `aggregate_telemetry()` memvalidasi setiap field (`None` check), mengonversi tipe data secara aman, dan melakukan worst-case status escalation (`DANGER > WARNING > NORMAL`).
+
+### Frontend Quality (Flutter)
+- `[30-09-2026]` **Arsitektur Flutter modular dan rapi.** 15 file Dart, tidak ada yang melebihi 188 baris. Pemisahan: `core/`, `models/`, `screens/`, `services/`, `widgets/` — **patuh Pilar 3 RULEBOOK** (< 250 baris per file).
+- `[30-09-2026]` **Design system terkonsolidasi** di `app_colors.dart` (11 warna semantik) dan `api_constants.dart` (threshold K3 terpusat). Tidak ada magic number di widget.
+- `[30-09-2026]` **Responsive layout** menggunakan `LayoutBuilder` + `GridView.count` dengan breakpoint 700px — adaptif untuk Web dan Mobile.
+- `[30-09-2026]` **Custom chart rendering** via `CustomPaint` di `telemetry_chart_widget.dart` — menghindari dependency berat `fl_chart` untuk grafik real-time sederhana.
+
+### Hardware Quality
+- `[30-09-2026]` **Firmware ESP32-C3 (`main.cpp`) sangat terstruktur** — 9 modul terpisah (A-I) dengan komentar seksional yang jelas. 401 baris dengan logika LCD paging, RGB strobe, REST POST, dan ADC PPM estimation yang lengkap.
+- `[30-09-2026]` **Test bench WROOM-32 (`tes_wroom.ino`) production-ready** — Firebase HTTPS REST langsung dari ESP32, server timestamp (`.sv: timestamp`), dan format JSON manual tanpa ArduinoJson overhead.
+
+### DevOps & Infra
+- `[30-09-2026]` **Systemd service file + setup script profesional** — `setup_raspi.sh` otomatis setup venv, install deps, registrasi service dinamis, dan validasi `.env`. One-command deployment.
+- `[30-09-2026]` **`.gitignore` komprehensif** — 53 baris mencakup `.env`, `secrets.h`, `venv/`, `build/`, `__pycache__/`, dan artifact PlatformIO.
+- `[30-09-2026]` **`.env.example` tersedia** dengan placeholder kredensial yang benar — memudahkan onboarding developer baru.
+
+### Previous Audit Items (Dipertahankan)
 - `[22-09-2026]` Pengujian hardware fisik ESP32 + MQ-7 + DHT22 berjalan 1 jam penuh (**1.188 sampel**) dengan **0% packet loss** dan **0 null errors**.
 - `[22-09-2026]` Pipeline ETL Python berhasil mengekstrak 1.661 data mentah dan meng-upsert 84 baris agregasi ke Supabase dengan status HTTP 201 Created.
 - `[23-09-2026]` Monorepo GitHub resmi terhubung dan ter-push dengan sanitasi kredensial 100% aman.
-- `[24-09-2026]` Skema relasional Supabase di-rebrand secara bersih menjadi prefix `ess_` (`ess_zones`, `ess_devices`, `ess_logs`, `ess_anomalies`).
-- `[24-09-2026]` Uji ketahanan continuous running 2 jam penuh berhasil gemilang: **2.826 titik data mentah** terkirim dari hardware ke Firebase RTDB tanpa putus.
-- `[24-09-2026]` Sensor MQ-7 berhasil mendeteksi aktivitas pematerian (*soldering*) riil di lab: konsentrasi gas naik mulus dari 5 PPM ke 21–25 PPM dengan puncak 35 PPM (ADC 682).
-- `[25-09-2026]` Backend FastAPI + APScheduler berjalan sukses sebagai systemd daemon di Raspberry Pi 3B Debian 13 (`aarch64`).
-- `[25-09-2026]` Eksekusi ETL perdana di Raspi sukses: 187 baris agregat ter-upsert ke Supabase `ess_logs` dan 3.337 data usang RTDB terpotong otomatis via sliding window.
-- `[25-09-2026]` Ngrok static tunnel online dengan HTTPS permanen `https://entrap-glamour-spectrum.ngrok-free.dev` (`GET /health` dan `POST /api/chat` terverifikasi 200 OK dari internet publik).
-- `[28-09-2026]` **Progres Toolchain Frontend Client (Zaki di lokal):**
-  - Toolchain Flutter & Android SDK berhasil dikonfigurasi di lokal: `Android SDK 36.0.0 (cmdline-tools)`, lisensi Android disetujui, dan status `flutter doctor` centang hijau (`[✓] Flutter`, `[✓] Android toolchain`, `[✓] Chrome`, `[✓] Android Studio`).
-  - *Catatan Audit:* Seluruh berkas kode Flutter (`frontend/lib/` 15 file modular < 188 baris), revisi `frontend/app.js`, `frontend/config.js`, dan APK release (20.9MB) **resmi terkomit & ter-push ke branch main**.
-- `[28-09-2026]` **Pembaruan Backend Gateway Layer 4 (Huda) selesai & terverifikasi:**
-  - Fungsi `_sanitize_history()` dan multi-turn conversation memory Gemini Flash-Lite aktif di `backend/app/services/ai_service.py`.
-  - Endpoint REST baru aktif di `backend/app/api/routes.py`: `GET /api/telemetry/latest` (Hot Buffer RTDB) dan `GET /api/logs` (Warm Analytics Supabase).
-  - Skema Pydantic `ChatMessage` terdaftar rapi pada dokumentasi OpenAPI/Swagger (`/docs`).
+- `[24-09-2026]` Uji ketahanan continuous running 2 jam penuh: **2.826 titik data mentah** terkirim tanpa putus.
+- `[24-09-2026]` Sensor MQ-7 berhasil mendeteksi aktivitas pematerian riil di lab: puncak 35 PPM (ADC 682).
+- `[25-09-2026]` Backend + Ngrok tunnel berjalan sukses 24/7 di Raspberry Pi 3B Debian 13.
+- `[28-09-2026]` Flutter toolchain konfigurasi lengkap. APK release 20.9MB terkompilasi sukses.
+- `[28-09-2026]` Multi-turn conversation, endpoint REST data, Pydantic schema selesai & terverifikasi.
 
-### ⚠️ The Bad / Technical Debt to Address
-- `[25-09-2026]` **[TERSELESAIKAN]** Chatbot di Web Frontend (`frontend/app.js`) resmi terhubung ke `POST /api/chat` Ngrok publik dan dilengkapi smart local fallback jika server sedang offline.
-- `[28-09-2026]` **[TERSELESAIKAN]** Tunnel Ngrok & Backend di Raspberry Pi 3B (`pikos`) telah aktif kembali secara permanen melalui `ess-backend.service` dan `ess-tunnel.service` (`https://entrap-glamour-spectrum.ngrok-free.dev`).
-- `[28-09-2026]` **[TERSELESAIKAN]** Parameter `history` pada `POST /api/chat` di backend telah diselaraskan di `ai_service.py` sehingga memori percakapan bertingkat Gemini aktif.
-- `[28-09-2026]` **[TERSELESAIKAN]** Backend telah menyediakan endpoint REST data (`/api/telemetry/latest`, `/api/logs`) untuk layar gauge & chart Flutter.
-- `[28-09-2026]` Daemon systemd di Raspi belum memiliki `PYTHONUNBUFFERED=1`, menyebabkan log output tertahan di buffer 4KB.
-- `[28-09-2026]` **[TERSELESAIKAN] Kesenjangan Status Repositori:** Zaki telah melakukan push kode aktual via 3 atomic commits (`feff43a`, `943e491`, `eb8dfbc`).
-- `[28-09-2026]` **[AUDIT REPO] Pelanggaran Batas Ukuran File UI (Pilar 3 RULEBOOK.md):** Berkas `frontend/app.js` (765 baris) dan `frontend/index.html` (552 baris) melanggar batas maksimal toleransi 250 baris monolitik. Perlu diagendakan modularisasi.
+---
+
+## ⚠️ THE BAD — Technical Debt & Kelemahan yang Perlu Ditangani
+
+### 🔴 [SEVERITY: HIGH] Backend Tech Debt
+
+1. **`[TD-B01]` CORS Wildcard Terbuka Lebar** — `main.py:31` → `allow_origins=["*"]`
+   - **Risiko:** Seluruh domain di internet bisa melakukan request ke API backend, termasuk site malicious.
+   - **Solusi:** Ganti dengan whitelist eksplisit: `["https://entrap-glamour-spectrum.ngrok-free.dev", "http://localhost:3000"]`.
+
+2. **`[TD-B02]` Firebase RTDB Tanpa Autentikasi** — `database.py:8` → HTTP GET tanpa token.
+   - **Risiko:** Siapapun yang tahu URL RTDB bisa membaca/menghapus seluruh buffer telemetri (rules: `.read: true`).
+   - **Solusi:** Aktifkan Firebase Auth Rules atau tambahkan `?auth=<database_secret>` pada URL.
+
+3. **`[TD-B03]` `config.py:14-15` Hardcoded Fallback Firebase URL & `config.py:25` Hardcoded Supabase URL**
+   - **Risiko:** Jika `.env` kosong, default fallback langsung menunjuk ke URL produksi. Ini bertentangan dengan spirit *fail-fast*. Idealnya, backend menolak start jika variabel kritis tidak diisi.
+   - **Severity:** Medium — saat ini aman karena `.env` aktif, tapi berbahaya saat migration/onboarding.
+
+4. **`[TD-B04]` `pull_and_audit.py:11` URL Firebase Diduplikasi (Hardcoded)**
+   - Script audit mandiri memiliki `DATABASE_URL` sendiri yang terpisah dari `config.py`, melanggar DRY (Don't Repeat Yourself). Satu sumber URL berubah, yang lain bisa tertinggal.
+   - **Solusi:** Import dari `app.core.config.settings.FIREBASE_RTDB_URL`.
+
+5. **`[TD-B05]` Tidak Ada Rate Limiting pada API Endpoints**
+   - `POST /api/chat` dan `POST /api/etl/trigger` terbuka tanpa pembatasan request.
+   - **Risiko:** Mudah di-flood/DDoS. Endpoint `/api/chat` memanggil Gemini API berbayar — flooding bisa menguras kuota/biaya.
+   - **Solusi:** Tambahkan `slowapi` atau middleware rate limiter sederhana.
+
+6. **`[TD-B06]` `routes.py:42-44` Import `json` di Dalam Fungsi**
+   - `import json` dilakukan di dalam body fungsi `get_latest_telemetry()`, bukan di top-level. Ini berfungsi tapi melanggar konvensi PEP 8 dan menambah overhead marginal tiap request.
+
+7. **`[TD-B07]` `requirements.txt` Mendaftarkan `requests==2.32.3` tapi Tidak Pernah Dipakai**
+   - Backend menggunakan `urllib.request` (stdlib) untuk semua HTTP. Dependency `requests` unused — menambah ukuran install tanpa fungsi. **Hapus.**
+
+8. **`[TD-B08]` `chat_cli.py` Tidak Menyimpan History Multi-turn**
+   - CLI chatbot memanggil `ask_esi(user_input)` tanpa passing `history`. Percakapan tidak memiliki konteks riwayat. Mudah diperbaiki tapi saat ini *broken*.
+
+### 🟡 [SEVERITY: MEDIUM] Frontend Tech Debt
+
+9. **`[TD-F01]` Web Frontend Monolitik (`app.js` 34KB, `index.html` 33KB)**
+   - Dua file masing-masing > 700 baris. **Melanggar Pilar 3 RULEBOOK** (batas 250 baris).
+   - **Solusi:** Modularisasi menjadi komponen terpisah: `chart.js`, `chat.js`, `gauges.js`, `settings.js`.
+
+10. **`[TD-F02]` Flutter `TelemetryService` Langsung Polling Firebase RTDB**
+    - `telemetry_service.dart:27` → Flutter menembak langsung ke Firebase RTDB URL, bukan melalui FastAPI gateway.
+    - **Implikasi:** Melanggar prinsip **single gateway** (Pilar 5: Client tidak boleh pegang kredensial database langsung). Meskipun RTDB URL bukan secret, pola ini tidak scalable.
+    - **Solusi:** Ganti dengan polling ke `GET /api/telemetry/latest` via backend gateway.
+
+11. **`[TD-F03]` `fl_chart` Dependency Terdaftar tapi Tidak Dipakai**
+    - `pubspec.yaml:14` → `fl_chart: ^0.69.0` terdaftar, tapi chart real-time menggunakan `CustomPaint` manual. Dependency unused 100% — menambah ukuran build.
+
+12. **`[TD-F04]` `shared_preferences` Dependency Terdaftar tapi Tidak Dipakai**
+    - `pubspec.yaml:15` → `shared_preferences: ^2.3.2` terdaftar tapi tidak ada import di seluruh `lib/`. Dead dependency.
+
+13. **`[TD-F05]` `intl` Dependency Terdaftar tapi Tidak Dipakai**
+    - `pubspec.yaml:13` → `intl: ^0.19.0` tidak diimport di file manapun. Dead dependency.
+
+14. **`[TD-F06]` `TelemetryModel.fromJson()` Default Value Menyembunyikan Error**
+    - `telemetry_model.dart:30` → `json['mq2_ppm'] ?? json['mq2'] ?? 100` — jika kedua key absent, default `100` PPM membuat UI menampilkan pembacaan palsu. Ini langsung melanggar **Pilar 1 RULEBOOK** (jangan menyembunyikan anomali).
+    - **Solusi:** Default ke `0` bukan `100`, atau tampilkan indikator "No Data".
+
+15. **`[TD-F07]` Dashboard `isDanger` Logic Tidak Memeriksa MQ-2 Threshold**
+    - `dashboard_screen.dart:65-67` → Kondisi `isDanger` hanya cek `temperature >= 35` dan `mq7CoPpm >= 50`, tapi **tidak cek `mq2SmokePpm >= 300`**. Jika asap meledak tapi CO rendah, banner tetap hijau.
+    - **Solusi:** Tambahkan `|| _current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold`.
+
+16. **`[TD-F08]` GPIO Label di Dashboard Tidak Sesuai Hardware Aktual**
+    - `dashboard_screen.dart:128,138,149` → Label `DHT22 • GPIO 4`, `MQ-7 • GPIO 1`, `MQ-2 • GPIO 0` merujuk pinout ESP32-C3 Super Mini (Wokwi). Hardware test bench aktual (WROOM-32) menggunakan GPIO 19, 34, 35.
+    - **Implikasi:** Membingungkan pengguna saat debugging hardware.
+
+17. **`[TD-F09]` `EsiChatBottomSheet` Tidak Scroll ke Pesan Terbaru**
+    - `esi_chat_bottom_sheet.dart` → ListView tidak memiliki `ScrollController` yang auto-scroll ke bottom saat pesan baru ditambahkan. UX buruk pada percakapan panjang.
+
+### 🟡 [SEVERITY: MEDIUM] Hardware Tech Debt
+
+18. **`[TD-H01]` Ambang Batas K3 Tidak Konsisten Antar Komponen**
+    | Parameter | `tes_wroom.ino` | `main.cpp` | `ai_service.py` | `api_constants.dart` | `config.js` |
+    |---|---|---|---|---|---|
+    | MQ-7 WARNING | 50 PPM | 50 PPM | 50 PPM | 50 PPM | 50 PPM |
+    | MQ-7 DANGER | 150 PPM | 150 PPM | 150 PPM | — | — |
+    | MQ-2 WARNING | 150 PPM | 300 PPM | 150 PPM | 300 PPM | 300 PPM |
+    | MQ-2 DANGER | 400 PPM | 600 PPM | 400 PPM | — | — |
+    - **Inkonsistensi kritis:** `main.cpp` (Wokwi) memakai threshold MQ-2 WARNING=300 & DANGER=600, sementara `tes_wroom.ino` (produksi) pakai 150 & 400. Frontend ikut `main.cpp`. **Perlu satu sumber kebenaran.**
+
+19. **`[TD-H02]` Kurva PPM Estimasi Berbeda Antar Firmware**
+    - `main.cpp:364` → MQ-2 baseline 800 ADC = 10 PPM, range map ke 1000 PPM.
+    - `tes_wroom.ino:56` → MQ-2 baseline 300 ADC = 10 PPM, range map ke 1000 PPM.
+    - Dua kurva berbeda = hasil PPM tidak comparable. Ini **masalah saintifik** yang harus distandardisasi sebelum laporan akhir.
+
+20. **`[TD-H03]` `main.cpp` Masih Pakai `StaticJsonDocument<256>` (ArduinoJson v6)**
+    - ArduinoJson v7 sudah memperkenalkan API baru (`JsonDocument`). Pinned ke v6 — perlu upgrade saat refactor C3.
+
+---
+
+## 💀 THE UGLY — Kerentanan Keamanan & Masalah Kritis
+
+### 🔴🔴 [SEVERITY: CRITICAL] Security Vulnerabilities
+
+21. **`[SEC-01]` 🚨 KREDENSIAL WI-FI HARDCODED DI SOURCE CODE YANG TER-PUSH KE GITHUB**
+    - `hardware/test_bench/tes_wroom/tes_wroom.ino:25-26`:
+      ```cpp
+      const char* WIFI_SSID = "Poltekom Hotspot";
+      const char* WIFI_PASS = "poltekomjaya";
+      ```
+    - **MELANGGAR PILAR 5 RULEBOOK** (Zero Hardcoded Secrets). Password Wi-Fi kampus POLTEKOM ter-expose publik di GitHub.
+    - **AKSI SEGERA:** Ganti password di infrastruktur kampus, refaktor ke `#include "secrets.h"`, dan jalankan `git filter-branch` / `BFG Repo Cleaner` untuk menghapus dari history Git.
+
+22. **`[SEC-02]` 🚨 FIREBASE RTDB URL TANPA AUTENTIKASI (PUBLIC READ/WRITE)**
+    - Endpoint `https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json` bisa diakses oleh **siapapun** tanpa token.
+    - Siapapun bisa: `curl -X DELETE <URL>` → **menghapus seluruh buffer telemetri**.
+    - **AKSI SEGERA:** Atur Firebase Security Rules:
+      ```json
+      { "rules": { "telemetry": { "buffer": { ".read": "auth != null", ".write": "auth != null" } } } }
+      ```
+
+23. **`[SEC-03]` `client.setInsecure()` Bypass SSL di Firmware Produksi**
+    - `tes_wroom.ino:75` → `client.setInsecure()` menonaktifkan validasi sertifikat SSL.
+    - **Risiko:** Man-in-the-middle attack bisa menginjeksi data telemetri palsu ke RTDB.
+    - **Mitigasi:** Pin root CA certificate Firebase di flash ESP32, atau terima risiko ini sebagai trade-off embedded (dengan dokumentasi eksplisit di README).
+
+24. **`[SEC-04]` CORS + `allow_credentials=True` dengan `allow_origins=["*"]`**
+    - `main.py:31-32` → Kombinasi wildcard origin + credentials = **browser security nightmare** (meskipun browser modern memblokir ini secara otomatis, konfigurasi tetap salah secara definitif).
+    - **Solusi:** Set `allow_credentials=False` atau ganti `allow_origins` ke whitelist eksplisit.
+
+25. **`[SEC-05]` Endpoint `POST /api/etl/trigger` Tanpa Autentikasi**
+    - Siapapun yang tahu URL bisa memicu ETL cycle kapan saja → potensi resource exhaustion di Raspi, dan pruning data prematur.
+    - **Solusi:** Tambahkan API key header check sederhana (`X-ESS-Admin-Key`) atau non-aktifkan dari route publik.
+
+26. **`[SEC-06]` Supabase `anon` Key Digunakan Sebagai `Service Role` Key**
+    - `database.py:38-39` → `Authorization: Bearer {settings.SUPABASE_KEY}` — jika ini adalah `anon` key, maka RLS (Row Level Security) Supabase akan membatasi akses. Tapi jika ini adalah `service_role` key (terlihat dari prefix `sb_secret_`), maka key ini bypass seluruh RLS.
+    - **Risiko:** Key ini ada di `.env` (aman), tapi jika `.env` pernah bocor (via log, screenshot, dsb), seluruh database Supabase terbuka.
+
+### 🟡 [SEVERITY: MEDIUM] Reliability Issues
+
+27. **`[REL-01]` ETL Scheduler Tidak Punya Error Recovery / Retry**
+    - `main.py:16` → `scheduler.add_job(func=run_etl, trigger="interval", minutes=15)` — jika `run_etl()` gagal (misal Supabase down), job hanya mencetak error dan menunggu 15 menit lagi. Tidak ada exponential backoff atau alert.
+
+28. **`[REL-02]` `telemetry_tool.py:20` Asumsi `entries.last` = Data Terbaru**
+    - `matching[-1]` mengambil entry terakhir dari dict values. Firebase RTDB push keys **tidak dijamin berurutan** secara kronologis di semua kasus (terutama setelah delete/patch).
+    - **Solusi:** Sort by `created_at` descending, ambil index 0.
+
+29. **`[REL-03]` `telemetry_service.dart:40` Catch-All Silently Falls Back ke Simulasi**
+    - Jika Firebase RTDB down, Flutter diam-diam menampilkan data simulasi palsu **tanpa indikasi apapun ke pengguna**. Operator bengkel bisa mengira semua aman padahal sensor offline.
+    - **Solusi:** Tampilkan badge "OFFLINE / SIMULATED DATA" yang jelas di UI saat fallback aktif.
 
 > [!WARNING]
 > **PERINGATAN & INSTRUKSI LEAD ARCHITECT UNTUK ZAKI:**
 > 1. **Tegakkan Disiplin Atomic Commits (Pilar 2)**: Pisahkan commit secara terpisah dengan pesan konvensional terstandar, hindari commit gelondongan atau upload via web GitHub.
 > 2. **Patuhi Batas 250 Baris (Pilar 3)**: Berkas monolitik `frontend/app.js` dan `frontend/index.html` harus dimodularisasi sesuai arsitektur komponen.
 
-### 🚀 The Next Action (Rencana Aksi Selanjutnya)
+---
 
-**1. Sisi Backend (Huda):**
-- [x] Perbaiki bug multi-turn conversation di `backend/app/services/ai_service.py` dengan mengonversi list `history` ke format pesan Gemini (`role: user / model`). *(Selesai)*
-- [x] Tambahkan endpoint data di `backend/app/api/routes.py`:
-  - `GET /api/telemetry/latest`: pembacaan real-time buffer RTDB untuk gauges Flutter. *(Selesai)*
-  - `GET /api/logs`: pembacaan riwayat agregasi menit Supabase untuk grafik Flutter. *(Selesai)*
-- [x] Tarik perubahan terbaru di Raspi (`git pull`), restart service backend dan tunnel di Raspi. *(Selesai - Status Active Running)*
-- [x] Verifikasi live call end-to-end `POST /api/chat`, `GET /health`, `GET /api/telemetry/latest`, `GET /api/logs` via domain Ngrok. *(Selesai - HTTP 200 OK)*
+## 📊 AUDIT SUMMARY SCOREBOARD
+
+| Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
+|---|---|---|---|---|---|
+| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 8 items (TD-B01~B08) | 4 items (SEC-02,04,05,06) | **6.5/10** |
+| **Frontend (Flutter)** | 15 | ✅ Clean architecture, < 188 LOC each | 9 items (TD-F01~F09) | 1 item (REL-03) | **6.0/10** |
+| **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
+| **Hardware (C++)** | 3 | ✅ Non-blocking, modular | 3 items (TD-H01~H03) | 2 items (SEC-01,03) | **5.0/10** |
+| **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
+| **TOTAL** | **35 files** | **—** | **22 items** | **7 items** | **6.2/10** |
+
+---
+
+### 🚀 The Next Action (Rencana Aksi Post-Audit)
+
+**1. 🚨 PRIORITAS KRITIS — Perbaikan Keamanan (Huda):**
+- [ ] **[SEC-01]** Hapus kredensial Wi-Fi hardcoded dari `tes_wroom.ino` → ganti dengan `#include "secrets.h"`. Jalankan BFG Repo Cleaner untuk hapus dari git history.
+- [ ] **[SEC-02]** Konfigurasi Firebase Security Rules agar RTDB tidak bisa diakses publik tanpa auth.
+- [ ] **[SEC-04]** Ganti `allow_origins=["*"]` di `main.py` ke whitelist domain.
+- [ ] **[SEC-05]** Tambahkan autentikasi sederhana pada `POST /api/etl/trigger`.
+
+**2. Backend Tech Debt (Huda):**
+- [ ] **[TD-B01]** Fix CORS whitelist.
+- [ ] **[TD-B05]** Tambahkan rate limiting (`slowapi`) pada `/api/chat`.
+- [ ] **[TD-B07]** Hapus `requests` dari `requirements.txt`.
+- [ ] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`.
 - [ ] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi.
 
-**2. Sisi Frontend (Zaki & Web/Flutter Client):**
-- [x] **[PRIORITAS UTAMA]** Lakukan commit & push kode aktual `frontend/app.js` & `frontend/config.js` yang sudah memuat header bypass Ngrok, timeout 20s, dan payload history. *(Selesai)*
-- [x] **[PRIORITAS UTAMA]** Lakukan commit & push seluruh berkas struktur Flutter monorepo (`frontend/lib/`) ke remote Git. *(Selesai)*
-- [x] Lakukan uji coba build Android APK (`flutter build apk`) dan tes rendering Web di Chrome. *(Selesai - APK 20.9MB terkompilasi sukses)*
-- [x] Verifikasi live call end-to-end `POST /api/chat` setelah daemon tunnel Ngrok diaktifkan kembali. *(Selesai)*
+**3. Frontend Tech Debt (Zaki & Huda):**
+- [ ] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2.
+- [ ] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`.
+- [ ] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`.
+- [ ] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`.
+- [ ] **[REL-03]** Tampilkan indikator "OFFLINE / SIMULATED" di UI saat fallback aktif.
+- [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
-**3. Sisi Edge Hardware & Pengujian (Huda):**
-- [x] Integrasikan sensor MQ-2 (Gas/Asap) pada test bench ESP32 DevKit V1: Pin D35 (GPIO 35, ADC1_CH7). *(Selesai - Quick Code di `hardware/test_bench/tes_wroom/tes_wroom.ino` dan `tes/tes.ino`)*
+**4. Hardware Standardisasi (Huda):**
+- [ ] **[TD-H01]** Standarisasi ambang batas K3 di satu sumber kebenaran (pilih salah satu: `tes_wroom.ino` atau `main.cpp` sebagai baseline, propagasi ke seluruh layer).
+- [ ] **[TD-H02]** Standarisasi kurva ADC→PPM estimation antar firmware.
+- [ ] **[SEC-01]** Refaktor `tes_wroom.ino` ke pola `#include "secrets.h"` untuk Wi-Fi.
 - [ ] Flash sketch `tes_wroom.ino` ke ESP32 dan verifikasi pembacaan ganda (MQ-7 CO & MQ-2 Gas/Asap) di Serial Monitor 115200 baud.
-- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM dan transisi status K3 (`NORMAL` $\rightarrow$ `WARNING` / `DANGER`).
+- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM dan transisi status K3 (`NORMAL` → `WARNING` / `DANGER`).
 - [ ] Tunggu kedatangan komponen ESP32-C3 Super Mini + Kipas + Driver Transistor + RGB LED untuk refactor arsitektur hardware final.
 
