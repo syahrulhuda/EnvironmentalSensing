@@ -96,6 +96,17 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Menghindari kerentanan MAC spoofing dan menjamin integritas data ESS.
 - **Keputusan:** `[24-09-24]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
 
+### [Status: DIAJUKAN - ROADMAP DEPLOYMENT] Automated CI/CD & Cloud Sandbox Testing untuk Auto-Update Raspberry Pi
+- **Tanggal & Inisiator:** `[30-09-2026]` - Huda
+- **Ide:** Mengintegrasikan GitHub Actions CI untuk pengujian otomatis di lingkungan tertutup (*isolated sandbox*) setiap kali ada commit/push. Jika seluruh pengujian (*smoke test*, validasi skema endpoint, *mocking* RTDB/Supabase/Gemini ReAct) lolos, Raspberry Pi 3B secara otomatis menarik pembaruan (`git pull`) dan merestart service tanpa intervensi manual SSH, menjaga fase pemeliharaan (*maintenance*) tetap terukur, aman, dan tidak asal-asalan.
+- **Diskusi Arsitektur:**
+  - **Fase CI (Cloud):** Berjalan di GitHub Actions runner Ubuntu (16 GB RAM) agar tidak membebani komputasi Raspi 3B (1 GB RAM). Menguji rute FastAPI, fungsi ETL, dan penalaran AI secara terisolasi.
+  - **Fase CD (Edge Deployment):** Dua opsi viable:
+    1. *Webhook Push*: Trigger via domain Ngrok terproteksi token rahasia.
+    2. *GitOps Poller Pull*: Script bash ringan via systemd timer di Raspi yang mengecek kelulusan status CI GitHub sebelum mengeksekusi `git pull`.
+  - **Pertimbangan Waktu:** Fitur ini tidak diimplementasikan saat ini di masa aktif *development*, melainkan disiapkan saat arsitektur fondasi sudah solid dan sistem bersiap memasuki fase transisi *deployment* menuju *production maintenance*.
+- **Keputusan:** `[30-09-2026]` - **[DIAJUKAN & PENDING UNTUK FASE DEPLOYMENT]** Dicatat ke roadmap arsitektur, akan mulai diimplementasikan saat sistem siap memasuki fase produksi/pemeliharaan.
+
 ---
 
 # 🔍 Section 3: Deep Audit (The Ruthless Audit)
