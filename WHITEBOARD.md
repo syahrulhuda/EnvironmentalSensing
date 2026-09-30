@@ -84,10 +84,10 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Ide:** Menyetel HTTP timeout minimal 15–20 detik dan mengimplementasikan indikator visual loading/typing bubble di UI Flutter/Web selama proses ReAct Function Calling berlangsung (2–5 detik).
 - **Keputusan:** `[28-09-2026]` - **[DITERIMA & TERAPKAN]** Timeout 20 detik dan animasi loading "ESI sedang menganalisis sensor..." telah terpasang di antarmuka Web dan Flutter.
 
-### [Status: DIAJUKAN] Konfigurasi PYTHONUNBUFFERED=1 pada Service Daemon Systemd Raspi
+### [Status: DITERIMA & SELESAI] Konfigurasi PYTHONUNBUFFERED=1 pada Service Daemon Systemd Raspi
 - **Tanggal & Inisiator:** `[28-09-2026]` - Huda
 - **Ide:** Mencegah output log ETL tertahan di block buffer 4KB Python saat berjalan sebagai daemon background systemd di Raspi.
-- **Keputusan:** `[28-09-2026]` - **[DIAJUKAN]** Disiapkan untuk diterapkan pada jadwal pemeliharaan Raspberry Pi berikutnya.
+- **Keputusan:** `[30-09-2026]` - **[DITERIMA & AKTIF]** `Environment=PYTHONUNBUFFERED=1` telah terpasang dan diverifikasi aktif di daemon systemd Raspberry Pi serta template setup.
 
 ### [Status: ROADMAP / PENDING] Zero-Trust Device Claiming & Quarantine Approval via Flutter Admin
 - **Tanggal & Inisiator:** `[24-09-2026]` - Huda
@@ -319,7 +319,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] **[TD-B05]** Tambahkan rate limiting (`slowapi`) pada `/api/chat`.
 - [ ] **[TD-B07]** Hapus `requests` dari `requirements.txt`.
 - [ ] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`.
-- [ ] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi.
+- [x] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi. *(Selesai - Terverifikasi aktif)*
 
 **3. Frontend Tech Debt (Zaki & Huda):**
 - [ ] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2.

@@ -50,6 +50,7 @@ Type=simple
 User=$CURRENT_USER
 WorkingDirectory=$BACKEND_DIR
 EnvironmentFile=$BACKEND_DIR/.env
+Environment=PYTHONUNBUFFERED=1
 ExecStart=$BACKEND_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
