@@ -48,7 +48,7 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 | Ref Des | Komponen | Nilai & Rating | Footprint | Jumlah | Status | Fungsi Rangkaian |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **R1** | Resistor Film | **10 kΩ**, 1/4 Watt, toleransi 1% / 5% | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pull-up jalur data DHT22 (GPIO21) |
+| **R1** | Resistor Film | **10 kΩ**, 1/4 Watt, toleransi 1% / 5% | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pull-up jalur data DHT22 (GPIO10) |
 | **R2** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Merah LED RGB (GPIO4) |
 | **R3** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Hijau LED RGB (GPIO3) |
 | **R4** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Biru LED RGB (GPIO2) |
