@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320mm" height="240mm" viewBox="0 0 320 240">
+  <title>Desain 2D Akrilik 3mm - Tunnel Sensor (Khusus MQ-2 &amp; MQ-7 + Fan 4x4)</title>
+  <desc>Sistem Tab and Slot Murni + Inlet Lingkaran Jaring Kawat</desc>
+  <style>
+    .cut { fill: none; stroke: #ff0000; stroke-width: 0.2; }
+    .slot { fill: none; stroke: #ff0000; stroke-width: 0.2; }
+    .hole { fill: none; stroke: #ff0000; stroke-width: 0.2; }
+    .engrave { fill: none; stroke: #0000ff; stroke-width: 0.15; font-family: Arial, sans-serif; font-size: 2.8px; }
+    .text-label { fill: #222222; font-family: Arial, sans-serif; font-size: 3.5px; font-weight: bold; }
+    .dim-label { fill: #555555; font-family: Arial, sans-serif; font-size: 2.3px; }
+  </style>
+
+  <!-- INFO HEADER -->
+  <text x="10" y="8" class="text-label" font-size="4.8px">DESAIN 1: TUNNEL SENSOR GAS MQ-2 &amp; MQ-7 (FAN 4x4 CM) - AKRILIK 3 MM</text>
+  <text x="10" y="13" class="dim-label">Panjang: 120 mm | Lebar/Tinggi: 50 mm | Inlet: Lubang Lingkaran Jaring Dia 22 mm | DHT22 Dipindah ke Case PCB</text>
+
+  <!-- 1. PELAT ATAS (TOP PLATE) - MOUNTING SENSOR MQ-2 & MQ-7 (120 x 50 mm) -->
+  <g transform="translate(10, 18)">
+    <text x="0" y="-2" class="text-label">1. Pelat Atas (Dudukan Sensor MQ-2 &amp; MQ-7) - 120 x 50 mm</text>
+    <rect x="0" y="0" width="120" height="50" rx="3.5" class="cut" />
+    <!-- 4 Lubang Baut Spacer Sudut M3 (Dia 3.2mm) -->
+    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
+    <circle cx="114.5" cy="5.5" r="1.6" class="hole" />
+    <circle cx="5.5" cy="44.5" r="1.6" class="hole" />
+    <circle cx="114.5" cy="44.5" r="1.6" class="hole" />
+    <!-- Slot Dinding Samping Kiri & Kanan (Celah 3.1mm) -->
+    <rect x="25" y="2" width="25" height="3.1" class="slot" />
+    <rect x="70" y="2" width="25" height="3.1" class="slot" />
+    <rect x="25" y="44.9" width="25" height="3.1" class="slot" />
+    <rect x="70" y="44.9" width="25" height="3.1" class="slot" />
+    <!-- SLOT DEPAN (Untuk Tab Atas Inlet Depan) di x=12 mm -->
+    <rect x="12" y="15" width="3.1" height="20" class="slot" />
+    <text x="7" y="26" class="dim-label" font-size="1.8px" transform="rotate(-90 7,26)">SLOT INLET</text>
+    <!-- SLOT BELAKANG (Untuk Tab Atas Outlet Belakang) di x=105 mm -->
+    <rect x="105" y="15" width="3.1" height="20" class="slot" />
+    <text x="109" y="27" class="dim-label" font-size="1.8px" transform="rotate(90 109,27)">SLOT OUTLET</text>
+    <!-- Lubang Sensor MQ-2 (Dia 20mm) di x=40, y=25 -->
+    <circle cx="40" cy="25" r="10" class="hole" />
+    <text x="35" y="26" class="dim-label" font-size="2px">MQ-2</text>
+    <!-- Lubang Sensor MQ-7 (Dia 20mm) di x=80, y=25 -->
+    <circle cx="80" cy="25" r="10" class="hole" />
+    <text x="75" y="26" class="dim-label" font-size="2px">MQ-7</text>
+  </g>
+
+  <!-- 2. PELAT BAWAH (BOTTOM PLATE) (120 x 50 mm) -->
+  <g transform="translate(145, 18)">
+    <text x="0" y="-2" class="text-label">2. Pelat Bawah (Lantai Tunnel) - 120 x 50 mm</text>
+    <rect x="0" y="0" width="120" height="50" rx="3.5" class="cut" />
+    <!-- 4 Lubang Baut Spacer Sudut M3 -->
+    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
+    <circle cx="114.5" cy="5.5" r="1.6" class="hole" />
+    <circle cx="5.5" cy="44.5" r="1.6" class="hole" />
+    <circle cx="114.5" cy="44.5" r="1.6" class="hole" />
+    <!-- Slot Dinding Samping Kiri & Kanan -->
+    <rect x="25" y="2" width="25" height="3.1" class="slot" />
+    <rect x="70" y="2" width="25" height="3.1" class="slot" />
+    <rect x="25" y="44.9" width="25" height="3.1" class="slot" />
+    <rect x="70" y="44.9" width="25" height="3.1" class="slot" />
+    <!-- Slot Pengunci Depan & Belakang -->
+    <rect x="12" y="15" width="3.1" height="20" class="slot" />
+    <rect x="105" y="15" width="3.1" height="20" class="slot" />
+    <!-- 2 Lubang Baut Dudukan Base (Dia 3.2 mm di x=45 dan x=85) -->
+    <circle cx="45" cy="25" r="1.6" class="hole" />
+    <circle cx="85" cy="25" r="1.6" class="hole" />
+    <text x="53" y="26" class="dim-label" font-size="2px">MOUNTING BASE</text>
+  </g>
+
+  <!-- 3. PELAT DINDING SAMPING KIRI (120 x 44 mm) -->
+  <g transform="translate(10, 80)">
+    <text x="0" y="-2" class="text-label">3. Dinding Samping Kiri (120 x 44 mm)</text>
+    <path d="M 0,3 
+             L 25,3 L 25,0 L 50,0 L 50,3 
+             L 70,3 L 70,0 L 95,0 L 95,3 
+             L 120,3 L 120,41 
+             L 95,41 L 95,44 L 70,44 L 70,41 
+             L 50,41 L 50,44 L 25,44 L 25,41 
+             L 0,41 Z" class="cut" />
+  </g>
+
+  <!-- 4. PELAT DINDING SAMPING KANAN (120 x 44 mm) -->
+  <g transform="translate(145, 80)">
+    <text x="0" y="-2" class="text-label">4. Dinding Samping Kanan (120 x 44 mm)</text>
+    <path d="M 0,3 
+             L 25,3 L 25,0 L 50,0 L 50,3 
+             L 70,3 L 70,0 L 95,0 L 95,3 
+             L 120,3 L 120,41 
+             L 95,41 L 95,44 L 70,44 L 70,41 
+             L 50,41 L 50,44 L 25,44 L 25,41 
+             L 0,41 Z" class="cut" />
+  </g>
+
+  <!-- 5. PELAT INLET DEPAN (DENGAN LUBANG BULAT DIA 22 MM UNTUK JARING KAWAT) -->
+  <g transform="translate(10, 145)">
+    <text x="0" y="-2" class="text-label">5. Inlet Depan (Lubang Bulat Dia 22 mm + Tab)</text>
+    <!-- Kontur Inlet dengan Tab Atas & Bawah -->
+    <path d="M 0,3 
+             L 12,3 L 12,0 L 32,0 L 32,3 L 44,3 
+             L 44,41 
+             L 32,41 L 32,44 L 12,44 L 12,41 L 0,41 Z" class="cut" />
+    <!-- 1 LUBANG BULAT TUNGGAL (Dia 22 mm) DI TENGAH UNTUK TEMPAT JARING KAWAT -->
+    <circle cx="22" cy="22" r="11" class="hole" />
+    <text x="13" y="23" class="dim-label" font-size="2px">JARING DIA 22MM</text>
+  </g>
+
+  <!-- 6. PELAT OUTLET BELAKANG (DUDUKAN KIPAS 4x4 CM + TAB) -->
+  <g transform="translate(75, 145)">
+    <text x="0" y="-2" class="text-label">6. Outlet Belakang (Mounting Kipas 4x4 + Tab)</text>
+    <path d="M 0,3 
+             L 12,3 L 12,0 L 32,0 L 32,3 L 44,3 
+             L 44,41 
+             L 32,41 L 32,44 L 12,44 L 12,41 L 0,41 Z" class="cut" />
+    <!-- Lubang Tengah Hembusan Udara Kipas (Dia 36 mm) di Center (22, 22) -->
+    <circle cx="22" cy="22" r="18" class="hole" />
+    <!-- 4 Lubang Baut Kipas 4x4 cm (Pitch 32 x 32 mm simetris: x=6 dan x=38, y=6 dan y=38) -->
+    <circle cx="6" cy="6" r="1.6" class="hole" />
+    <circle cx="38" cy="6" r="1.6" class="hole" />
+    <circle cx="6" cy="38" r="1.6" class="hole" />
+    <circle cx="38" cy="38" r="1.6" class="hole" />
+    <text x="11" y="23" class="dim-label" font-size="2px">KIPAS 40x40</text>
+  </g>
+
+  <!-- 7. PELAT KAKI DUDUKAN / BRACKET BAWAH TUNNEL (OPSIONAL) -->
+  <g transform="translate(145, 145)">
+    <text x="0" y="-2" class="text-label">7. Kaki Dudukan / Bracket Bawah (2 pcs)</text>
+    <rect x="0" y="0" width="50" height="18" rx="2" class="cut" />
+    <circle cx="8" cy="9" r="1.6" class="hole" />
+    <circle cx="25" cy="9" r="1.6" class="hole" />
+    <circle cx="42" cy="9" r="1.6" class="hole" />
+    <text x="12" y="10" class="dim-label" font-size="1.9px">KAKI DEPAN</text>
+
+    <rect x="0" y="23" width="50" height="18" rx="2" class="cut" />
+    <circle cx="8" cy="32" r="1.6" class="hole" />
+    <circle cx="25" cy="32" r="1.6" class="hole" />
+    <circle cx="42" cy="32" r="1.6" class="hole" />
+    <text x="10" y="33" class="dim-label" font-size="1.9px">KAKI BELAKANG</text>
+  </g>
+
+  <!-- PENJELASAN FUNGSI KAKI BRACKET -->
+  <g transform="translate(210, 145)">
+    <text x="0" y="-2" class="text-label">Fungsi Kaki Dudukan (No. 7):</text>
+    <rect x="0" y="0" width="100" height="42" fill="#fafafa" stroke="#dddddd" stroke-width="0.3" rx="2" />
+    <text x="4" y="8" class="dim-label">Kaki ini adalah penopang bawah opsional.</text>
+    <text x="4" y="15" class="dim-label">Jika tunnel ingin ditaruh/dibaut di atas meja</text>
+    <text x="4" y="22" class="dim-label">atau dibaut menempel di atas case PCB,</text>
+    <text x="4" y="29" class="dim-label">kaki ini berfungsi sebagai dudukan penahan.</text>
+    <text x="4" y="36" class="dim-label">Jika tidak ingin dipakai, boleh diabaikan.</text>
+  </g>
+</svg>
