@@ -52,11 +52,14 @@ Sistem **Smart Environmental Sensing System (ESS)** ini dikembangkan untuk menja
             │ (HTTPS POST Telemetri Tiap 3 Detik)
             ▼
 [Layer 1: Perception & Edge Sensing Tier]
-     ESP32 DevKit V1 (WROOM-32 / ESP32-C3 Super Mini)
-     • Sensor Gas Karbon Monoksida (MQ-7)
-     • Sensor Gas & Asap (MQ-2)
-     • Sensor Suhu & Kelembapan (DHT22)
-     • Indikator Visual LED RGB & Kipas Ekstraktor
+     ESP32-C3 SuperMini (RISC-V 32-bit Single-Core, 16-pin)
+     • Display OLED 0.96" I2C SSD1306 (SDA: GPIO 8, SCL: GPIO 9)
+     • Sensor Gas Karbon Monoksida (MQ-7 • GPIO 1 • Baseline 1.25V / 1550 ADC)
+     • Sensor Asap & Gas Mudah Terbakar (MQ-2 • GPIO 0 • Baseline 0.37V / 460 ADC)
+     • Sensor Suhu & Kelembapan (DHT22 • GPIO 10 • Kompensasi Panas Koil MQ)
+     • Indikator Visual K3: LED RGB Common Cathode (GPIO 4: R, GPIO 3: G, GPIO 2: B)
+     • Driver Kipas PWM: Transistor SS8050 NPN + Diode Flyback 1N4007 (GPIO 5)
+     • Filter Proteksi Daya: Elco 100 µF (C1) + Keramik 100 nF (C2) + Terminal KF301
 ```
 
 ---
@@ -70,11 +73,19 @@ environmentalsensing/
 ├── RULEBOOK.md            # Konstitusi proyek & standar penulisan kode
 ├── WHITEBOARD.md          # Dapur kotor, grand plan, & log ide
 │
+├── schematics/            # Desain PCB & Hardware BOM
+│   ├── COMPONENTS.md      # Bill of Materials & panduan perakitan fisik
+│   ├── PCB_PCB_ESS_5_*.json # Layout PCB EasyEDA Single-Layer 70x40 mm
+│   └── SCH_ESS_*.json     # Skematik rangkaian resmi
+│
 ├── hardware/              # Layer 1: Edge Sensing Node (ESP32)
-│   ├── src/               # Kode sumber C++ (PlatformIO / Arduino)
-│   ├── test_bench/        # Skrip uji bangku tes WROOM-32
-│   ├── platformio.ini     # Konfigurasi build PlatformIO
-│   └── diagram.json       # Simulasi rangkaian Wokwi
+│   ├── src/               # Kode sumber produksi C++ (PlatformIO / Arduino)
+│   │   ├── main.cpp       # Firmware produksi (OLED SSD1306 + RTDB Streaming)
+│   │   └── secrets.example.h # Template kredensial Wi-Fi & Firebase
+│   ├── test_bench/        # Skrip uji bangku perangkat keras
+│   │   ├── tes_c3/        # Test bench offline mandiri ESP32-C3 SuperMini
+│   │   └── tes_wroom/     # Test bench ESP32 WROOM-32 legacy
+│   └── platformio.ini     # Konfigurasi build PlatformIO (Adafruit SSD1306)
 │
 ├── backend/               # Layer 3 & 4: FastAPI, ETL Worker & AI ESI
 │   ├── app/               # Modul Python Terstruktur
@@ -124,5 +135,20 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-### Menjalankan Firmware Hardware:
-Buka folder `hardware/` menggunakan VS Code dengan ekstensi **PlatformIO**, lalu klik **Upload** ke board ESP32 kamu.
+### Menjalankan & Mem-flash Firmware Hardware:
+
+#### Opsi A: PlatformIO IDE (VS Code)
+Buka folder `hardware/` menggunakan VS Code dengan ekstensi **PlatformIO**, sambungkan board ke port USB-C, lalu klik **Upload**.
+
+#### Opsi B: Arduino IDE (Pengujian Offline Test Bench)
+1. Buka berkas `hardware/test_bench/tes_c3/tes_c3.ino`.
+2. Pasang board support `esp32` by Espressif Systems (v2.0.x / v3.x).
+3. Atur menu **Tools**:
+   * **Board:** `ESP32C3 Dev Module`
+   * **Flash Mode:** **`DIO`** *(Wajib DIO, jangan gunakan QIO karena menyebabkan crash bootloader)*
+   * **USB CDC On Boot:** **`Enabled`** *(Wajib Enabled agar Serial Monitor terbaca via USB-C internal)*
+   * **Port:** Pilih COM yang terdeteksi (misal `COM8`).
+4. **Troubleshooting USB Flapping / Putus-Nyambung:**
+   * Jika saat pertama kali dicolok perangkat berbunyi putus-nyambung: **Tahan tombol BOOT, tekan tombol RST sekali, lalu lepas tombol BOOT**.
+   * Board akan terkunci di mode download bootloader dan port COM akan terdeteksi stabil di Device Manager.
+5. Klik tombol **Upload**, lalu buka **Serial Monitor** pada baudrate `115200`.

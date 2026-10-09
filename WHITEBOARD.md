@@ -6,15 +6,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Penyempurnaan backend untuk integrasi Flutter (perbaikan bug multi-turn ESI, ekspansi endpoint REST data telemetri/log, `PYTHONUNBUFFERED=1` di daemon Raspi), penyambungan Web Frontend ke Ngrok, dan pengujian fisik respon anomali gas.
-> **Affected Areas:** `backend/`, `frontend/`, `deploy/`.
+> **Fokus Utama Saat Ini:** Validasi prototipe breadboard ESP32-C3 SuperMini (OLED SSD1306, DHT22, MQ-7, MQ-2, LED RGB CC, Filter C1/C2) telah tuntas 100%. Fokus transisi berikutnya: pengujian beban inrush kipas DC 4010 + transistor SS8050 saat kipas tiba, persiapan cetak PCB `PCB_ESS_5`, serta integrasi streaming live ke Firebase RTDB buffer.
+> **Affected Areas:** `hardware/`, `schematics/`, `deploy/`.
 > **Success Criteria:** 
-> 1. ESI AI Agent (`POST /api/chat`) mampu mengingat konteks percakapan bertingkat (*multi-turn conversation*) dari array `history`.
-> 2. Backend menyediakan endpoint data siap pakai untuk Flutter (`GET /api/telemetry/latest` dan `GET /api/logs`).
-> 3. Daemon systemd `ess-backend.service` di Raspberry Pi terkonfigurasi `PYTHONUNBUFFERED=1` agar log journal real-time.
-> 4. Chatbot frontend terhubung secara riil ke endpoint `POST /api/chat` ESI AI Agent di Raspi (bukan simulasi string).
-> 5. Dashboard menampilkan data real-time RTDB sekaligus tren agregat historis dari Supabase `ess_logs`.
-> 6. Terujinya respon lonjakan gas/asap fisik sehingga terpicu status WARNING/DANGER dan tercatat di `ess_anomalies`.
+> 1. Verifikasi offline seluruh sensor & display via `tes_c3.ino` (SELESAI - Teruji fisik).
+> 2. Proof of concept peredaman noise rangkaian filter C1/C2 (SELESAI - 5.10-5.15V diredam ke 5.13-5.14V).
+> 3. Standardisasi kurva & baseline kalibrasi ADC udara bersih MQ-7 (1550) & MQ-2 (460) (SELESAI).
+> 4. Kompensasi mikroklimat thermal cross-heating DHT22 via `TEMP_OFFSET` (SELESAI).
+> 5. Uji inrush current & PWM kipas 4010 via transistor SS8050 & diode 1N4007 (Menunggu kedatangan kipas).
+> 6. Fabrikasi & penyolderan PCB single-layer 70x40 mm `PCB_ESS_5`.
 
 ---
 
@@ -105,7 +105,31 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
     1. *Webhook Push*: Trigger via domain Ngrok terproteksi token rahasia.
     2. *GitOps Poller Pull*: Script bash ringan via systemd timer di Raspi yang mengecek kelulusan status CI GitHub sebelum mengeksekusi `git pull`.
   - **Pertimbangan Waktu:** Fitur ini tidak diimplementasikan saat ini di masa aktif *development*, melainkan disiapkan saat arsitektur fondasi sudah solid dan sistem bersiap memasuki fase transisi *deployment* menuju *production maintenance*.
-- **Keputusan:** `[30-09-2026]` - **[DIAJUKAN & PENDING UNTUK FASE DEPLOYMENT]** Dicatat ke roadmap arsitektur, akan mulai diimplementasikan saat sistem siap memasuki fase produksi/pemeliharaan.
+### [Status: DITERIMA & SELESAI] Hasil Uji Empiris Rangkaian Filter Daya C1/C2 (Proof of Concept)
+- **Tanggal & Inisiator:** `[09-10-2026]` - Huda
+- **Ide & Pengujian:** Menguji rangkaian low-pass / decoupling filter daya input (C1 Elco 100uF + C2 Keramik 100nF + KF301-2P) menggunakan sumber daya 5V dari pin VIN ESP32 WROOM sebelum pemasangan barrel jack DC permanen.
+- **Hasil Pengukuran Multimeter:**
+  - Tegangan input dari rail 5V berfluktuasi pada rentang `5.10 - 5.15 V` (ripple ~50 mV).
+  - Tegangan output pada screw terminal KF301 terukur sangat stabil di `5.13 - 5.14 V` (ripple hanya ~10 mV).
+  - Gejala *RC discharging* teramati saat daya diputus (tegangan turun perlahan), membuktikan elco C1 aktif menyimpan muatan sebagai bulk energy buffer lokal untuk menyerap inrush current.
+- **Keputusan:** `[09-10-2026]` - **[TERBUKTI SECARA EMPIRIS]** Desain filter catu daya `PCB_ESS_5` dinyatakan paten dan valid untuk peredaman noise switching/transient.
+
+### [Status: DITERIMA & SELESAI] Kalibrasi Zero-Baseline Udara Bersih Sensor Gas MQ-7 & MQ-2
+- **Tanggal & Inisiator:** `[09-10-2026]` - Huda
+- **Temuan Fisik:** Setelah pemanasan kontinu >1 jam (1670+ sampel) di udara bersih ber-AC, modul MQ-7 fisik menghasilkan tegangan idle stabil pada `1.24 - 1.25 V` (ADC ~1545-1550), sementara MQ-2 stabil pada `0.36 - 0.39 V` (ADC ~450-475). Rumus linier awal `map(adc, 400, ...)` menyebabkan false warning 127 ppm di kamar normal.
+- **Keputusan Arsitektur:** Menetapkan nilai baseline udara bersih `#define MQ7_BASELINE_ADC 1550` dan `#define MQ2_BASELINE_ADC 460` di firmware `tes_c3.ino` dan `main.cpp`. Nilai ADC di bawah atau sama dengan baseline dipetakan ke 5 ppm (kondisi aman / NORMAL, LED Hijau Solid).
+
+### [Status: DITERIMA & SELESAI] Mitigasi Thermal Cross-Heating DHT22 dari Pemanas Sensor MQ
+- **Tanggal & Inisiator:** `[09-10-2026]` - Huda
+- **Analisis Masalah:** Sensor DHT22 membaca suhu 29 - 33 C meskipun berada di ruangan ber-AC (suhu riil ~26 C). Fenomena ini teridentifikasi sebagai *thermal cross-heating* akibat koil pemanas internal MQ-2 dan MQ-7 yang mendisipasikan daya termal ~1.5 Watt ke area sekitarnya pada breadboard.
+- **Keputusan:**
+  1. Di sisi firmware: Ditambahkan konstanta kompensasi `#define TEMP_OFFSET 0.0` (dapat diset misal `-3.0` jika offset termal konstan).
+  2. Di sisi mekanikal/enclosure: DHT22 wajib diberi jarak fisik minimal 2 - 3 cm dari modul MQ pada casing akrilik atau dipisahkan oleh aliran angin intake tunnel.
+
+### [Status: DITERIMA & SELESAI] Penanganan Flapping USB ESP32-C3 SuperMini via Download Mode (BOOT+RST)
+- **Tanggal & Inisiator:** `[09-10-2026]` - Huda
+- **Masalah:** Saat pertama kali dicolokkan ke laptop via kabel USB-C, koneksi USB ESP32-C3 SuperMini mengalami flapping (putus-nyambung berulang) akibat loop crash firmware bawaan atau status ROM bootloader yang tidak stabil.
+- **Solusi Operasional:** Menahan tombol **BOOT** (GPIO 9), menekan tombol **RST** satu kali, lalu melepas tombol **BOOT**. Trik ini memaksa SoC masuk ke *ROM Download Boot Mode*, menstabilkan enumerasi USB CDC Serial di Device Manager / Arduino IDE (`COM8`). Setelah diflash dengan parameter `USB CDC On Boot: Enabled` dan `Flash Mode: DIO`, board booting stabil seterusnya.
 
 ---
 
@@ -227,22 +251,23 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### 🟡 [SEVERITY: MEDIUM] Hardware Tech Debt
 
-18. **`[TD-H01]` Ambang Batas K3 Tidak Konsisten Antar Komponen**
-    | Parameter | `tes_wroom.ino` | `main.cpp` | `ai_service.py` | `api_constants.dart` | `config.js` |
+18. **`[TD-H01]` Ambang Batas K3 Tidak Konsisten Antar Komponen — `[SELESAI & TERSTANDARISASI PADA C3]`**
+    | Parameter | `tes_wroom.ino` | `main.cpp` (C3 Baru) | `ai_service.py` | `api_constants.dart` | `config.js` |
     |---|---|---|---|---|---|
     | MQ-7 WARNING | 50 PPM | 50 PPM | 50 PPM | 50 PPM | 50 PPM |
     | MQ-7 DANGER | 150 PPM | 150 PPM | 150 PPM | — | — |
-    | MQ-2 WARNING | 150 PPM | 300 PPM | 150 PPM | 300 PPM | 300 PPM |
-    | MQ-2 DANGER | 400 PPM | 600 PPM | 400 PPM | — | — |
-    - **Inkonsistensi kritis:** `main.cpp` (Wokwi) memakai threshold MQ-2 WARNING=300 & DANGER=600, sementara `tes_wroom.ino` (produksi) pakai 150 & 400. Frontend ikut `main.cpp`. **Perlu satu sumber kebenaran.**
+    | MQ-2 WARNING | 150 PPM | 150 PPM | 150 PPM | 300 PPM (update ke 150) | 300 PPM (update ke 150) |
+    | MQ-2 DANGER | 400 PPM | 400 PPM | 400 PPM | — | — |
+    - **Status:** Ambang batas resmi telah distandardisasi pada seluruh firmware C3 (`tes_c3.ino` & `main.cpp`) ke nilai MQ-7: 50/150 PPM dan MQ-2: 150/400 PPM selaras dengan ETL backend.
 
-19. **`[TD-H02]` Kurva PPM Estimasi Berbeda Antar Firmware**
-    - `main.cpp:364` → MQ-2 baseline 800 ADC = 10 PPM, range map ke 1000 PPM.
-    - `tes_wroom.ino:56` → MQ-2 baseline 300 ADC = 10 PPM, range map ke 1000 PPM.
-    - Dua kurva berbeda = hasil PPM tidak comparable. Ini **masalah saintifik** yang harus distandardisasi sebelum laporan akhir.
+19. **`[TD-H02]` Kurva PPM Estimasi Berbeda Antar Firmware — `[SELESAI DENGAN ZERO-BASELINE CALIBRATION]`**
+    - Firmware ESP32-C3 (`tes_c3.ino` & `main.cpp`) kini menggunakan zero-baseline terkalibrasi:
+      - MQ-7: `MQ7_BASELINE_ADC = 1550` (~1.25V) -> rentang 5 s/d 400 PPM.
+      - MQ-2: `MQ2_BASELINE_ADC = 460` (~0.37V) -> rentang 5 s/d 1000 PPM.
+    - Menghilangkan false positive alarm di udara bersih normal.
 
 20. **`[TD-H03]` `main.cpp` Masih Pakai `StaticJsonDocument<256>` (ArduinoJson v6)**
-    - ArduinoJson v7 sudah memperkenalkan API baru (`JsonDocument`). Pinned ke v6 — perlu upgrade saat refactor C3.
+    - ArduinoJson v7 sudah memperkenalkan API baru (`JsonDocument`). Pinned ke v6 — siap diupgrade saat migrasi final.
 
 ---
 
@@ -340,11 +365,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] **[REL-03]** Tampilkan indikator "OFFLINE / SIMULATED" di UI saat fallback aktif.
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
-**4. Hardware Standardisasi (Huda):**
-- [ ] **[TD-H01]** Standarisasi ambang batas K3 di satu sumber kebenaran (pilih salah satu: `tes_wroom.ino` atau `main.cpp` sebagai baseline, propagasi ke seluruh layer).
-- [ ] **[TD-H02]** Standarisasi kurva ADC→PPM estimation antar firmware.
-- [ ] **[SEC-01]** Refaktor `tes_wroom.ino` ke pola `#include "secrets.h"` untuk Wi-Fi.
-- [ ] Flash sketch `tes_wroom.ino` ke ESP32 dan verifikasi pembacaan ganda (MQ-7 CO & MQ-2 Gas/Asap) di Serial Monitor 115200 baud.
-- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM dan transisi status K3 (`NORMAL` → `WARNING` / `DANGER`).
-- [ ] Tunggu kedatangan komponen ESP32-C3 Super Mini + Kipas + Driver Transistor + RGB LED untuk refactor arsitektur hardware final.
+**4. Hardware Standardisasi & Perakitan Fisik (Huda):**
+- [x] **[TD-H01]** Standarisasi ambang batas K3 di satu sumber kebenaran (MQ-7: 50/150 PPM, MQ-2: 150/400 PPM di seluruh firmware C3).
+- [x] **[TD-H02]** Standarisasi kurva ADC→PPM estimation dengan kalibrasi zero-baseline (MQ-7: 1550, MQ-2: 460).
+- [x] Rancang dan uji prototipe breadboard ESP32-C3 SuperMini dengan OLED SSD1306, DHT22, MQ-7, MQ-2, dan LED RGB CC.
+- [x] Uji empiris peredaman ripple filter input catu daya C1/C2 (5.10-5.15V menjadi 5.13-5.14V).
+- [x] Dokumentasikan solusi USB flapping C3 via tombol BOOT+RST download mode.
+- [ ] Tunggu kedatangan komponen Kipas DC 4010 5V + Adaptor 5V 2A untuk pengujian inrush current dan PWM transistor SS8050.
+- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline.
+- [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
 
