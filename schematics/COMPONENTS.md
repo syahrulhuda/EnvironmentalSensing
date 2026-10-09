@@ -6,18 +6,18 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 ## 1. Status Ringkasan Komponen
 
-* **Komponen yang Sudah Tersedia:**
-  * Modul ESP32-C3 SuperMini
+* **Komponen yang Sudah Tersedia & Teruji Fisik di Breadboard:**
+  * Modul ESP32-C3 SuperMini (Teruji flashing & USB CDC COM8)
   * Sensor Suhu & Kelembaban DHT22 (AM2302)
-  * Modul Sensor Karbon Monoksida MQ-7
-  * Modul Sensor Asap & Gas Mudah Terbakar MQ-2
-* **Komponen yang Perlu Dibeli:**
-  * Modul Display OLED 0.96 inch I2C (SSD1306)
-  * DC Brushless Fan 5V 4010 (Exhaust / Intake Tunnel)
-  * Komponen Semikonduktor (LED RGB Common Cathode, Transistor NPN SS8050/2N2222, Diode 1N4007)
-  * Komponen Pasif (Resistor 220 ohm, 1k ohm, 10k ohm, Kapasitor Elco 100 uF, Kapasitor Keramik 100 nF)
-  * Konektor & Terminal PCB (KF301-2P, JST-XH 2-Pin Siku, Female Pin Header 2.54 mm)
-  * Aksesoris Enclosure & Catu Daya (Adaptor 5V 2A, DC-022 Panel Mount, Spacer M3, Kabel Jumper)
+  * Modul Sensor Karbon Monoksida MQ-7 (Teruji baseline 1.25V / ADC 1550)
+  * Modul Sensor Asap & Gas Mudah Terbakar MQ-2 (Teruji baseline 0.37V / ADC 460)
+  * Modul Display OLED 0.96 inch I2C SSD1306 (Teruji 0x3C, SDA: GPIO8, SCL: GPIO9)
+  * LED RGB Common Cathode (Teruji mandiri 4 warna & indikator K3)
+  * Komponen Pasif & Filter Daya (C1 Elco 100 µF, C2 Keramik 100 nF, Terminal KF301-2P teruji redam ripple 5.10-5.15V -> 5.13-5.14V)
+  * Resistor 220Ω x3, 1kΩ x1, 10kΩ x1 tipe 1/2 Watt, Transistor SS8050, Diode 1N4007
+* **Komponen Belum Terpasang / Menunggu Pengiriman:**
+  * Kipas DC 5V 4010 (Exhaust Tunnel) & Adaptor 5V 2A Regulated
+  * DC-022 Panel Mount Jack, Spacer M3, Baut & Mur akrilik
 
 ---
 
@@ -25,12 +25,12 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 | Item | Komponen | Spesifikasi & Deskripsi | Status | Keterangan Pemasangan |
 | :--- | :--- | :--- | :--- | :--- |
-| **MCU** | **ESP32-C3 SuperMini** | RISC-V 32-bit single-core, WiFi 2.4GHz & BLE, USB-C, 16-pin Through-Hole | **SUDAH ADA** | Dipasang ke socket Female Header 2x8 pin di PCB |
-| **H4** | **Sensor DHT22 (AM2302)** | Sensor suhu (-40 s/d 80 C, presisi 0.5 C) dan kelembaban (0-100% RH, presisi 2-5%) | **SUDAH ADA** | Panel mount intake tunnel, koneksi jumper ke header H4 |
-| **H1** | **Sensor MQ-7** | Deteksi gas CO (10 - 1000 ppm), modul 4-pin (VCC, GND, DO, AO) | **SUDAH ADA** | Panel mount tunnel, koneksi jumper ke header H1 |
-| **H3** | **Sensor MQ-2** | Deteksi LPG, asap, propana, metana, modul 4-pin (VCC, GND, DO, AO) | **SUDAH ADA** | Panel mount tunnel, koneksi jumper ke header H3 |
-| **H2** | **OLED Display 0.96" I2C** | 128x64 piksel, Driver SSD1306, 4-pin (GND, VCC, SCL, SDA), warna Putih/Biru | **PERLU DIBELI** | Panel mount casing depan, koneksi jumper ke header H2 |
-| **CN1** | **Kipas DC 5V (4010 Fan)** | DC 5V Brushless Fan ukuran 40 x 40 x 10 mm, arus ~0.10 - 0.15 A | **PERLU DIBELI** | Dipasang di exhaust tunnel, kabel konektor colok ke CN1 |
+| **MCU** | **ESP32-C3 SuperMini** | RISC-V 32-bit single-core, WiFi 2.4GHz & BLE, USB-C, 16-pin Through-Hole | **TERUJI FISIK** | Lolos flash Arduino IDE (DIO, CDC Enabled, COM8). Pinout fit PCB |
+| **H4** | **Sensor DHT22 (AM2302)** | Sensor suhu (-40 s/d 80 C, presisi 0.5 C) dan kelembaban (0-100% RH, presisi 2-5%) | **TERUJI FISIK** | GPIO 10, pull-up 10k ke 3.3V. Kompensasi TEMP_OFFSET aktif |
+| **H1** | **Sensor MQ-7** | Deteksi gas CO (10 - 1000 ppm), modul 4-pin (VCC, GND, DO, AO) | **TERUJI FISIK** | GPIO 1 (ADC1_CH1). Baseline idle stabil di 1.25V (ADC 1550) |
+| **H3** | **Sensor MQ-2** | Deteksi LPG, asap, propana, metana, modul 4-pin (VCC, GND, DO, AO) | **TERUJI FISIK** | GPIO 0 (ADC1_CH0). Baseline idle stabil di 0.37V (ADC 460) |
+| **H2** | **OLED Display 0.96" I2C** | 128x64 piksel, Driver SSD1306, 4-pin (GND, VCC, SCL, SDA), warna Putih/Biru | **TERUJI FISIK** | Alamat 0x3C, SDA: GPIO8, SCL: GPIO9 dengan timeout anti-freeze |
+| **CN1** | **Kipas DC 5V (4010 Fan)** | DC 5V Brushless Fan ukuran 40 x 40 x 10 mm, arus ~0.10 - 0.15 A | **MENUNGGU KIRIMAN** | Menunggu pengiriman untuk uji inrush current & PWM GPIO5 |
 
 ---
 
@@ -38,9 +38,9 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 | Ref Des | Komponen | Spesifikasi Teknis | Footprint / Package | Status | Catatan Khusus |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **D1** | **LED RGB 5mm** | **Common Cathode (CC)** / Katoda Bersama (kaki terpanjang terhubung ke GND), tipe Diffused / Frosted | Through-Hole 4-Pin | **PERLU DIBELI** | Disolder langsung di PCB, kepala LED menembus lubang akrilik atas |
-| **Q1** | **Transistor NPN** | **SS8050** atau **2N2222** (arus kolektor 800 mA - 1.5 A), susunan kaki **E-B-C** (1=Emitor, 2=Basis, 3=Kolektor) | TO-92 Through-Hole | **PERLU DIBELI** | Saklar low-side driver kipas. Hindari BC547 karena kaki C-B-E terbalik |
-| **D2** | **Diode Flyback** | **1N4007** (1A, 1000V) atau 1N4001 - 1N4004 | DO-41 Through-Hole | **PERLU DIBELI** | Proteksi clamp lonjakan induktif motor kipas (Katoda ke +5V, Anoda ke Kolektor Q1) |
+| **D1** | **LED RGB 5mm** | **Common Cathode (CC)** / Katoda Bersama (kaki terpanjang terhubung ke GND), tipe Diffused / Frosted | Through-Hole 4-Pin | **SUDAH ADA** | Disolder langsung di PCB, kepala LED menembus lubang akrilik atas |
+| **Q1** | **Transistor NPN** | **SS8050** (arus kolektor 800 mA - 1.5 A), susunan kaki pabrikan **E-B-C** (1=Emitor, 2=Basis, 3=Kolektor) | TO-92 Through-Hole | **SUDAH ADA** | Sesuai footprint PCB. Langsung pasang tanpa silang kaki |
+| **D2** | **Diode Flyback** | **1N4007** (1A, 1000V) | DO-41 Through-Hole | **SUDAH ADA** | Proteksi clamp lonjakan induktif motor kipas (Katoda ke +5V, Anoda ke Kolektor Q1) |
 
 ---
 
@@ -48,15 +48,15 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 | Ref Des | Komponen | Nilai & Rating | Footprint | Jumlah | Status | Fungsi Rangkaian |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **R1** | Resistor Film | **10 kΩ**, 1/4 Watt, toleransi 1% / 5% | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pull-up jalur data DHT22 (GPIO10) |
-| **R2** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Merah LED RGB (GPIO4) |
-| **R3** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Hijau LED RGB (GPIO3) |
-| **R4** | Resistor Film | **220 Ω**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Pembatas arus kanal Biru LED RGB (GPIO2) |
-| **R5** | Resistor Film | **1 kΩ**, 1/4 Watt | Axial Through-Hole | 1 pcs | **PERLU DIBELI** | Resistor Basis transistor Q1 dari GPIO5 |
-| **C1** | Kapasitor Elco | **100 µF / 16V atau 25V** | Radial Elektrolit (Dia 5mm, Pitch 2.0-2.5mm) | 1 pcs | **PERLU DIBELI** | Bulk buffer & peredam ripple daya +5V saat kipas start |
-| **C2** | Kapasitor Keramik | **100 nF (0.1 µF)**, kode bodi `104` | Radial Keramik (Pitch 2.5 mm) | 1 pcs | **PERLU DIBELI** | Decoupling noise frekuensi tinggi pada rail +5V |
+| **R1** | Resistor Film | **10 kΩ**, 1/2 Watt (tahan panas) | Axial Through-Hole | 1 pcs | **SUDAH ADA** | Pull-up jalur data DHT22 (GPIO10) |
+| **R2** | Resistor Film | **220 Ω**, 1/2 Watt (tahan panas) | Axial Through-Hole | 1 pcs | **SUDAH ADA** | Pembatas arus kanal Merah LED RGB (GPIO4) |
+| **R3** | Resistor Film | **220 Ω**, 1/2 Watt (tahan panas) | Axial Through-Hole | 1 pcs | **SUDAH ADA** | Pembatas arus kanal Hijau LED RGB (GPIO3) |
+| **R4** | Resistor Film | **220 Ω**, 1/2 Watt (tahan panas) | Axial Through-Hole | 1 pcs | **SUDAH ADA** | Pembatas arus kanal Biru LED RGB (GPIO2) |
+| **R5** | Resistor Film | **1 kΩ**, 1/2 Watt (tahan panas) | Axial Through-Hole | 1 pcs | **SUDAH ADA** | Resistor Basis transistor Q1 dari GPIO5 |
+| **C1** | Kapasitor Elco | **100 µF / 16V-25V** | Radial Elektrolit (Dia 5mm, Pitch 2.0-2.5mm) | 1 pcs | **SUDAH ADA** | Bulk buffer & peredam ripple daya +5V saat kipas start |
+| **C2** | Kapasitor Keramik | **100 nF (0.1 µF)**, kode bodi `104` | Radial Keramik (Pitch 2.5 mm) | 1 pcs | **SUDAH ADA** | Decoupling noise frekuensi tinggi pada rail +5V |
 
-*Rekomendasi pembelian:* Resistor dapat dibeli dalam kemasan per renteng (10 pcs / strip) karena harganya sangat terjangkau.
+*Catatan:* Resistor 1/2 Watt berdimensi sedikit lebih panjang (~8.5-9mm), pas dengan footprint `R_AXIAL-0.4` (pitch 10.16mm).
 
 ---
 
@@ -64,13 +64,13 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 | Ref Des | Komponen | Spesifikasi Fisik | Jumlah | Status | Keterangan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **U1** | **Screw Terminal Block** | **KF301-2P** (Pitch 5.00 mm, 2-pin) | 1 pcs | **PERLU DIBELI** | Input daya utama (+5V dan GND) dari panel jack |
-| **CN1** | **Konektor JST-XH 2-Pin Siku** | JST-XH 2.54 mm Horizontal / Right-Angle Male Header | 1 pcs | **PERLU DIBELI** | Output daya terkontrol untuk Fan 5V (beli beserta housing female + pin crimp jika perlu) |
-| **H1** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm, Straight | 1 pcs | **PERLU DIBELI** | Konektor jumper sensor MQ-7 |
-| **H2** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm, Straight | 1 pcs | **PERLU DIBELI** | Konektor jumper modul OLED I2C |
-| **H3** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm, Straight | 1 pcs | **PERLU DIBELI** | Konektor jumper sensor MQ-2 |
-| **H4** | Female Pin Header | 1x3 Pin, Pitch 2.54 mm, Straight | 1 pcs | **PERLU DIBELI** | Konektor jumper sensor DHT22 |
-| **MCU Socket** | Female Pin Header | 1x8 Pin, Pitch 2.54 mm, Straight (2 baris) | 2 pcs | **PERLU DIBELI** | Dudukan modul ESP32-C3 SuperMini agar dapat dilepas-pasang (dapat dipotong dari strip female 1x40) |
+| **U1** | **Screw Terminal Block** | **KF301-2P** (Pitch 5.00 mm, 2-pin) | 1 pcs | **SUDAH ADA** | Input daya utama (+5V dan GND) dari panel jack |
+| **CN1** | **Konektor JST-XH 2-Pin Siku** | JST-XH 2.54 mm Horizontal / Right-Angle Male Header | 1 pcs | **SUDAH ADA** | Output daya terkontrol untuk Fan 5V (Pin 1=+5V, Pin 2=Kolektor) |
+| **H1** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm | 1 pcs | **SUDAH ADA** | Dipotong dari strip Female 1x40 untuk jumper MQ-7 |
+| **H2** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm | 1 pcs | **SUDAH ADA** | Dipotong dari strip Female 1x40 untuk jumper OLED I2C |
+| **H3** | Female Pin Header | 1x4 Pin, Pitch 2.54 mm | 1 pcs | **SUDAH ADA** | Dipotong dari strip Female 1x40 untuk jumper MQ-2 |
+| **H4** | Female Pin Header | 1x3 Pin, Pitch 2.54 mm | 1 pcs | **SUDAH ADA** | Dipotong dari strip Female 1x40 untuk jumper DHT22 |
+| **MCU Socket** | Female Pin Header | 2x 1x8 Pin (16 pin total), Pitch 2.54 mm | 2 pcs | **SUDAH ADA** | Dipotong dari strip Female 1x40 untuk dudukan ESP32-C3 SuperMini |
 
 ---
 
@@ -96,5 +96,13 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 3. **Orientasi Diode D2 (1N4007):**
    * Gelang putih (Katoda) wajib menghadap ke pin +5V (Pad 1).
    * Kaki tanpa gelang (Anoda) terhubung ke pin Kolektor Q1 (Pad 2).
-4. **Orientasi Kapasitor Elco C1:**
+4. **Orientasi Kapasitor Elco C1 & Hasil Uji Filter:**
    * Garis putih/negatif pada bodi kapasitor wajib menghadap ke Pad bertanda minus / GND (sisi kiri dekat U1).
+   * **Hasil Pengujian Empiris Multimeter:** Kombinasi C1 (100 µF) + C2 (100 nF) sukses meredam fluktuasi ripple daya dari `5.10 - 5.15 V` menjadi tegangan stabil `5.13 - 5.14 V` di terminal KF301, serta membuktikan discharging muatan saat catu daya diputus.
+5. **Penanganan Flapping USB ESP32-C3 SuperMini (Download Boot Mode):**
+   * Jika board mengalami *flapping* (putus-nyambung USB berulang saat pertama dicolok ke PC): **Tahan tombol BOOT, tekan tombol RST sekali, lalu lepas tombol BOOT**.
+   * SoC ESP32-C3 akan mengunci ke mode download boot, menstabilkan port COM (misal: COM8) di Device Manager.
+   * Parameter wajib di Arduino IDE: Board `ESP32C3 Dev Module`, **Flash Mode: `DIO`** (bukan QIO), dan **USB CDC On Boot: `Enabled`**.
+6. **Mitigasi Thermal Cross-Heating (Jarak Fisik DHT22 dan Sensor MQ):**
+   * Sensor MQ-2 dan MQ-7 memiliki kumparan pemanas internal (*heater coil*) yang membuang daya panas gabungan ~1.5 Watt ke lingkungan sekitar (suhu permukaan MQ mencapai 45 - 55 C).
+   * Pada enclosure fisik / intake tunnel, berikan jarak pemisah minimal 2 - 3 cm antara DHT22 dan kedua sensor MQ agar pembacaan suhu DHT22 tidak terdistorsi oleh mikroklimat panas sensor gas. Gunakan kompensasi firmware `#define TEMP_OFFSET` jika terdapat deviasi suhu konstan.
