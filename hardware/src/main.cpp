@@ -1,23 +1,29 @@
 /*
   =============================================================================
-  Environmental Sensing System (ESS) - Edge Firmware v5 (Breadboard Edition)
+  Environmental Sensing System (ESS) - Production Edge Firmware v5
   Bengkel Mekatronika POLTEKOM
   
   Target MCU: ESP32-C3 SuperMini (RISC-V 32-bit Single-Core)
   Arsitektur: Non-blocking millis() Scheduler (Pilar 3 RULEBOOK)
   Kredensial : Isolated in secrets.h (Pilar 5 RULEBOOK)
   
-  Pinout Sesuai Breadboard Prototype (cobabaru.fzz):
-    - OLED SSD1306 0.96" I2C : SDA -> GPIO 8, SCL -> GPIO 9 (VCC: 5V, GND: GND)
-    - DHT22 (AM2302)        : DATA -> GPIO 10 (Pull-up 10k ke 3.3V, VDD: 3.3V)
+  Pinout Resmi Prototype:
+    - OLED SSD1306 0.96" I2C : SDA -> GPIO 8, SCL -> GPIO 9 (0x3C, VCC: 5V)
+    - DHT22 (AM2302)        : DATA -> GPIO 10 (Pull-up 10k ke 5V, VDD: 5V)
     - MQ-7 (Carbon Monoxide) : AO   -> GPIO 1 (ADC1_CH1, VCC: 5V)
     - MQ-2 (Smoke & Gas)     : AO   -> GPIO 0 (ADC1_CH0, VCC: 5V)
     - LED RGB Common Cathode : RED  -> GPIO 4 (R2 220R)
                                GREEN-> GPIO 3 (R3 220R)
                                BLUE -> GPIO 2 (R4 220R)
                                Cathode -> GND
-    - Fan PWM (CN1)          : GPIO 5 (Belum terpasang di breadboard - Standby)
-    - Power                  : 100% ESP32 USB-C 5V VBUS (Jack 5V belum dipasang)
+    - Fan PWM (Low-Side NPN) : PWM  -> GPIO 5 (R5 1k ke Basis SS8050)
+    - Power                  : 5V Regulated (Terminal KF301 + Filter C1/C2)
+
+  Petunjuk Arduino IDE 2.x:
+    - Board: ESP32C3 Dev Module
+    - Flash Mode: DIO (Wajib DIO)
+    - USB CDC On Boot: Enabled
+    - Upload Speed: 921600 / 115200
   =============================================================================
 */
 
@@ -30,16 +36,10 @@
 #include <Adafruit_SSD1306.h>
 #include <DHT.h>
 #include <ArduinoJson.h>
+#include <esp_wifi.h>
 
-// Ambil kredensial dari secrets.h (Pilar 5: Zero Hardcoded Secrets)
-#if __has_include("secrets.h")
-  #include "secrets.h"
-#else
-  #define SECRET_WIFI_SSID    ""
-  #define SECRET_WIFI_PASS    ""
-  #define SECRET_FIREBASE_URL ""
-  #define DEVICE_NODE_ID      "NODE-MRS01"
-#endif
+// Ambil kredensial dari tab secrets.h
+#include "secrets.h"
 
 // =============================================================================
 // 1. KONFIGURASI PIN & PERIPHERAL
@@ -62,10 +62,10 @@
 #define LED_GREEN_PIN 3     // GPIO 3 - Kanal Hijau LED RGB
 #define LED_BLUE_PIN  2     // GPIO 2 - Kanal Biru LED RGB
 
-#define FAN_PWM_PIN   5     // GPIO 5 - Standby (Kipas belum dipasang di breadboard)
+#define FAN_PWM_PIN   5     // GPIO 5 - Kendali PWM Kipas Hisap (SS8050 NPN)
 
 // =============================================================================
-// 2. STANDAR AMBANG BATAS K3 (Pilar 1 & Solusi TD-H01)
+// 2. STANDAR AMBANG BATAS K3 & KALIBRASI SENSOR
 // =============================================================================
 // MQ-7: Karbon Monoksida (CO) dalam satuan PPM
 #define MQ7_WARN_PPM   50
@@ -75,21 +75,29 @@
 #define MQ2_WARN_PPM   150
 #define MQ2_DANGER_PPM 400
 
-// --- KALIBRASI BASELINE UDARA BERSIH (CLEAN AIR ADC) & OFFSET SUHU ---
+// Kalibrasi Baseline Udara Bersih (Clean Air Zero Reference) & Offset Suhu
 #define MQ7_BASELINE_ADC 1550  // Nilai idle ADC MQ-7 di udara bersih (~1.25V)
 #define MQ2_BASELINE_ADC 460   // Nilai idle ADC MQ-2 di udara bersih (~0.37V)
-#define TEMP_OFFSET      0.0   // Offset suhu (°C). Jika terpengaruh panas heater MQ, ubah misal: -3.0
+#define TEMP_OFFSET      0.0   // Offset suhu (°C). Jika terpengaruh panas koil MQ, ubah misal: -3.0
 
 // =============================================================================
-// 3. INTERVAL WAKTU NON-BLOCKING (MILLIS)
+// 3. DEFINISI LEVEL DAYA KIPAS PWM (30x30 mm 5V)
+// =============================================================================
+#define FAN_PWM_STOP   0    // 0%   (0.00V) - Mati
+#define FAN_PWM_LOW    191  // 75%  (~3.70V) - Mode Senyap / Sirkulasi Normal
+#define FAN_PWM_MED    230  // 90%  (~4.50V) - Mode Sedang / Waspada
+#define FAN_PWM_HIGH   255  // 100% (~4.95V) - Mode Purge Maksimal / Bahaya
+
+// =============================================================================
+// 4. INTERVAL WAKTU NON-BLOCKING (MILLIS)
 // =============================================================================
 const unsigned long INTERVAL_SENSOR   = 3000;   // Baca DHT22 & gas tiap 3 detik
 const unsigned long INTERVAL_DISPLAY  = 3500;   // Rotasi halaman OLED tiap 3.5 detik
-const unsigned long INTERVAL_CLOUD    = 10000;  // Kirim data ke cloud tiap 10 detik
+const unsigned long INTERVAL_CLOUD    = 10000;  // Kirim data ke Firebase tiap 10 detik
 const unsigned long INTERVAL_STROBE   = 150;    // Kecepatan kedip LED merah bahaya
 
 // =============================================================================
-// 4. STRUKTUR DATA & OBJEK GLOBAL
+// 5. STRUKTUR DATA & OBJEK GLOBAL
 // =============================================================================
 struct TelemetryData {
   float temperature = 0.0;
@@ -104,6 +112,7 @@ struct TelemetryData {
   float mq2Volt     = 0.0;
   int   mq2Ppm      = 0;
 
+  int   fanPwm      = FAN_PWM_LOW;
   float hazardScore = 0.0;
   const char* status = "NORMAL"; // "NORMAL", "WARNING", "DANGER"
 } telemetry;
@@ -111,10 +120,12 @@ struct TelemetryData {
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(DHT_PIN, DHT_TYPE);
 
+const unsigned long INTERVAL_WIFI_RETRY = 12000; // Coba reconnect tiap 12 detik jika offline
 unsigned long lastSensorRead  = 0;
 unsigned long lastDisplayPage = 0;
 unsigned long lastCloudPost   = 0;
 unsigned long lastStrobeTick  = 0;
+unsigned long lastWifiRetry   = 0;
 unsigned long sampleCount     = 0;
 
 int  oledPage       = 0;        // 0 = Dashboard Utama, 1 = Diagnostik ADC
@@ -123,12 +134,13 @@ bool wifiConnected  = false;
 bool strobeState    = false;
 
 // =============================================================================
-// 5. PROTOTIPE FUNGSI
+// 6. PROTOTIPE FUNGSI
 // =============================================================================
 void initHardware();
 void initWiFi();
 void readSensors();
 void evaluateK3Status();
+void setFanPwm(int duty);
 void updateRgbIndicator();
 void setRgbColor(bool r, bool g, bool b);
 void updateOledDisplay();
@@ -140,7 +152,7 @@ int  calculateMq7Ppm(int rawAdc);
 int  calculateMq2Ppm(int rawAdc);
 
 // =============================================================================
-// 6. SETUP UTAMA
+// 7. SETUP UTAMA
 // =============================================================================
 void setup() {
   Serial.begin(115200);
@@ -148,13 +160,13 @@ void setup() {
 
   Serial.println("\n=======================================================");
   Serial.println("  POLTEKOM SMART ENVIRONMENTAL SENSING SYSTEM (ESS)");
-  Serial.println("  Edge Node Firmware v5 - Breadboard Test Build");
+  Serial.println("  Edge Node Firmware v5 - Production Release Build");
   Serial.println("=======================================================");
 
   initHardware();
   initWiFi();
 
-  // Pembacaan awal sensor
+  // Pembacaan awal sensor & inisialisasi status
   readSensors();
   evaluateK3Status();
   updateOledDisplay();
@@ -164,7 +176,7 @@ void setup() {
 }
 
 // =============================================================================
-// 7. LOOP UTAMA (NON-BLOCKING BASIS MILLIS() - PATUH PILAR 3)
+// 8. LOOP UTAMA (NON-BLOCKING BASIS MILLIS() - PATUH PILAR 3)
 // =============================================================================
 void loop() {
   unsigned long currentMillis = millis();
@@ -192,39 +204,78 @@ void loop() {
     updateOledDisplay();
   }
 
-  // 4. Tugas Rutin C: Pengiriman Data Telemetri Cloud (tiap 10 detik, jika online)
-  if (currentMillis - lastCloudPost >= INTERVAL_CLOUD) {
-    lastCloudPost = currentMillis;
-    if (wifiConnected && strlen(SECRET_FIREBASE_URL) > 0) {
-      sendTelemetryFirebase();
+    // 4. Tugas Rutin C: Pengiriman Data Telemetri Cloud (tiap 10 detik, jika online)
+    if (currentMillis - lastCloudPost >= INTERVAL_CLOUD) {
+      lastCloudPost = currentMillis;
+      if (wifiConnected && strlen(SECRET_FIREBASE_URL) > 0) {
+        sendTelemetryFirebase();
+      }
+    }
+  
+    // 5. Tugas Rutin D: Sinkronisasi Status Wi-Fi (Auto-reconnect ditangani native oleh ESP-IDF)
+    if (WiFi.status() == WL_CONNECTED) {
+      if (!wifiConnected) {
+        wifiConnected = true;
+      }
+    } else {
+      if (wifiConnected) {
+        wifiConnected = false;
+        Serial.println("\n[WIFI] Sinyal Wi-Fi terputus. Beralih ke Mode Offline...");
+      }
     }
   }
-}
 
 // =============================================================================
-// 8. IMPLEMENTASI MODUL-MODUL FUNGSIONAL
+// 9. IMPLEMENTASI MODUL-MODUL FUNGSIONAL
 // =============================================================================
 
 // --- Modul A: Inisialisasi Perangkat Keras ---
 void initHardware() {
-  Serial.println("[INIT] Mempersiapkan I2C, GPIO, & Sensor...");
+  Serial.println("[INIT] Mempersiapkan GPIO, PWM, & Bus I2C...");
 
-  // Konfigurasi Pin LED RGB (Common Cathode)
+  // 1. Konfigurasi Pin LED RGB (Common Cathode)
   pinMode(LED_RED_PIN, OUTPUT);
   pinMode(LED_GREEN_PIN, OUTPUT);
   pinMode(LED_BLUE_PIN, OUTPUT);
-  setRgbColor(0, 0, 1); // Warna Biru saat bootloader/inisialisasi
+  setRgbColor(0, 0, 0);
 
-  // Fan Pin standby (Output LOW agar aman jika tercolok)
+  // 2. Konfigurasi Driver Kipas PWM (SS8050 NPN)
   pinMode(FAN_PWM_PIN, OUTPUT);
-  digitalWrite(FAN_PWM_PIN, LOW);
+  setFanPwm(FAN_PWM_STOP);
 
-  // Inisialisasi I2C Bus pada GPIO 8 (SDA) dan GPIO 9 (SCL)
+  // 3. Self-Test Diagnostik LED & Driver Kipas (Bertahap)
+  Serial.println("[TEST] Uji Mandiri LED & Kipas PWM...");
+  
+  // Tahap 1: Hijau + Fan 75%
+  setRgbColor(0, 1, 0);
+  setFanPwm(FAN_PWM_LOW);
+  delay(1200);
+
+  // Tahap 2: Kuning + Fan 90%
+  setRgbColor(1, 1, 0);
+  setFanPwm(FAN_PWM_MED);
+  delay(1200);
+
+  // Tahap 3: Merah + Fan 100%
+  setRgbColor(1, 0, 0);
+  setFanPwm(FAN_PWM_HIGH);
+  delay(1200);
+
+  // Tahap 4: Biru Standby
+  setRgbColor(0, 0, 1);
+  setFanPwm(FAN_PWM_STOP); // Matikan kipas agar jalur daya 5V bebas ripple selama boot & WiFi
+  delay(800);
+
+  setRgbColor(0, 0, 0);
+  Serial.println("[TEST] Uji Mandiri Selesai.");
+
+  // 4. Inisialisasi I2C Bus dengan Proteksi Timeout Anti-Freeze
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+  Wire.setTimeOut(50);   // Timeout 50ms mencegah lockup strapping pin GPIO 9
   Wire.setClock(400000); // 400 kHz Fast-Mode I2C
 
-  // Inisialisasi OLED Display SSD1306
-  if (display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
+  // 5. Inisialisasi OLED Display SSD1306 (0x3C)
+  if (display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR, false, false)) {
     oledReady = true;
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
@@ -232,22 +283,53 @@ void initHardware() {
     display.setCursor(10, 15);
     display.println("POLTEKOM ESS v5");
     display.setCursor(10, 30);
-    display.println("Breadboard Test");
+    display.println("Connecting Wi-Fi...");
     display.setCursor(10, 45);
     display.println("Booting System...");
     display.display();
     Serial.println("[INIT] OLED Display 128x64 Terdeteksi (0x3C).");
   } else {
-    Serial.println("[ERROR] OLED Display gagal terdeteksi! Periksa jalur SDA/SCL.");
+    Serial.println("[ERROR] OLED Display gagal terdeteksi! Periksa jalur SDA(8)/SCL(9).");
   }
 
-  // Inisialisasi Sensor DHT22
+  // 6. Inisialisasi Sensor DHT22 & ADC 12-bit
   dht.begin();
-
-  // Konfigurasi Resolusi ADC 12-bit ESP32-C3 (0 - 4095)
   analogReadResolution(12);
 
   Serial.println("[INIT] Hardware berhasil diinisialisasi.");
+}
+
+// Callback Event Wi-Fi untuk mendiagnosa alasan kegagalan koneksi secara presisi
+void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.println("\n[WIFI EVENT] Sukses terasosiasi ke AP. Meminta alamat IP via DHCP...");
+      break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      wifiConnected = true;
+      Serial.printf("\n[WIFI EVENT] DHCP Berhasil! IP: %s | Gateway: %s\n",
+                    WiFi.localIP().toString().c_str(), WiFi.gatewayIP().toString().c_str());
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: {
+      wifiConnected = false;
+      uint8_t reason = info.wifi_sta_disconnected.reason;
+      Serial.printf("\n[WIFI EVENT] Terputus dari AP (Alasan / Reason Code: %d)\n", reason);
+      if (reason == 202) {
+        Serial.println("  -> [DIAGNOSTIK PASTI] Password salah / ditolak oleh router! Periksa huruf besar/kecil.");
+      } else if (reason == 15) {
+        Serial.println("  -> [DIAGNOSTIK PASTI] 4-Way Handshake Timeout (Fitur PMF/WPA3 pada router Wi-Fi 6 menolak WPA2).");
+      } else if (reason == 2) {
+        Serial.println("  -> [DIAGNOSTIK PASTI] Auth Expired: Router memutus sesi otentikasi.");
+      } else if (reason == 36) {
+        Serial.println("  -> [DIAGNOSTIK PASTI] Cipher Suite / PMF Rejected oleh Router.");
+      } else if (reason == 201) {
+        Serial.println("  -> [DIAGNOSTIK PASTI] AP tidak ditemukan.");
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 // --- Modul B: Inisialisasi Jaringan Wi-Fi ---
@@ -258,12 +340,42 @@ void initWiFi() {
     return;
   }
 
-  Serial.printf("[WIFI] Menyambungkan ke AP: %s ", SECRET_WIFI_SSID);
+  // 1. Daftarkan Event Listener sebelum menyalakan radio
+  WiFi.onEvent(onWiFiEvent);
+
+  // 2. Matikan Radio Bluetooth agar 100% kristal RF dialokasikan untuk Wi-Fi
+  btStop();
+
+  // 3. Reset state & NVS cache Wi-Fi untuk memastikan inisialisasi bersih
+  WiFi.persistent(false);
+  WiFi.disconnect(true, true);
+  delay(100);
+
+  // 4. Konfigurasi Mode Station
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);              // Matikan power-saving modem Wi-Fi
+  WiFi.setTxPower(WIFI_POWER_11dBm); // 11 dBm: aman dari drop tegangan LDO SuperMini
+  WiFi.setAutoReconnect(true);       // Native auto-reconnect ESP-IDF di background
+
+  // 5. Force Mode Legacy 802.11b/g/n & WPA2-PSK Murni (Emulasi Karakter ESP32-WROOM)
+  // Menghindari bentrok negosiasi PMF / Wi-Fi 6 GCMP pada router enterprise kampus
+  esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+
+  wifi_config_t conf;
+  if (esp_wifi_get_config(WIFI_IF_STA, &conf) == ESP_OK) {
+    conf.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    conf.sta.pmf_cfg.capable = false;
+    conf.sta.pmf_cfg.required = false;
+    esp_wifi_set_config(WIFI_IF_STA, &conf);
+    Serial.println("[WIFI] Mode Legacy WPA2 Diaktifkan (Emulasi WROOM, PMF Nonaktif, TX 11dBm).");
+  }
+
+  // 6. Hubungkan ke Access Point
+  Serial.printf("[WIFI] Menghubungkan ke AP: \"%s\" ", SECRET_WIFI_SSID);
   WiFi.begin(SECRET_WIFI_SSID, SECRET_WIFI_PASS);
 
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 15) {
+  while (WiFi.status() != WL_CONNECTED && attempts < 25) { // 25 x 500ms = 12.5 detik
     delay(500);
     Serial.print(".");
     attempts++;
@@ -271,11 +383,11 @@ void initWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
-    Serial.printf("\n[WIFI] Terhubung! IP: %s | RSSI: %d dBm\n",
-                  WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    Serial.printf("\n[WIFI] Terhubung! IP: %s | RSSI: %d dBm | Gateway: %s\n",
+                  WiFi.localIP().toString().c_str(), WiFi.RSSI(), WiFi.gatewayIP().toString().c_str());
   } else {
     wifiConnected = false;
-    Serial.println("\n[WARN] Timeout koneksi Wi-Fi. Berjalan di Mode Offline Lokal.");
+    Serial.printf("\n[WARN] Belum terhubung di setup (Kode: %d). Sistem lanjut berjalan di Mode Offline (Background reconnect aktif).\n", WiFi.status());
   }
 }
 
@@ -306,15 +418,21 @@ void readSensors() {
   telemetry.mq2Ppm  = calculateMq2Ppm(telemetry.mq2Raw);
 }
 
-// --- Modul D: Evaluasi Tingkat Bahaya K3 ---
+// --- Modul D: Evaluasi Tingkat Bahaya K3 & Kontrol Kipas ---
 void evaluateK3Status() {
   if (telemetry.mq7Ppm >= MQ7_DANGER_PPM || telemetry.mq2Ppm >= MQ2_DANGER_PPM) {
     telemetry.status = "DANGER";
+    telemetry.fanPwm = FAN_PWM_HIGH; // 100% (5.0V Purge)
   } else if (telemetry.mq7Ppm >= MQ7_WARN_PPM || telemetry.mq2Ppm >= MQ2_WARN_PPM) {
     telemetry.status = "WARNING";
+    telemetry.fanPwm = FAN_PWM_MED;  // 90% (~4.5V Sedang)
   } else {
     telemetry.status = "NORMAL";
+    telemetry.fanPwm = FAN_PWM_LOW;  // 75% (~3.7V Senyap)
   }
+
+  // Terapkan kecepatan kipas ke pin PWM
+  setFanPwm(telemetry.fanPwm);
 
   // Hitung Hazard Priority Score (selaras dengan ETL backend)
   float h_mq7 = (float)telemetry.mq7Ppm / (float)MQ7_WARN_PPM;
@@ -322,7 +440,13 @@ void evaluateK3Status() {
   telemetry.hazardScore = (h_mq7 > h_mq2) ? h_mq7 : h_mq2;
 }
 
-// --- Modul E: Indikator Visual K3 (LED RGB Common Cathode) ---
+// --- Modul E: Penggerak Kipas PWM ---
+void setFanPwm(int duty) {
+  duty = constrain(duty, 0, 255);
+  analogWrite(FAN_PWM_PIN, duty);
+}
+
+// --- Modul F: Indikator Visual K3 (LED RGB Common Cathode) ---
 void setRgbColor(bool r, bool g, bool b) {
   digitalWrite(LED_RED_PIN,   r ? HIGH : LOW);
   digitalWrite(LED_GREEN_PIN, g ? HIGH : LOW);
@@ -346,7 +470,7 @@ void updateRgbIndicator() {
   }
 }
 
-// --- Modul F: Pembaruan Tampilan Layar OLED 128x64 ---
+// --- Modul G: Pembaruan Tampilan Layar OLED 128x64 ---
 void updateOledDisplay() {
   if (!oledReady) return;
 
@@ -381,23 +505,24 @@ void drawDashboardScreen() {
   // 2. Baris Suhu & Kelembaban
   display.setCursor(0, 14);
   if (telemetry.dhtValid) {
-    display.printf("Suhu : %.1f C\n", telemetry.temperature);
-    display.setCursor(72, 14);
-    display.printf("RH: %.1f%%", telemetry.humidity);
+    display.printf("Suhu : %.1f C", telemetry.temperature);
+    display.setCursor(76, 14);
+    display.printf("RH:%.0f%%", telemetry.humidity);
   } else {
-    display.print("Suhu : --.- C  RH: --%");
+    display.print("Suhu : ERR     RH: ERR");
   }
 
-  // 3. Baris Konsentrasi Gas
+  // 3. Baris Konsentrasi Gas & Kipas
   display.setCursor(0, 26);
   display.printf("CO   : %3d ppm", telemetry.mq7Ppm);
+  display.setCursor(76, 26);
+  display.printf("Fan:%2d%%", (telemetry.fanPwm * 100) / 255);
   
   display.setCursor(0, 37);
   display.printf("Asap : %3d ppm", telemetry.mq2Ppm);
 
   // 4. Footer Banner Status K3
   if (strcmp(telemetry.status, "DANGER") == 0) {
-    // Solid White Banner dengan Tulisan Hitam (Emergency Alert)
     display.fillRect(0, 50, 128, 14, SSD1306_WHITE);
     display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
     display.setCursor(14, 53);
@@ -434,26 +559,26 @@ void drawDiagnosticScreen() {
   display.printf("Voltase   : %.2f Volt", telemetry.mq2Volt);
 
   display.setCursor(0, 57);
-  display.printf("Sampel #%lu", sampleCount);
+  display.printf("#%lu | Kipas: %d%%", sampleCount, (telemetry.fanPwm * 100) / 255);
 }
 
-// --- Modul G: Logging Serial Monitor (115200 Baud) ---
+// --- Modul H: Logging Serial Monitor (115200 Baud) ---
 void logTelemetrySerial() {
   char thStr[32];
   if (telemetry.dhtValid) {
-    snprintf(thStr, sizeof(thStr), "T: %.1f C | H: %.1f %%", telemetry.temperature, telemetry.humidity);
+    snprintf(thStr, sizeof(thStr), "T:%.1fC H:%.1f%%", telemetry.temperature, telemetry.humidity);
   } else {
-    snprintf(thStr, sizeof(thStr), "T: ERR | H: ERR");
+    snprintf(thStr, sizeof(thStr), "T:ERR H:ERR");
   }
 
-  Serial.printf("[ESS #%04lu] %s | MQ7: %3d PPM (ADC %4d, %.2fV) | MQ2: %3d PPM (ADC %4d, %.2fV) | K3: %s\n",
+  Serial.printf("[ESS #%04lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:%s | FAN:%d%%\n",
                 sampleCount, thStr,
                 telemetry.mq7Ppm, telemetry.mq7Raw, telemetry.mq7Volt,
                 telemetry.mq2Ppm, telemetry.mq2Raw, telemetry.mq2Volt,
-                telemetry.status);
+                telemetry.status, (telemetry.fanPwm * 100) / 255);
 }
 
-// --- Modul H: Pengiriman Telemetri ke Firebase RTDB (HTTPS REST) ---
+// --- Modul I: Pengiriman Telemetri ke Firebase RTDB (HTTPS REST) ---
 void sendTelemetryFirebase() {
   if (WiFi.status() != WL_CONNECTED) {
     return;
@@ -467,7 +592,11 @@ void sendTelemetryFirebase() {
   if (https.begin(client, SECRET_FIREBASE_URL)) {
     https.addHeader("Content-Type", "application/json");
 
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument doc;
+#else
     StaticJsonDocument<384> doc;
+#endif
     doc["node_id"]   = DEVICE_NODE_ID;
     if (telemetry.dhtValid) {
       doc["temp"]    = round(telemetry.temperature * 10.0) / 10.0;
@@ -484,6 +613,7 @@ void sendTelemetryFirebase() {
     doc["mq2_volt"]  = round(telemetry.mq2Volt * 100.0) / 100.0;
     doc["mq2_ppm"]   = telemetry.mq2Ppm;
 
+    doc["fan_pwm"]   = (telemetry.fanPwm * 100) / 255;
     doc["status"]    = telemetry.status;
     doc["created_at"][".sv"] = "timestamp";
 
@@ -492,15 +622,15 @@ void sendTelemetryFirebase() {
 
     int httpCode = https.POST(payload);
     if (httpCode > 0) {
-      Serial.printf("  [CLOUD POST] HTTP %d (Success)\n", httpCode);
+      Serial.printf("  [FIREBASE POST] HTTP %d (Success)\n", httpCode);
     } else {
-      Serial.printf("  [CLOUD ERROR] Gagal mengirim: %s\n", https.errorToString(httpCode).c_str());
+      Serial.printf("  [FIREBASE ERROR] Gagal mengirim: %s\n", https.errorToString(httpCode).c_str());
     }
     https.end();
   }
 }
 
-// --- Modul I: Estimasi Kurva PPM Sensor Gas ---
+// --- Modul J: Estimasi Kurva PPM Sensor Gas ---
 // MQ-7: Karbon Monoksida (CO) dengan Kalibrasi Baseline Udara Bersih
 int calculateMq7Ppm(int rawAdc) {
   int constrainedAdc = constrain(rawAdc, MQ7_BASELINE_ADC, 4095);

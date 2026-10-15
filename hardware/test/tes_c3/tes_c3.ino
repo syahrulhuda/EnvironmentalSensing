@@ -9,6 +9,7 @@
     - MQ-7 (Karbon Monoksida)  : AO   -> GPIO 1 (ADC1_CH1)
     - MQ-2 (Asap & Gas)        : AO   -> GPIO 0 (ADC1_CH0)
     - LED RGB (Common Cathode) : R -> GPIO 4, G -> GPIO 3, B -> GPIO 2
+    - Fan PWM (Transistor NPN) : PWM -> GPIO 5 (R5 1k ke Basis SS8050)
 */
 
 #include <Arduino.h>
@@ -26,6 +27,7 @@
 #define PIN_LED_R     4
 #define PIN_LED_G     3
 #define PIN_LED_B     2
+#define PIN_FAN_PWM   5
 
 #define DHT_TYPE      DHT22
 #define OLED_ADDR     0x3C
@@ -43,6 +45,12 @@
 #define MQ2_BASELINE_ADC 460   // Nilai idle ADC MQ-2 di udara bersih (~0.37V)
 #define TEMP_OFFSET      0.0   // Offset suhu (°C). Jika terpengaruh panas heater MQ, ubah misal: -3.0
 
+// --- KIPAS DC PWM DEFINITIONS ---
+#define FAN_PWM_STOP   0    // 0%   (0.00V) - Mati
+#define FAN_PWM_LOW    89   // 35%  (~1.75V) - Mode Senyap / Tenang (K3 Normal)
+#define FAN_PWM_MED    165  // 65%  (~3.25V) - Mode Sedang (K3 Warning)
+#define FAN_PWM_HIGH   255  // 100% (~4.95V) - Mode Purge Maksimal (K3 Danger)
+
 // --- OBJECTS & TIMERS ---
 Adafruit_SSD1306 display(SCREEN_W, SCREEN_H, &Wire, -1);
 DHT dht(PIN_DHT, DHT_TYPE);
@@ -56,6 +64,7 @@ unsigned long sampleNum = 0;
 
 // --- PROTOTYPES ---
 void setRgb(bool r, bool g, bool b);
+void setFanPwm(int duty);
 int getMq7Ppm(int adc);
 int getMq2Ppm(int adc);
 void updateOled(float t, float h, bool dhtOk, int co, int gas, const char* status);
@@ -63,40 +72,57 @@ void updateOled(float t, float h, bool dhtOk, int co, int gas, const char* statu
 void setup() {
   Serial.begin(115200);
 
-  // 1. Self-Test Diagnostik LED RGB (Semua Warna Diuji Saat Boot)
+  // 1. Inisialisasi Pin Output LED RGB & Driver Kipas PWM
   pinMode(PIN_LED_R, OUTPUT);
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_LED_B, OUTPUT);
+  pinMode(PIN_FAN_PWM, OUTPUT);
+
+  setRgb(0, 0, 0);
+  setFanPwm(FAN_PWM_STOP);
 
   delay(500);
   Serial.println("\n=== [ESS] ESP32-C3 HARDWARE TEST BENCH ===");
-  Serial.println("[TEST] Uji Mandiri LED RGB...");
+  Serial.println("[TEST] Uji Mandiri LED RGB & Driver PWM Kipas SS8050...");
   
-  Serial.println("  -> Nyalakan MERAH (GPIO 4)...");
-  setRgb(1, 0, 0);
-  delay(1000);
+  // Tahap 0: Semua Mati
+  Serial.println("  -> [Tahap 0] Semua MATI | PWM: 0% (Target Multimeter: 0.00 V)...");
+  setRgb(0, 0, 0);
+  setFanPwm(FAN_PWM_STOP);
+  delay(1500);
 
-  Serial.println("  -> Nyalakan HIJAU (GPIO 3)...");
+  // Tahap 1: HIJAU + PWM 35% (~1.75V)
+  Serial.println("  -> [Tahap 1] LED HIJAU (GPIO 3) | Kipas TENANG | PWM: 35% (Target Multimeter: ~1.75 V)...");
   setRgb(0, 1, 0);
-  delay(1000);
+  setFanPwm(FAN_PWM_LOW);
+  delay(2500);
 
-  Serial.println("  -> Nyalakan BIRU (GPIO 2)...");
-  setRgb(0, 0, 1);
-  delay(1000);
-
-  Serial.println("  -> Nyalakan KUNING (GPIO 4 + 3)...");
+  // Tahap 2: KUNING + PWM 65% (~3.25V)
+  Serial.println("  -> [Tahap 2] LED KUNING (GPIO 4+3) | Kipas SEDANG | PWM: 65% (Target Multimeter: ~3.25 V)...");
   setRgb(1, 1, 0);
-  delay(1000);
+  setFanPwm(FAN_PWM_MED);
+  delay(2500);
 
-  setRgb(0, 0, 0); // Matikan sementara
-  Serial.println("[TEST] Uji Mandiri LED RGB Selesai.\n");
+  // Tahap 3: MERAH + PWM 100% (~4.95V)
+  Serial.println("  -> [Tahap 3] LED MERAH (GPIO 4) | Kipas MAKSIMAL | PWM: 100% (Target Multimeter: ~4.95 V)...");
+  setRgb(1, 0, 0);
+  setFanPwm(FAN_PWM_HIGH);
+  delay(2500);
+
+  // Tahap 4: BIRU (Standby)
+  Serial.println("  -> [Tahap 4] LED BIRU (GPIO 2) | Standby...");
+  setRgb(0, 0, 1);
+  setFanPwm(FAN_PWM_STOP);
+  delay(1500);
+
+  setRgb(0, 0, 0);
+  Serial.println("[TEST] Uji Mandiri Selesai. Masuk ke Loop Telemetri Sensor.\n");
   Serial.flush();
 
   // 2. Init I2C & OLED (dengan Proteksi Timeout Anti-Freeze)
   Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
   Wire.setTimeOut(50); // Timeout 50ms agar tidak hang jika I2C bermasalah
 
-  // Cek apakah perangkat 0x3C merespons di bus I2C
   Wire.beginTransmission(OLED_ADDR);
   byte i2cErr = Wire.endTransmission();
 
@@ -136,6 +162,8 @@ void loop() {
 
   // Evaluasi dan baca sensor secara periodik
   static const char* curStatus = "NORMAL";
+  static int currentPwm = FAN_PWM_LOW;
+  static const char* fanStateStr = "35%(~1.75V)";
 
   if (now - prevRead >= INTERVAL_READ) {
     prevRead = now;
@@ -157,17 +185,25 @@ void loop() {
     float vMq2 = (adcMq2 / 4095.0) * 3.3;
     int ppmMq2 = getMq2Ppm(adcMq2);
 
-    // 4. Evaluasi Status K3
+    // 4. Evaluasi Status K3 & Set Kecepatan Kipas PWM
     if (ppmMq7 >= MQ7_DANGER_PPM || ppmMq2 >= MQ2_DANGER_PPM) {
       curStatus = "DANGER";
+      currentPwm = FAN_PWM_HIGH;
+      fanStateStr = "100%(~4.95V)";
     } else if (ppmMq7 >= MQ7_WARN_PPM || ppmMq2 >= MQ2_WARN_PPM) {
       curStatus = "WARNING";
+      currentPwm = FAN_PWM_MED;
+      fanStateStr = "65%(~3.25V)";
     } else {
       curStatus = "NORMAL";
+      currentPwm = FAN_PWM_LOW;
+      fanStateStr = "35%(~1.75V)";
     }
 
+    setFanPwm(currentPwm);
+
     // 5. Output Serial Monitor (Atomic Single Line Buffer - Anti Truncation)
-    char logBuf[160];
+    char logBuf[180];
     char dhtStr[32];
     if (dhtOk) {
       snprintf(dhtStr, sizeof(dhtStr), "T:%.1fC H:%.1f%%", temp, hum);
@@ -179,8 +215,8 @@ void loop() {
                               ((strcmp(curStatus, "WARNING") == 0) ? "KUNING_ON" : "HIJAU_ON");
 
     snprintf(logBuf, sizeof(logBuf),
-             "[#%03lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:%s | LED:%s",
-             sampleNum, dhtStr, ppmMq7, adcMq7, vMq7, ppmMq2, adcMq2, vMq2, curStatus, ledStateStr);
+             "[#%03lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:%s | LED:%s | FAN:%s",
+             sampleNum, dhtStr, ppmMq7, adcMq7, vMq7, ppmMq2, adcMq2, vMq2, curStatus, ledStateStr, fanStateStr);
     Serial.println(logBuf);
     Serial.flush();
 
@@ -209,6 +245,12 @@ void setRgb(bool r, bool g, bool b) {
   digitalWrite(PIN_LED_R, r ? HIGH : LOW);
   digitalWrite(PIN_LED_G, g ? HIGH : LOW);
   digitalWrite(PIN_LED_B, b ? HIGH : LOW);
+}
+
+// Helper: Kendali Kecepatan Kipas PWM (SS8050 Low-Side Switch)
+void setFanPwm(int duty) {
+  duty = constrain(duty, 0, 255);
+  analogWrite(PIN_FAN_PWM, duty);
 }
 
 // Estimasi PPM MQ-7 (CO) dengan Kalibrasi Baseline Udara Bersih
@@ -242,9 +284,13 @@ void updateOled(float t, float h, bool dhtOk, int co, int gas, const char* statu
     display.print("DHT22: ERROR SENSOR");
   }
 
-  // Baris Gas
+  // Baris Gas & Status Kipas
   display.setCursor(0, 26);
   display.printf("CO  : %3d ppm", co);
+  display.setCursor(76, 26);
+  display.printf("Fan:%s", (strcmp(status, "DANGER") == 0) ? "100%" :
+                           ((strcmp(status, "WARNING") == 0) ? "65%" : "35%"));
+
   display.setCursor(0, 37);
   display.printf("Asap: %3d ppm", gas);
 
