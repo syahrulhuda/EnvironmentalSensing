@@ -16,8 +16,13 @@ def get_telemetry(device_id: str = settings.DEFAULT_NODE_ID) -> str:
     if not data:
         return json.dumps({"status": "empty", "message": "Buffer Firebase kosong atau node belum online."})
 
-    matching = [item for item in data.values() if item.get("node_id", settings.DEFAULT_NODE_ID) == device_id]
-    latest = matching[-1] if matching else list(data.values())[-1]
+    matching = [item for item in data.values() if isinstance(item, dict) and item.get("node_id", settings.DEFAULT_NODE_ID) == device_id]
+    candidates = matching if matching else [item for item in data.values() if isinstance(item, dict)]
+    if not candidates:
+        return json.dumps({"status": "empty", "message": "Tidak ada data telemetri yang valid di buffer."})
+
+    # Urutan kronologis presisi berdasarkan timestamp created_at (REL-02)
+    latest = max(candidates, key=lambda x: x.get("created_at") or 0)
 
     ts_ms = latest.get("created_at")
     tz_wib = timezone(timedelta(hours=settings.TIMEZONE_OFFSET_HOURS))
