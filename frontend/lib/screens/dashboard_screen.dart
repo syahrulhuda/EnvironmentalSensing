@@ -64,6 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isDanger = _current.temperature >= ApiConstants.tempMaxThreshold ||
         _current.mq7CoPpm >= ApiConstants.mq7MaxThreshold ||
+        _current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold ||
         _current.status == 'DANGER';
 
     return Scaffold(

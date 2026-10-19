@@ -27,7 +27,7 @@ class TelemetryModel {
     final rawTemp = json['temp'] ?? json['temperature'] ?? 25.0;
     final rawHum = json['hum'] ?? json['humidity'] ?? 55.0;
     final rawCo = json['mq7_ppm'] ?? 0;
-    final rawSmoke = json['mq2_ppm'] ?? json['mq2'] ?? 100;
+    final rawSmoke = json['mq2_ppm'] ?? json['mq2'] ?? 0;
     final rawVolt = json['mq7_volt'] ?? 0.0;
     final rawAdc = json['mq7_raw'] ?? 0;
     final rawNode = json['node_id'] ?? 'NODE-MRS01';
