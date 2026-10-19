@@ -21,9 +21,19 @@
 // =============================================================================
 // 1. KONFIGURASI WI-FI & FIREBASE REALTIME DATABASE
 // =============================================================================
-// GANTI DENGAN NAMA & PASSWORD WI-FI / HOTSPOT KAMU
-const char* WIFI_SSID = "Poltekom Hotspot";
-const char* WIFI_PASS = "poltekomjaya";
+// Gunakan berkas secrets.h lokal (terproteksi .gitignore) atau placeholder
+#if __has_include("../secrets.h")
+  #include "../secrets.h"
+  const char* WIFI_SSID = SECRET_WIFI_SSID;
+  const char* WIFI_PASS = SECRET_WIFI_PASS;
+#elif __has_include("secrets.h")
+  #include "secrets.h"
+  const char* WIFI_SSID = SECRET_WIFI_SSID;
+  const char* WIFI_PASS = SECRET_WIFI_PASS;
+#else
+  const char* WIFI_SSID = "YOUR_WIFI_SSID";
+  const char* WIFI_PASS = "YOUR_WIFI_PASSWORD";
+#endif
 
 // Endpoint Firebase RTDB (Region: asia-southeast1 / Singapura)
 const char* FIREBASE_URL = "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json";
