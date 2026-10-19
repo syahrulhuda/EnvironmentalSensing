@@ -39,5 +39,6 @@ class Settings:
 
     PORT: int = int(os.getenv("PORT", 8000))
     HOST: str = os.getenv("HOST", "0.0.0.0")
+    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "ess-secret-admin-key-2026")
 
 settings = Settings()

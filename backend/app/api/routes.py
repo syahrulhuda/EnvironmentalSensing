@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header, status
 from pydantic import BaseModel, Field
 from app.core.config import settings
 from app.services.ai_service import ask_esi
@@ -90,6 +90,12 @@ async def chat_endpoint(request: ChatRequest):
     )
 
 @router.post("/api/etl/trigger", tags=["System"])
-async def trigger_etl():
+async def trigger_etl(x_ess_admin_key: Optional[str] = Header(None, alias="X-ESS-Admin-Key")):
+    """Memicu siklus ETL secara manual dengan proteksi API Key (SEC-05)."""
+    if not x_ess_admin_key or x_ess_admin_key != settings.ADMIN_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Akses ditolak: Header 'X-ESS-Admin-Key' tidak valid atau tidak disertakan."
+        )
     success = run_etl()
     return {"status": "success" if success else "failed", "timestamp": datetime.now(timezone.utc).isoformat()}
