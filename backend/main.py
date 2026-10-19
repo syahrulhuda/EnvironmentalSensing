@@ -26,11 +26,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Konfigurasi CORS resmi (SEC-04 / TD-B01)
+# Stateless REST API tanpa session cookies: allow_credentials diset False agar patuh spesifikasi W3C
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
