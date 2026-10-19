@@ -234,13 +234,11 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 13. **`[TD-F05]` `intl` Dependency Terdaftar tapi Tidak Dipakai**
     - `pubspec.yaml:13` → `intl: ^0.19.0` tidak diimport di file manapun. Dead dependency.
 
-14. **`[TD-F06]` `TelemetryModel.fromJson()` Default Value Menyembunyikan Error**
-    - `telemetry_model.dart:30` → `json['mq2_ppm'] ?? json['mq2'] ?? 100` — jika kedua key absent, default `100` PPM membuat UI menampilkan pembacaan palsu. Ini langsung melanggar **Pilar 1 RULEBOOK** (jangan menyembunyikan anomali).
-    - **Solusi:** Default ke `0` bukan `100`, atau tampilkan indikator "No Data".
+14. **`[TD-F06]` `TelemetryModel.fromJson()` Default Value Menyembunyikan Error — `[SELESAI & TERVALIDASI]`**
+    - `frontend/lib/models/telemetry_model.dart:30`: Nilai default fallback `rawSmoke` diubah dari `100` ke `0` PPM saat key absent. Mengeliminasi pembacaan palsu dan patuh **Pilar 1 (K3 Mindset)**.
 
-15. **`[TD-F07]` Dashboard `isDanger` Logic Tidak Memeriksa MQ-2 Threshold**
-    - `dashboard_screen.dart:65-67` → Kondisi `isDanger` hanya cek `temperature >= 35` dan `mq7CoPpm >= 50`, tapi **tidak cek `mq2SmokePpm >= 300`**. Jika asap meledak tapi CO rendah, banner tetap hijau.
-    - **Solusi:** Tambahkan `|| _current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold`.
+15. **`[TD-F07]` Dashboard `isDanger` Logic Tidak Memeriksa MQ-2 Threshold — `[SELESAI & TERVALIDASI]`**
+    - `frontend/lib/screens/dashboard_screen.dart:65-68`: Kondisi `isDanger` telah diperluas dengan menambahkan `_current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold`. Menjamin peringatan darurat K3 aktif seketika saat terjadi lonjakan asap/gas mudah terbakar.
 
 16. **`[TD-F08]` GPIO Label di Dashboard Tidak Sesuai Hardware Aktual**
     - `dashboard_screen.dart:128,138,149` → Label `DHT22 • GPIO 4`, `MQ-7 • GPIO 1`, `MQ-2 • GPIO 0` merujuk pinout ESP32-C3 Super Mini (Wokwi). Hardware test bench aktual (WROOM-32) menggunakan GPIO 19, 34, 35.
@@ -294,9 +292,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 24. **`[SEC-04]` CORS + `allow_credentials=True` dengan `allow_origins=["*"]` — `[SELESAI & DIPERBAIKI]`**
     - `backend/main.py:31-35`: Dikonfigurasi ulang dengan `allow_credentials=False` dan metode eksplisit `["GET", "POST", "OPTIONS"]`. Sepenuhnya patuh spesifikasi W3C CORS untuk stateless REST API.
 
-25. **`[SEC-05]` Endpoint `POST /api/etl/trigger` Tanpa Autentikasi**
-    - Siapapun yang tahu URL bisa memicu ETL cycle kapan saja → potensi resource exhaustion di Raspi, dan pruning data prematur.
-    - **Solusi:** Tambahkan API key header check sederhana (`X-ESS-Admin-Key`) atau non-aktifkan dari route publik.
+25. **`[SEC-05]` Endpoint `POST /api/etl/trigger` Tanpa Autentikasi — `[SELESAI & DIPROTEKSI]`**
+    - `backend/app/api/routes.py:90-99`: Dilindungi dengan validasi header wajib `X-ESS-Admin-Key` mencocokkan `settings.ADMIN_API_KEY`. Menolak akses ilegal dengan status `HTTP 401 Unauthorized`. Scheduler otomatis internal tetap berjalan independen.
 
 26. **`[SEC-06]` Supabase `anon` Key Digunakan Sebagai `Service Role` Key**
     - `database.py:38-39` → `Authorization: Bearer {settings.SUPABASE_KEY}` — jika ini adalah `anon` key, maka RLS (Row Level Security) Supabase akan membatasi akses. Tapi jika ini adalah `service_role` key (terlihat dari prefix `sb_secret_`), maka key ini bypass seluruh RLS.
@@ -325,12 +322,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
-| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 7 items | 2 items (SEC-02,05) | **7.5/10** |
-| **Frontend (Flutter)** | 15 | ✅ Clean architecture, < 188 LOC each | 9 items (TD-F01~F09) | 1 item (REL-03) | **6.0/10** |
+| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 7 items | 1 item (SEC-02) | **8.0/10** |
+| **Frontend (Flutter)** | 15 | ✅ Clean architecture, < 188 LOC each | 7 items | 1 item (REL-03) | **7.0/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **35 files** | **—** | **19 items** | **4 items** | **7.2/10** |
+| **TOTAL** | **35 files** | **—** | **17 items** | **3 items** | **7.8/10** |
 
 ---
 
@@ -340,7 +337,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[SEC-01]** Hapus kredensial Wi-Fi hardcoded dari `tes_wroom.ino` → ganti dengan `#include "secrets.h"`. *(Selesai - Commit 298d645)*
 - [ ] **[SEC-02]** Konfigurasi Firebase Security Rules agar RTDB tidak bisa diakses publik tanpa auth.
 - [x] **[SEC-04]** Ganti konfigurasi CORS di `main.py` ke `allow_credentials=False` dan metode eksplisit. *(Selesai - Commit 8e67f60)*
-- [ ] **[SEC-05]** Tambahkan autentikasi sederhana pada `POST /api/etl/trigger`.
+- [x] **[SEC-05]** Tambahkan autentikasi header X-ESS-Admin-Key pada `POST /api/etl/trigger`. *(Selesai - Commit 0322cf8)*
 
 **2. Backend Tech Debt & Reliability (Huda):**
 - [x] **[REL-02]** Garansi urutan kronologis presisi telemetri terbaru via `max(created_at)`. *(Selesai - Commit 030f669)*
@@ -350,8 +347,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi. *(Selesai - Terverifikasi aktif)*
 
 **3. Frontend Tech Debt (Zaki & Huda):**
-- [ ] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2.
-- [ ] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`.
+- [x] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2. *(Selesai - Commit c9ee83a)*
+- [x] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`. *(Selesai - Commit c9ee83a)*
 - [ ] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`.
 - [ ] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`.
 - [ ] **[REL-03]** Tampilkan indikator "OFFLINE / SIMULATED" di UI saat fallback aktif.
