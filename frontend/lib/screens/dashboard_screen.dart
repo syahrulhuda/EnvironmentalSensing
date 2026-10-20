@@ -51,6 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       nodeId: _current.nodeId,
       status: 'DANGER',
       timestamp: DateTime.now(),
+      isOnline: _current.isOnline,
     );
   }
 
@@ -77,7 +78,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          StatusPillBadge(isLive: true, label: _current.nodeId),
+          StatusPillBadge(
+            isLive: _current.isOnline,
+            label: _current.isOnline ? 'ONLINE' : 'OFFLINE',
+          ),
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(
@@ -93,11 +97,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               context: context,
               builder: (_) => SettingsDialog(
                 currentFirebaseUrl: _telemetryService.firebaseUrl,
-                currentBackendUrl: _chatService.backendUrl,
-                currentNodeId: _current.nodeId,
+                currentBackendUrl: _telemetryService.backendUrl,
+                currentNodeId: _telemetryService.nodeId,
                 onSave: (fb, be, node) {
-                  _telemetryService.firebaseUrl = fb;
-                  _chatService.backendUrl = be;
+                  setState(() {
+                    _telemetryService.firebaseUrl = fb;
+                    _telemetryService.backendUrl = be;
+                    _telemetryService.nodeId = node;
+                    _chatService.backendUrl = be;
+                  });
                 },
               ),
             ),

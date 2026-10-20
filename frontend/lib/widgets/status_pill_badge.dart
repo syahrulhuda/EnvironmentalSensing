@@ -14,7 +14,7 @@ class StatusPillBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isLive ? AppColors.safeEmerald : AppColors.smokeAmber;
+    final color = isLive ? AppColors.safeEmerald : AppColors.dangerRed;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

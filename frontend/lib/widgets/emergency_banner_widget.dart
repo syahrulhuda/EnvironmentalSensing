@@ -14,15 +14,26 @@ class EmergencyBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isDanger
-        ? AppColors.dangerRed.withOpacity(0.18)
-        : AppColors.safeEmerald.withOpacity(0.10);
-    final borderColor = isDanger ? AppColors.dangerRed : AppColors.safeEmerald;
-    final icon = isDanger ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded;
-    final title = isDanger ? 'PERINGATAN: KONDISI BENGKEL KRITIS!' : 'Bengkel Terpantau Aman';
-    final desc = isDanger
-        ? 'Sensor mendeteksi anomali: Suhu, Gas CO, atau Asap melebihi batas K3. LED Merah & Kipas Aktif!'
-        : 'Parameter atmosfer ruangan dalam ambang baku mutu K3 & OSHA. Tidak ada kebocoran gas.';
+    final isOffline = statusText == 'OFFLINE';
+    final bgColor = isOffline
+        ? AppColors.dangerRed.withOpacity(0.12)
+        : (isDanger
+            ? AppColors.dangerRed.withOpacity(0.18)
+            : AppColors.safeEmerald.withOpacity(0.10));
+    final borderColor = isOffline
+        ? AppColors.dangerRed
+        : (isDanger ? AppColors.dangerRed : AppColors.safeEmerald);
+    final icon = isOffline
+        ? Icons.cloud_off_rounded
+        : (isDanger ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded);
+    final title = isOffline
+        ? 'PERINGATAN: KONEKSI IOT TERPUTUS'
+        : (isDanger ? 'PERINGATAN: KONDISI BENGKEL KRITIS!' : 'Bengkel Terpantau Aman');
+    final desc = isOffline
+        ? 'Koneksi ke node ESS terputus. Menampilkan data fallback simulasi. Periksa koneksi Wi-Fi dan catu daya perangkat!'
+        : (isDanger
+            ? 'Sensor mendeteksi anomali: Suhu, Gas CO, atau Asap melebihi batas K3. LED Merah & Kipas Aktif!'
+            : 'Parameter atmosfer ruangan dalam ambang baku mutu K3 & OSHA. Tidak ada kebocoran gas.');
 
     return Container(
       width: double.infinity,
