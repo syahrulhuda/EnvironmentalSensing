@@ -220,10 +220,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
    - Dua file masing-masing > 700 baris. **Melanggar Pilar 3 RULEBOOK** (batas 250 baris).
    - **Solusi:** Modularisasi menjadi komponen terpisah: `chart.js`, `chat.js`, `gauges.js`, `settings.js`.
 
-10. **`[TD-F02]` Flutter `TelemetryService` Langsung Polling Firebase RTDB**
-    - `telemetry_service.dart:27` → Flutter menembak langsung ke Firebase RTDB URL, bukan melalui FastAPI gateway.
-    - **Implikasi:** Melanggar prinsip **single gateway** (Pilar 5: Client tidak boleh pegang kredensial database langsung). Meskipun RTDB URL bukan secret, pola ini tidak scalable.
-    - **Solusi:** Ganti dengan polling ke `GET /api/telemetry/latest` via backend gateway.
+10. **`[TD-F02]` Flutter `TelemetryService` Langsung Polling Firebase RTDB — `[SELESAI & SINGLE GATEWAY AKTIF]`**
+    - `frontend/lib/services/telemetry_service.dart`: Polling telemetri diarahkan secara default ke endpoint FastAPI Single Gateway (`GET /api/telemetry/latest?device_id=NODE-MRS01`) dengan header bypass Ngrok. Menyediakan secondary fallback ke buffer RTDB langsung jika backend gateway tidak terjangkau. Sepenuhnya patuh **Pilar 5 (Single Gateway)**.
 
 11. **`[TD-F03]` `fl_chart` Dependency Terdaftar tapi Tidak Dipakai**
     - `pubspec.yaml:14` → `fl_chart: ^0.69.0` terdaftar, tapi chart real-time menggunakan `CustomPaint` manual. Dependency unused 100% — menambah ukuran build.
@@ -307,9 +305,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 28. **`[REL-02]` `telemetry_tool.py:20` Asumsi `entries.last` = Data Terbaru — `[SELESAI & TERURUT KRONOLOGIS]`**
     - `backend/app/tools/telemetry_tool.py`: Logika naive indexing `matching[-1]` digantikan dengan fungsi Pythonic `max(candidates, key=lambda x: x.get('created_at') or 0)`. Menjamin data sensor terkini yang dikonsumsi oleh ESI AI Agent maupun Flutter (`GET /api/telemetry/latest`) selalu 100% akurat secara kronologis.
 
-29. **`[REL-03]` `telemetry_service.dart:40` Catch-All Silently Falls Back ke Simulasi**
-    - Jika Firebase RTDB down, Flutter diam-diam menampilkan data simulasi palsu **tanpa indikasi apapun ke pengguna**. Operator bengkel bisa mengira semua aman padahal sensor offline.
-    - **Solusi:** Tampilkan badge "OFFLINE / SIMULATED DATA" yang jelas di UI saat fallback aktif.
+29. **`[REL-03]` `telemetry_service.dart:40` Catch-All Silently Falls Back ke Simulasi — `[SELESAI & TRANSPARAN OFFLINE]`**
+    - `frontend/lib/services/telemetry_service.dart`, `status_pill_badge.dart`, `emergency_banner_widget.dart`, `dashboard_screen.dart`: Mekanisme silent fallback dihilangkan. Ketika koneksi ke backend gateway maupun buffer RTDB terputus, service memancarkan `isOnline: false` dengan status `'OFFLINE'`. AppBar secara presisi menampilkan badge merah tegas `[● OFFLINE]` (dan hijau `[● ONLINE]` saat terhubung), serta banner darurat menampilkan peringatan bahwa koneksi ke node IoT terputus. Menjamin operator bengkel tidak tertipu oleh data simulasi normal saat sensor mati. Patuh **Pilar 1 (K3 Safety Mindset)**.
 
 > [!WARNING]
 > **PERINGATAN & INSTRUKSI LEAD ARCHITECT UNTUK ZAKI:**
@@ -323,11 +320,11 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
 | **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 7 items | 1 item (SEC-02) | **8.0/10** |
-| **Frontend (Flutter)** | 15 | ✅ Clean architecture, < 188 LOC each | 7 items | 1 item (REL-03) | **7.0/10** |
+| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, explicit OFFLINE | 4 items | 0 items | **8.5/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **35 files** | **—** | **17 items** | **3 items** | **7.8/10** |
+| **TOTAL** | **35 files** | **—** | **14 items** | **2 items** | **8.2/10** |
 
 ---
 
@@ -349,9 +346,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 **3. Frontend Tech Debt (Zaki & Huda):**
 - [x] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2. *(Selesai - Commit c9ee83a)*
 - [x] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`. *(Selesai - Commit c9ee83a)*
-- [ ] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`.
+- [x] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`. *(Selesai - Commit 41ac3d1)*
 - [ ] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`.
-- [ ] **[REL-03]** Tampilkan indikator "OFFLINE / SIMULATED" di UI saat fallback aktif.
+- [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
 **4. Hardware Standardisasi & Perakitan Fisik (Huda):**
