@@ -133,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     SensorMetricCard(
                       title: 'Suhu & Kelembapan',
-                      pinLabel: 'DHT22 • GPIO 4',
+                      pinLabel: 'DHT22 • GPIO 10',
                       value: '${_current.temperature.toStringAsFixed(1)}°C',
                       unit: '${_current.humidity.toStringAsFixed(0)}% RH',
                       badgeText: _current.temperature >= 35 ? 'Overheat' : 'Optimal',
