@@ -1,8 +1,10 @@
+import json
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Header, status
+from fastapi import APIRouter, HTTPException, Header, Depends, status
 from pydantic import BaseModel, Field
 from app.core.config import settings
+from app.core.rate_limiter import chat_rate_limiter
 from app.services.ai_service import ask_esi
 from app.services.etl_service import run_etl
 
@@ -39,7 +41,6 @@ async def health_check():
 @router.get("/api/telemetry/latest", tags=["Telemetry"])
 async def get_latest_telemetry(device_id: str = settings.DEFAULT_NODE_ID):
     """Mengambil data telemetri terkini dari Hot Buffer Firebase RTDB untuk gauge real-time Flutter."""
-    import json
     from app.tools.telemetry_tool import get_telemetry
     res_str = get_telemetry(device_id=device_id)
     return json.loads(res_str)
@@ -77,7 +78,12 @@ async def get_historical_logs(
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
-@router.post("/api/chat", response_model=ChatResponse, tags=["ESI Assistant"])
+@router.post(
+    "/api/chat",
+    response_model=ChatResponse,
+    tags=["ESI Assistant"],
+    dependencies=[Depends(chat_rate_limiter)]
+)
 async def chat_endpoint(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Pesan tidak boleh kosong.")
