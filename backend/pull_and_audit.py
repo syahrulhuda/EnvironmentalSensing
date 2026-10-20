@@ -3,12 +3,19 @@ Script Audit & Analisis Data Telemetri Firebase RTDB
 Laboratorium Mekatronika POLTEKOM - K3 Environmental Sensing
 """
 
+import os
+import sys
 import json
 import urllib.request
 import datetime
 import math
 
-DATABASE_URL = "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
+# Pastikan path modul root backend terbaca untuk eksekusi script standalone
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from app.core.config import settings
+
+DATABASE_URL = settings.FIREBASE_RTDB_URL
 
 def fetch_telemetry_data():
     print(f"[1/4] Mengunduh data dari Firebase RTDB: {DATABASE_URL} ...")
