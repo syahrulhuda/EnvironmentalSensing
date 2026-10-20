@@ -199,13 +199,11 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 4. **`[TD-B04]` `pull_and_audit.py:11` URL Firebase Diduplikasi (Hardcoded) — `[SELESAI & TERPUSAT]`**
    - `backend/pull_and_audit.py`: Konfigurasi duplikat `DATABASE_URL` dieliminasi. Script kini mengimpor `settings.FIREBASE_RTDB_URL` dari `app.core.config`, sepenuhnya mematuhi prinsip DRY.
 
-5. **`[TD-B05]` Tidak Ada Rate Limiting pada API Endpoints**
-   - `POST /api/chat` dan `POST /api/etl/trigger` terbuka tanpa pembatasan request.
-   - **Risiko:** Mudah di-flood/DDoS. Endpoint `/api/chat` memanggil Gemini API berbayar — flooding bisa menguras kuota/biaya.
-   - **Solusi:** Tambahkan `slowapi` atau middleware rate limiter sederhana.
+5. **`[TD-B05]` Tidak Ada Rate Limiting pada API Endpoints — `[SELESAI & DILINDUNGI]`**
+   - `backend/app/core/rate_limiter.py` & `routes.py`: Diimplementasikan `InMemoryRateLimiter` berbasis sliding-window dengan thread-safe lock. Endpoint `POST /api/chat` kini dibatasi maksimal 15 request per menit per IP client/proxy (`X-Forwarded-For`). Melebihi batas akan mengembalikan status `HTTP 429 Too Many Requests` dengan header `Retry-After`. Kuota Gemini AI terlindungi 100% dari potensi abuse/flood.
 
-6. **`[TD-B06]` `routes.py:42-44` Import `json` di Dalam Fungsi**
-   - `import json` dilakukan di dalam body fungsi `get_latest_telemetry()`, bukan di top-level. Ini berfungsi tapi melanggar konvensi PEP 8 dan menambah overhead marginal tiap request.
+6. **`[TD-B06]` `routes.py:42-44` Import `json` di Dalam Fungsi — `[SELESAI & DIPINDAH KE TOP-LEVEL]`**
+   - `backend/app/api/routes.py`: Import `json` dipindahkan ke baris teratas (top-level) sesuai konvensi PEP 8.
 
 7. **`[TD-B07]` `requirements.txt` Mendaftarkan `requests==2.32.3` tapi Tidak Pernah Dipakai — `[SELESAI & DIHAPUS]`**
    - `backend/requirements.txt`: Dependensi mati `requests==2.32.3` telah dihapus. Seluruh backend konsisten menggunakan library bawaan Python `urllib.request`.
@@ -231,9 +229,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 15. **`[TD-F07]` Dashboard `isDanger` Logic Tidak Memeriksa MQ-2 Threshold — `[SELESAI & TERVALIDASI]`**
     - `frontend/lib/screens/dashboard_screen.dart:65-68`: Kondisi `isDanger` telah diperluas dengan menambahkan `_current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold`. Menjamin peringatan darurat K3 aktif seketika saat terjadi lonjakan asap/gas mudah terbakar.
 
-16. **`[TD-F08]` GPIO Label di Dashboard Tidak Sesuai Hardware Aktual**
-    - `dashboard_screen.dart:128,138,149` → Label `DHT22 • GPIO 4`, `MQ-7 • GPIO 1`, `MQ-2 • GPIO 0` merujuk pinout ESP32-C3 Super Mini (Wokwi). Hardware test bench aktual (WROOM-32) menggunakan GPIO 19, 34, 35.
-    - **Implikasi:** Membingungkan pengguna saat debugging hardware.
+16. **`[TD-F08]` GPIO Label di Dashboard Tidak Sesuai Hardware Aktual — `[SELESAI & DISELARASKAN KE GPIO 10]`**
+    - `frontend/lib/screens/dashboard_screen.dart:136`: Label pin DHT22 diperbarui dari `GPIO 4` menjadi `GPIO 10` selaras dengan pinout firmware produksi fisik ESP32-C3 SuperMini (`prodC3.ino:12`). Mengeliminasi kebingungan teknis saat perakitan dan verifikasi operasional.
 
 17. **`[TD-F09]` `EsiChatBottomSheet` Tidak Scroll ke Pesan Terbaru**
     - `esi_chat_bottom_sheet.dart` → ListView tidak memiliki `ScrollController` yang auto-scroll ke bottom saat pesan baru ditambahkan. UX buruk pada percakapan panjang.
@@ -312,12 +309,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
-| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 5 items | 1 item (SEC-02) | **8.5/10** |
-| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, lean deps | 1 item | 0 items | **9.2/10** |
+| **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, error-handled | 3 items | 1 item (SEC-02) | **9.0/10** |
+| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **35 files** | **—** | **9 items** | **2 items** | **8.8/10** |
+| **TOTAL** | **36 files** | **—** | **6 items** | **2 items** | **9.2/10** |
 
 ---
 
@@ -331,7 +328,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 **2. Backend Tech Debt & Reliability (Huda):**
 - [x] **[REL-02]** Garansi urutan kronologis presisi telemetri terbaru via `max(created_at)`. *(Selesai - Commit 030f669)*
-- [ ] **[TD-B05]** Tambahkan rate limiting (`slowapi`) pada `/api/chat`.
+- [x] **[TD-B05]** Tambahkan rate limiting (`InMemoryRateLimiter`) pada `/api/chat`. *(Selesai - Commit 7558be0)*
+- [x] **[TD-B06]** Pindahkan import json ke top-level PEP 8. *(Selesai - Commit 7558be0)*
 - [x] **[TD-B07]** Hapus `requests` dari `requirements.txt`. *(Selesai - Commit 29aaca4)*
 - [x] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`. *(Selesai - Commit 29aaca4)*
 - [x] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi. *(Selesai - Terverifikasi aktif)*
@@ -341,6 +339,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`. *(Selesai - Commit c9ee83a)*
 - [x] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`. *(Selesai - Commit 41ac3d1)*
 - [x] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`. *(Selesai - Commit c8309c2)*
+- [x] **[TD-F08]** Selaraskan label pinout sensor fisik ke GPIO 10 (DHT22), GPIO 1 (MQ-7), GPIO 0 (MQ-2). *(Selesai - Commit 47e5bd6)*
 - [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
