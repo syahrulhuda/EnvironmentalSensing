@@ -196,9 +196,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
    - **Risiko:** Jika `.env` kosong, default fallback langsung menunjuk ke URL produksi. Ini bertentangan dengan spirit *fail-fast*. Idealnya, backend menolak start jika variabel kritis tidak diisi.
    - **Severity:** Medium — saat ini aman karena `.env` aktif, tapi berbahaya saat migration/onboarding.
 
-4. **`[TD-B04]` `pull_and_audit.py:11` URL Firebase Diduplikasi (Hardcoded)**
-   - Script audit mandiri memiliki `DATABASE_URL` sendiri yang terpisah dari `config.py`, melanggar DRY (Don't Repeat Yourself). Satu sumber URL berubah, yang lain bisa tertinggal.
-   - **Solusi:** Import dari `app.core.config.settings.FIREBASE_RTDB_URL`.
+4. **`[TD-B04]` `pull_and_audit.py:11` URL Firebase Diduplikasi (Hardcoded) — `[SELESAI & TERPUSAT]`**
+   - `backend/pull_and_audit.py`: Konfigurasi duplikat `DATABASE_URL` dieliminasi. Script kini mengimpor `settings.FIREBASE_RTDB_URL` dari `app.core.config`, sepenuhnya mematuhi prinsip DRY.
 
 5. **`[TD-B05]` Tidak Ada Rate Limiting pada API Endpoints**
    - `POST /api/chat` dan `POST /api/etl/trigger` terbuka tanpa pembatasan request.
@@ -208,8 +207,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 6. **`[TD-B06]` `routes.py:42-44` Import `json` di Dalam Fungsi**
    - `import json` dilakukan di dalam body fungsi `get_latest_telemetry()`, bukan di top-level. Ini berfungsi tapi melanggar konvensi PEP 8 dan menambah overhead marginal tiap request.
 
-7. **`[TD-B07]` `requirements.txt` Mendaftarkan `requests==2.32.3` tapi Tidak Pernah Dipakai**
-   - Backend menggunakan `urllib.request` (stdlib) untuk semua HTTP. Dependency `requests` unused — menambah ukuran install tanpa fungsi. **Hapus.**
+7. **`[TD-B07]` `requirements.txt` Mendaftarkan `requests==2.32.3` tapi Tidak Pernah Dipakai — `[SELESAI & DIHAPUS]`**
+   - `backend/requirements.txt`: Dependensi mati `requests==2.32.3` telah dihapus. Seluruh backend konsisten menggunakan library bawaan Python `urllib.request`.
 
 8. **`[TD-B08]` `chat_cli.py` Tidak Menyimpan History Multi-turn**
    - CLI chatbot memanggil `ask_esi(user_input)` tanpa passing `history`. Percakapan tidak memiliki konteks riwayat. Mudah diperbaiki tapi saat ini *broken*.
@@ -223,14 +222,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 10. **`[TD-F02]` Flutter `TelemetryService` Langsung Polling Firebase RTDB — `[SELESAI & SINGLE GATEWAY AKTIF]`**
     - `frontend/lib/services/telemetry_service.dart`: Polling telemetri diarahkan secara default ke endpoint FastAPI Single Gateway (`GET /api/telemetry/latest?device_id=NODE-MRS01`) dengan header bypass Ngrok. Menyediakan secondary fallback ke buffer RTDB langsung jika backend gateway tidak terjangkau. Sepenuhnya patuh **Pilar 5 (Single Gateway)**.
 
-11. **`[TD-F03]` `fl_chart` Dependency Terdaftar tapi Tidak Dipakai**
-    - `pubspec.yaml:14` → `fl_chart: ^0.69.0` terdaftar, tapi chart real-time menggunakan `CustomPaint` manual. Dependency unused 100% — menambah ukuran build.
-
-12. **`[TD-F04]` `shared_preferences` Dependency Terdaftar tapi Tidak Dipakai**
-    - `pubspec.yaml:15` → `shared_preferences: ^2.3.2` terdaftar tapi tidak ada import di seluruh `lib/`. Dead dependency.
-
-13. **`[TD-F05]` `intl` Dependency Terdaftar tapi Tidak Dipakai**
-    - `pubspec.yaml:13` → `intl: ^0.19.0` tidak diimport di file manapun. Dead dependency.
+11. **`[TD-F03/F04/F05]` Dead Dependencies Terdaftar di `pubspec.yaml` — `[SELESAI & DIPANGKAS]`**
+    - `frontend/pubspec.yaml`: Dependensi tak terpakai `fl_chart`, `shared_preferences`, dan `intl` telah dipangkas habis. Mengurangi ukuran bundle build Web dan APK Flutter.
 
 14. **`[TD-F06]` `TelemetryModel.fromJson()` Default Value Menyembunyikan Error — `[SELESAI & TERVALIDASI]`**
     - `frontend/lib/models/telemetry_model.dart:30`: Nilai default fallback `rawSmoke` diubah dari `100` ke `0` PPM saat key absent. Mengeliminasi pembacaan palsu dan patuh **Pilar 1 (K3 Mindset)**.
@@ -319,12 +312,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
-| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 7 items | 1 item (SEC-02) | **8.0/10** |
-| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, explicit OFFLINE | 4 items | 0 items | **8.5/10** |
+| **Backend (Python)** | 10 | ✅ Modular, type-hinted, error-handled | 5 items | 1 item (SEC-02) | **8.5/10** |
+| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, lean deps | 1 item | 0 items | **9.2/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **35 files** | **—** | **14 items** | **2 items** | **8.2/10** |
+| **TOTAL** | **35 files** | **—** | **9 items** | **2 items** | **8.8/10** |
 
 ---
 
@@ -339,15 +332,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 **2. Backend Tech Debt & Reliability (Huda):**
 - [x] **[REL-02]** Garansi urutan kronologis presisi telemetri terbaru via `max(created_at)`. *(Selesai - Commit 030f669)*
 - [ ] **[TD-B05]** Tambahkan rate limiting (`slowapi`) pada `/api/chat`.
-- [ ] **[TD-B07]** Hapus `requests` dari `requirements.txt`.
-- [ ] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`.
+- [x] **[TD-B07]** Hapus `requests` dari `requirements.txt`. *(Selesai - Commit 29aaca4)*
+- [x] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`. *(Selesai - Commit 29aaca4)*
 - [x] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi. *(Selesai - Terverifikasi aktif)*
 
 **3. Frontend Tech Debt (Zaki & Huda):**
 - [x] **[TD-F07]** Fix `isDanger` logic di `dashboard_screen.dart` → tambahkan cek MQ-2. *(Selesai - Commit c9ee83a)*
 - [x] **[TD-F06]** Ganti default MQ-2 PPM dari `100` ke `0` di `telemetry_model.dart`. *(Selesai - Commit c9ee83a)*
 - [x] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`. *(Selesai - Commit 41ac3d1)*
-- [ ] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`.
+- [x] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`. *(Selesai - Commit c8309c2)*
 - [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
