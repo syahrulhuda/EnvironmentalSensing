@@ -83,11 +83,15 @@ body {
 
 /* Push chat column safely below the fold so it never peeks in hero view */
 #workspaceSection.hero-layout #chatColumn {
-  margin-top: 7rem;
+  margin-top: 18rem;
   transition: all 0.4s ease-out;
 }
 
 /* 2. SCROLLED STATE (When scrolled down) */
+#workspaceSection.scrolled-layout #chatColumn {
+  margin-top: 1.5rem;
+}
+
 @media (min-width: 1024px) {
   #workspaceSection.scrolled-layout #workspaceGrid {
     display: grid;
@@ -96,7 +100,7 @@ body {
     align-items: start;
   }
   #workspaceSection.scrolled-layout #cardsColumn {
-    grid-column: span 7 / span 7;
+    grid-column: span 6 / span 6;
   }
   #workspaceSection.scrolled-layout #cardsGrid {
     display: flex;
@@ -104,7 +108,7 @@ body {
     gap: 1rem;
   }
   #workspaceSection.scrolled-layout #chatColumn {
-    grid-column: span 5 / span 5;
+    grid-column: span 6 / span 6;
     position: -webkit-sticky;
     position: sticky;
     top: 5rem;
