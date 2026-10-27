@@ -352,6 +352,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F08]** Selaraskan label pinout sensor fisik ke GPIO 10 (DHT22), GPIO 1 (MQ-7), GPIO 0 (MQ-2). *(Selesai - Commit 47e5bd6)*
 - [x] **[TD-F09]** Auto-scroll chat ListView dan Pinned Responsive Split Layout (Opsi A Web / Opsi B Mobile) via `EsiChatPanel`. *(Selesai - Commit 70552e0 & b7d446f)*
 - [x] **[TD-F10]** Redesain Web Frontend: Arsitektur 3-Warna Ketat (Background #080d1a, Card Surface #0f172a, Tulisan & Elemen Putih #ffffff), Penghapusan tombol simulasi header, Transformasi Scroll Morphing dari 3 Card Hero (~70px) menjadi 3 Card Detail di kolom kiri masing-masing dengan canvas sparkline real-time (Suhu, Asap, CO), serta Panel Chat ESI yang lebih kompak (~400px) dan pinned sticky di kanan saat digulir.
+- [x] **[TD-F11]** Penyelarasan Proporsi Web Frontend: Slider dipendekkan (305px) agar 3 card sensor di hero state muat 100% tanpa terpotong di layar laptop; Pembagian simetris 50/50 (`span 6 / span 6`) pada layout scrolled agar lebar kolom informasi sensor dan card ESI persis seimbang; Panel ESI ditinggikan menjadi 495px agar sejajar secara vertikal dengan 3 tumpukan card sensor bergrafik; Margin hero chat ditingkatkan ke 18rem mencegah peeking.
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
 **4. Hardware Standardisasi & Perakitan Fisik (Huda):**
