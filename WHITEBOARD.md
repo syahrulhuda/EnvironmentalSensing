@@ -319,10 +319,10 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 |---|---|---|---|---|---|
 | **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, resilient ETL | 2 items (CORS, Config) | 1 item (SEC-02) | **9.5/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
-| **Frontend (Web JS)** | 3 | ✅ Functional, compact floating cards, scroll morphing split layout | 1 item (TD-F01) | — | **7.5/10** |
+| **Frontend (Web JS)** | 3 | ✅ Functional, compact cards below slider, 3-color palette, real-time canvas chart, sticky ESI chat | 1 item (TD-F01) | — | **9.0/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **37 files** | **—** | **4 items** | **1 item** | **9.7/10** |
+| **TOTAL** | **37 files** | **—** | **3 items** | **1 item** | **9.8/10** |
 
 ---
 
@@ -352,6 +352,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F08]** Selaraskan label pinout sensor fisik ke GPIO 10 (DHT22), GPIO 1 (MQ-7), GPIO 0 (MQ-2). *(Selesai - Commit 47e5bd6)*
 - [x] **[TD-F09]** Auto-scroll chat ListView dan Pinned Responsive Split Layout (Opsi A Web / Opsi B Mobile) via `EsiChatPanel`. *(Selesai - Commit 70552e0 & b7d446f)*
 - [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
+- [x] **[TD-F10]** Redesain Web Frontend: 3-Warna Minimalis (Sky/Slate/Emerald), 3 Card Ringkas (~70px) tepat di bawah slider tanpa overlap, eliminasi teks deskriptif verbos & label GPIO/hardware, perbaikan icon unicode rusak via Material Symbols, scroll alami dan grafik telemetri real-time HTML5 Canvas.
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
 **4. Hardware Standardisasi & Perakitan Fisik (Huda):**
