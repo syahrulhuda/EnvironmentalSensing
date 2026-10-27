@@ -351,8 +351,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`. *(Selesai - Commit c8309c2)*
 - [x] **[TD-F08]** Selaraskan label pinout sensor fisik ke GPIO 10 (DHT22), GPIO 1 (MQ-7), GPIO 0 (MQ-2). *(Selesai - Commit 47e5bd6)*
 - [x] **[TD-F09]** Auto-scroll chat ListView dan Pinned Responsive Split Layout (Opsi A Web / Opsi B Mobile) via `EsiChatPanel`. *(Selesai - Commit 70552e0 & b7d446f)*
-- [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
-- [x] **[TD-F10]** Redesain Web Frontend: 3-Warna Minimalis (Sky/Slate/Emerald), 3 Card Ringkas (~70px) tepat di bawah slider tanpa overlap, eliminasi teks deskriptif verbos & label GPIO/hardware, perbaikan icon unicode rusak via Material Symbols, scroll alami dan grafik telemetri real-time HTML5 Canvas.
+- [x] **[TD-F10]** Redesain Web Frontend: Arsitektur 3-Warna Ketat (Background #080d1a, Card Surface #0f172a, Tulisan & Elemen Putih #ffffff), Penghapusan tombol simulasi header, Transformasi Scroll Morphing dari 3 Card Hero (~70px) menjadi 3 Card Detail di kolom kiri masing-masing dengan canvas sparkline real-time (Suhu, Asap, CO), serta Panel Chat ESI yang lebih kompak (~400px) dan pinned sticky di kanan saat digulir.
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
 **4. Hardware Standardisasi & Perakitan Fisik (Huda):**
