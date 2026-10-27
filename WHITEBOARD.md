@@ -131,6 +131,14 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - **Masalah:** Saat pertama kali dicolokkan ke laptop via kabel USB-C, koneksi USB ESP32-C3 SuperMini mengalami flapping (putus-nyambung berulang) akibat loop crash firmware bawaan atau status ROM bootloader yang tidak stabil.
 - **Solusi Operasional:** Menahan tombol **BOOT** (GPIO 9), menekan tombol **RST** satu kali, lalu melepas tombol **BOOT**. Trik ini memaksa SoC masuk ke *ROM Download Boot Mode*, menstabilkan enumerasi USB CDC Serial di Device Manager / Arduino IDE (`COM8`). Setelah diflash dengan parameter `USB CDC On Boot: Enabled` dan `Flash Mode: DIO`, board booting stabil seterusnya.
 
+### [Status: DITERIMA & SELESAI] Arsitektur Responsif Pinned Chat Panel (Opsi A Web / Opsi B Mobile) & Palet 4-Warna
+- **Tanggal & Inisiator:** `[27-10-2026]` - Huda
+- **Ide:** Menghilangkan kelebihan variasi warna (*color clutter*) dengan merampingkan UI menjadi 4 token semantik utama: Primary (#0284C7 Slate Cyan), Secondary (#0F172A/#1E293B Dark Slate Surface/Card), Tertiary (#94A3B8 Muted Text/Border), dan Accent (#10B981 Neon Mint / Safe Emerald), dengan warna peringatan bahaya K3 (Merah & Amber) aktif murni secara kondisional saat insiden bahaya. Sekaligus menghadirkan tata letak responsif adaptif:
+  - **Opsi A (Web/Desktop, width > 900px):** Split-view di mana kolom kiri (metriks dan grafik) dapat di-scroll vertikal, sementara kolom kanan memuat `EsiChatPanel` yang dipin (*stay in place*) setinggi viewport tanpa ikut ter-scroll keluar layar.
+  - **Opsi B (Mobile, width <= 900px):** Tampilan satu kolom dengan *floating action button* yang memicu *docked modal bottom sheet*.
+- **Keputusan:** `[27-10-2026]` - **[DITERIMA & IMPLEMENTED LENGKAP]** Diimplementasikan di `app_colors.dart`, `esi_chat_panel.dart`, `esi_chat_bottom_sheet.dart`, dan `dashboard_screen.dart` dengan auto-scroll bottom frame listener.
+
+
 ---
 
 # 🔍 Section 3: Deep Audit (The Ruthless Audit)
@@ -208,8 +216,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 7. **`[TD-B07]` `requirements.txt` Mendaftarkan `requests==2.32.3` tapi Tidak Pernah Dipakai — `[SELESAI & DIHAPUS]`**
    - `backend/requirements.txt`: Dependensi mati `requests==2.32.3` telah dihapus. Seluruh backend konsisten menggunakan library bawaan Python `urllib.request`.
 
-8. **`[TD-B08]` `chat_cli.py` Tidak Menyimpan History Multi-turn**
-   - CLI chatbot memanggil `ask_esi(user_input)` tanpa passing `history`. Percakapan tidak memiliki konteks riwayat. Mudah diperbaiki tapi saat ini *broken*.
+8. **`[TD-B08]` `chat_cli.py` Multi-turn Conversation Memory — `[SELESAI & RIWAYAT AKTIF]`**
+   - `backend/chat_cli.py`: Multi-turn session memory kini dipertahankan dalam list `history`. Setiap prompt user dan respon ESI di-append secara berurutan dan dikirimkan ke `ask_esi()`, memulihkan konteks dialog interaktif pada pengujian CLI terminal secara sempurna.
 
 ### 🟡 [SEVERITY: MEDIUM] Frontend Tech Debt
 
@@ -232,8 +240,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 16. **`[TD-F08]` GPIO Label di Dashboard Tidak Sesuai Hardware Aktual — `[SELESAI & DISELARASKAN KE GPIO 10]`**
     - `frontend/lib/screens/dashboard_screen.dart:136`: Label pin DHT22 diperbarui dari `GPIO 4` menjadi `GPIO 10` selaras dengan pinout firmware produksi fisik ESP32-C3 SuperMini (`prodC3.ino:12`). Mengeliminasi kebingungan teknis saat perakitan dan verifikasi operasional.
 
-17. **`[TD-F09]` `EsiChatBottomSheet` Tidak Scroll ke Pesan Terbaru**
-    - `esi_chat_bottom_sheet.dart` → ListView tidak memiliki `ScrollController` yang auto-scroll ke bottom saat pesan baru ditambahkan. UX buruk pada percakapan panjang.
+17. **`[TD-F09]` Auto-Scroll Chat & Pinned Split-View Responsive — `[SELESAI & ESICHATPANEL TERINTEGRASI]`**
+    - `frontend/lib/widgets/esi_chat_panel.dart`, `esi_chat_bottom_sheet.dart`, `dashboard_screen.dart`: Komponen obrolan AI dimodularisasi menjadi `EsiChatPanel` mandiri dengan `ScrollController` auto-scroll yang otomatis bergeser ke pesan terbaru pada setiap input/output (`_scrollToBottom()`). Pada layar lebar (> 900px, Web App), panel tersemat *stay in place* (pinned) setinggi viewport berdampingan dengan feed metriks sensor yang dapat di-scroll vertikal (Opsi A). Pada layar ponsel (<= 900px), antarmuka menggunakan bottom sheet via FAB (Opsi B). Seluruh palet warna juga telah diselaraskan ke 4 token desain utama di `app_colors.dart`.
 
 ### 🟡 [SEVERITY: MEDIUM] Hardware Tech Debt
 
@@ -289,8 +297,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### 🟡 [SEVERITY: MEDIUM] Reliability Issues
 
-27. **`[REL-01]` ETL Scheduler Tidak Punya Error Recovery / Retry**
-    - `main.py:16` → `scheduler.add_job(func=run_etl, trigger="interval", minutes=15)` — jika `run_etl()` gagal (misal Supabase down), job hanya mencetak error dan menunggu 15 menit lagi. Tidak ada exponential backoff atau alert.
+27. **`[REL-01]` ETL Scheduler Retry dengan Exponential Backoff — `[SELESAI & RESILIENT]`**
+    - `backend/app/services/etl_service.py`: Pipeline `run_etl(max_retries=3, retry_delay=3.0)` kini dilengkapi penanganan kegagalan cerdas berjenjang dengan *exponential backoff* (`delay * 2^(attempt-1)`). Jika upsert ke Supabase gagal, pipeline otomatis mencoba ulang hingga 3 kali dan membatalkan pemangkasan (*pruning*) buffer RTDB. Data mentah terlindungi dari potensi kehilangan (*data loss*) jika database cloud mengalami downtime sesaat.
 
 28. **`[REL-02]` `telemetry_tool.py:20` Asumsi `entries.last` = Data Terbaru — `[SELESAI & TERURUT KRONOLOGIS]`**
     - `backend/app/tools/telemetry_tool.py`: Logika naive indexing `matching[-1]` digantikan dengan fungsi Pythonic `max(candidates, key=lambda x: x.get('created_at') or 0)`. Menjamin data sensor terkini yang dikonsumsi oleh ESI AI Agent maupun Flutter (`GET /api/telemetry/latest`) selalu 100% akurat secara kronologis.
@@ -309,12 +317,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
-| **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, error-handled | 3 items | 1 item (SEC-02) | **9.0/10** |
-| **Frontend (Flutter)** | 15 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO | 0 items | 0 items | **10.0/10** |
+| **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, resilient ETL | 2 items (CORS, Config) | 1 item (SEC-02) | **9.5/10** |
+| **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **36 files** | **—** | **6 items** | **2 items** | **9.2/10** |
+| **TOTAL** | **37 files** | **—** | **4 items** | **1 item** | **9.6/10** |
 
 ---
 
@@ -327,11 +335,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[SEC-05]** Tambahkan autentikasi header X-ESS-Admin-Key pada `POST /api/etl/trigger`. *(Selesai - Commit 0322cf8)*
 
 **2. Backend Tech Debt & Reliability (Huda):**
+- [x] **[REL-01]** Retry with exponential backoff pada scheduler ETL `etl_service.py`. *(Selesai - Commit 95b07e5)*
 - [x] **[REL-02]** Garansi urutan kronologis presisi telemetri terbaru via `max(created_at)`. *(Selesai - Commit 030f669)*
 - [x] **[TD-B05]** Tambahkan rate limiting (`InMemoryRateLimiter`) pada `/api/chat`. *(Selesai - Commit 7558be0)*
 - [x] **[TD-B06]** Pindahkan import json ke top-level PEP 8. *(Selesai - Commit 7558be0)*
 - [x] **[TD-B07]** Hapus `requests` dari `requirements.txt`. *(Selesai - Commit 29aaca4)*
 - [x] **[TD-B04]** Refaktor `pull_and_audit.py` agar import URL dari `config.py`. *(Selesai - Commit 29aaca4)*
+- [x] **[TD-B08]** Multi-turn conversation memory di `chat_cli.py`. *(Selesai - Commit 5f3be57)*
 - [x] Tambahkan `Environment=PYTHONUNBUFFERED=1` di unit systemd `deploy/ess-backend.service` dan terapkan di Raspi. *(Selesai - Terverifikasi aktif)*
 
 **3. Frontend Tech Debt (Zaki & Huda):**
@@ -340,6 +350,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F02]** Migrasi polling Flutter dari RTDB langsung ke `/api/telemetry/latest`. *(Selesai - Commit 41ac3d1)*
 - [x] **[TD-F03/F04/F05]** Hapus dependency unused (`fl_chart`, `shared_preferences`, `intl`) dari `pubspec.yaml`. *(Selesai - Commit c8309c2)*
 - [x] **[TD-F08]** Selaraskan label pinout sensor fisik ke GPIO 10 (DHT22), GPIO 1 (MQ-7), GPIO 0 (MQ-2). *(Selesai - Commit 47e5bd6)*
+- [x] **[TD-F09]** Auto-scroll chat ListView dan Pinned Responsive Split Layout (Opsi A Web / Opsi B Mobile) via `EsiChatPanel`. *(Selesai - Commit 70552e0 & b7d446f)*
 - [x] **[REL-03]** Tampilkan indikator "ONLINE / OFFLINE" di UI saat fallback aktif. *(Selesai - Commit 68ed1cc)*
 - [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
 
@@ -353,4 +364,5 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Dokumentasikan solusi USB flapping C3 via tombol BOOT+RST download mode.
 - [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline.
 - [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
+
 
