@@ -11,6 +11,8 @@ def main():
     print("Ketik 'exit' atau 'keluar' untuk mengakhiri percakapan.")
     print("=" * 65)
 
+    history = []
+
     while True:
         try:
             user_input = input("\n👤 Anda: ").strip()
@@ -21,9 +23,14 @@ def main():
                 break
 
             print("\n⏳ ESI sedang menganalisis data sensor ESS...")
-            res = ask_esi(user_input)
-            print(f"\n🤖 ESI:\n{res['reply']}\n")
+            res = ask_esi(user_input, history=history)
+            reply = res.get("reply", "Maaf, respon tidak dapat diproses.")
+            print(f"\n🤖 ESI:\n{reply}\n")
             print("-" * 65)
+
+            # Simpan giliran percakapan ke riwayat multi-turn
+            history.append({"role": "user", "content": user_input})
+            history.append({"role": "model", "content": reply})
         except (KeyboardInterrupt, EOFError):
             print("\n👋 Percakapan diakhiri.")
             break
