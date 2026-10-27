@@ -1,4 +1,5 @@
 import re
+import time
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Tuple
 from app.core.config import settings
@@ -209,25 +210,39 @@ def process_incident_sessions(upserted_rows: List[Dict[str, Any]]) -> None:
                 print(f"[ESS ETL] Insiden #{active_anomaly['id']} resmi ditutup (udara normal kembali pada {rec_at}, durasi {active_anomaly.get('duration_minutes')} m).")
                 active_anomaly = None
 
-def run_etl() -> bool:
-    print(f"[ESS ETL] Siklus dimulai pada {datetime.now(timezone.utc).isoformat()}")
-    raw_data = fetch_rtdb()
-    if not raw_data:
-        print("[ESS ETL] Buffer Firebase kosong.")
-        return False
+def run_etl(max_retries: int = 3, retry_delay: float = 3.0) -> bool:
+    """Menjalankan siklus agregasi ETL dengan mekanisme retry recovery (REL-01)."""
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"[ESS ETL] Siklus dimulai (Percobaan {attempt}/{max_retries}) pada {datetime.now(timezone.utc).isoformat()}")
+            raw_data = fetch_rtdb()
+            if not raw_data:
+                print("[ESS ETL] Buffer Firebase kosong.")
+                return False
 
-    records = aggregate_telemetry(raw_data)
-    if not records:
-        print("[ESS ETL] Tidak ada data valid setelah agregasi.")
-        return False
+            records = aggregate_telemetry(raw_data)
+            if not records:
+                print("[ESS ETL] Tidak ada data valid setelah agregasi.")
+                return False
 
-    upserted_rows = upsert_logs(records)
-    if not upserted_rows:
-        print("[ESS ETL ERROR] Gagal menyimpan ke Supabase. Pruning dibatalkan.")
-        return False
+            upserted_rows = upsert_logs(records)
+            if not upserted_rows:
+                raise RuntimeError("Gagal menyimpan data agregasi ke Supabase.")
 
-    process_incident_sessions(upserted_rows)
+            process_incident_sessions(upserted_rows)
 
-    pruned = prune_buffer(raw_data)
-    print(f"[ESS ETL] Sukses mengagregasi {len(records)} baris & memangkas {pruned} data usang.")
-    return True
+            pruned = prune_buffer(raw_data)
+            print(f"[ESS ETL] Sukses mengagregasi {len(records)} baris & memangkas {pruned} data usang.")
+            return True
+
+        except Exception as e:
+            print(f"[ESS ETL WARN] Percobaan {attempt} gagal: {e}")
+            if attempt < max_retries:
+                wait_time = retry_delay * (2 ** (attempt - 1))
+                print(f"[ESS ETL] Menunggu {wait_time:.1f} detik sebelum mencoba kembali...")
+                time.sleep(wait_time)
+            else:
+                print("[ESS ETL ERROR] Seluruh percobaan retry ETL gagal. Pruning dibatalkan demi keamanan data.")
+                return False
+
+    return False
