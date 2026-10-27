@@ -170,7 +170,7 @@ function pushTelemetryToSparklines(temp, mq7, mq2) {
   renderAllSparklines();
 }
 
-function renderSparkline(canvasId, getValue, maxVal) {
+function renderSparkline(canvasId, getValue, maxVal, dotColor = '#10b981') {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -192,8 +192,8 @@ function renderSparkline(canvasId, getValue, maxVal) {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
 
-  // Background subtle horizontal grid line (pure monochromatic white)
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  // Background subtle horizontal grid line
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.1)";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, height * 0.5);
@@ -213,10 +213,10 @@ function renderSparkline(canvasId, getValue, maxVal) {
   const plotH = height - paddingTop - paddingBottom;
   const stepX = plotW / (telemetryHistory.length - 1);
 
-  // Draw smooth sparkline curve
+  // Draw smooth sparkline curve in vibrant Cyan / Sky Blue
   ctx.beginPath();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.lineWidth = 1.75;
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 2;
   ctx.lineJoin = "round";
 
   telemetryHistory.forEach((pt, idx) => {
@@ -233,17 +233,17 @@ function renderSparkline(canvasId, getValue, maxVal) {
   });
   ctx.stroke();
 
-  // Gradient fill under the curve (monochromatic white tint)
+  // Gradient fill under the curve (Sky Blue tint)
   ctx.lineTo(paddingLeft + plotW, height);
   ctx.lineTo(paddingLeft, height);
   ctx.closePath();
   const grad = ctx.createLinearGradient(0, paddingTop, 0, height);
-  grad.addColorStop(0, "rgba(255, 255, 255, 0.12)");
-  grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+  grad.addColorStop(0, "rgba(56, 189, 248, 0.2)");
+  grad.addColorStop(1, "rgba(56, 189, 248, 0.0)");
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Active dot at latest reading
+  // Active dot at latest reading with K3 semantic color
   const lastPt = telemetryHistory[telemetryHistory.length - 1];
   const lastVal = getValue(lastPt);
   const lastNormY = Math.min(Math.max(lastVal / maxVal, 0), 1);
@@ -251,17 +251,27 @@ function renderSparkline(canvasId, getValue, maxVal) {
   const lastY = paddingTop + plotH - (lastNormY * plotH);
 
   ctx.beginPath();
-  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
-  ctx.fillStyle = "#ffffff";
+  ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = dotColor;
   ctx.fill();
+  ctx.strokeStyle = "#070d1e";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
   ctx.restore();
 }
 
 function renderAllSparklines() {
-  renderSparkline('canvasTemp', pt => pt.temp, 50);
-  renderSparkline('canvasSmoke', pt => pt.mq2, 500);
-  renderSparkline('canvasTox', pt => pt.mq7, 100);
+  const lastPt = telemetryHistory[telemetryHistory.length - 1] || currentSensorState;
+  
+  // K3 Color determination for dots
+  const tempDot = lastPt.temp > 35.0 ? '#ef4444' : (lastPt.temp > 30.0 ? '#f59e0b' : '#10b981');
+  const smokeDot = lastPt.mq2 > 300 ? '#ef4444' : (lastPt.mq2 > 150 ? '#f59e0b' : '#10b981');
+  const toxDot = lastPt.mq7 > 50 ? '#ef4444' : (lastPt.mq7 > 25 ? '#f59e0b' : '#10b981');
+
+  renderSparkline('canvasTemp', pt => pt.temp, 50, tempDot);
+  renderSparkline('canvasSmoke', pt => pt.mq2, 500, smokeDot);
+  renderSparkline('canvasTox', pt => pt.mq7, 100, toxDot);
 }
 
 // --- 5. RENDER UI KE TAMPILAN DASHBOARD ---
@@ -271,7 +281,7 @@ function applyDisplay(state) {
   const mq2Val = state.mq2_ppm || 0;
   const mq7Val = state.mq7_ppm || 0;
 
-  // 1. Card 1: Suhu Ruangan
+  // 1. Card 1: Suhu Ruangan & Kelembapan
   const displayComfort = document.getElementById('displayComfort');
   const badgeHumidity = document.getElementById('badgeHumidity');
   const badgeComfort = document.getElementById('badgeComfort');
@@ -283,7 +293,16 @@ function applyDisplay(state) {
     badgeHumidity.innerText = `${humVal.toFixed(0)}% RH`;
   }
   if (badgeComfort) {
-    badgeComfort.innerText = tempVal > 35.0 ? "Bahaya" : "Optimal";
+    if (tempVal > 35.0) {
+      badgeComfort.innerText = "Overheat";
+      badgeComfort.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-red-500/50 bg-red-500/25 text-red-400 animate-pulse transition-colors";
+    } else if (tempVal > 30.0) {
+      badgeComfort.innerText = "Hangat";
+      badgeComfort.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-amber-500/40 bg-amber-500/20 text-amber-300 transition-colors";
+    } else {
+      badgeComfort.innerText = "Optimal";
+      badgeComfort.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors";
+    }
   }
 
   // 2. Card 2: Gas & Asap
@@ -294,7 +313,16 @@ function applyDisplay(state) {
     displaySmoke.innerText = `${mq2Val} PPM`;
   }
   if (badgeSmoke) {
-    badgeSmoke.innerText = mq2Val > 150 ? "Bahaya" : "Aman";
+    if (mq2Val > 300) {
+      badgeSmoke.innerText = "Bahaya";
+      badgeSmoke.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-red-500/50 bg-red-500/25 text-red-400 animate-pulse transition-colors";
+    } else if (mq2Val > 150) {
+      badgeSmoke.innerText = "Waspada";
+      badgeSmoke.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-amber-500/40 bg-amber-500/20 text-amber-300 transition-colors";
+    } else {
+      badgeSmoke.innerText = "Aman";
+      badgeSmoke.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors";
+    }
   }
 
   // 3. Card 3: Karbon Monoksida (CO)
@@ -305,14 +333,23 @@ function applyDisplay(state) {
     displayTox.innerText = `${mq7Val} PPM`;
   }
   if (badgeTox) {
-    badgeTox.innerText = mq7Val > 50 ? "Bahaya" : "Aman";
+    if (mq7Val > 50) {
+      badgeTox.innerText = "Berbahaya";
+      badgeTox.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-red-500/50 bg-red-500/25 text-red-400 animate-pulse transition-colors";
+    } else if (mq7Val > 25) {
+      badgeTox.innerText = "Perhatian";
+      badgeTox.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-amber-500/40 bg-amber-500/20 text-amber-300 transition-colors";
+    } else {
+      badgeTox.innerText = "Aman";
+      badgeTox.className = "px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors";
+    }
   }
 
   // Push latest reading to all 3 sparkline canvases
   pushTelemetryToSparklines(tempVal, mq7Val, mq2Val);
 
   // Siren Trigger jika ada bahaya aktual
-  const isDanger = (state.status === "DANGER") || (tempVal > 35.0) || (mq2Val > 150) || (mq7Val > 50);
+  const isDanger = (state.status === "DANGER") || (tempVal > 35.0) || (mq2Val > 300) || (mq7Val > 50);
   if (isDanger) {
     startSiren();
   } else {

@@ -1,22 +1,39 @@
 /* =============================================================================
-   Smart Environmental Sensing System (ESS) - 3-Color Strict Minimalist Stylesheet
-   1. Background: #080d1a
-   2. Card Surface: rgba(15, 23, 42, 0.85) / #0f172a
-   3. Typography & UI: #ffffff (White with Opacities)
+   Smart Environmental Sensing System (ESS) - Modern Navy/Cyan Industrial Palette
+   1. Background: #070d1e (Deep Midnight Navy)
+   2. Card Surface: rgba(17, 28, 56, 0.85) (Rich Slate Blue Glass)
+   3. Card Outline: rgba(56, 189, 248, 0.22) (Crisp Sky Blue Outline)
+   4. Text: #f8fafc (Crisp Clean White Typography Across All Cards)
+   5. K3 Indicators: Hijau (#10b981) / Kuning (#f59e0b) / Merah (#ef4444)
    ============================================================================= */
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  color: #ffffff;
-  background-color: #080d1a;
+  color: #f8fafc;
+  background-color: #070d1e;
   overflow-x: hidden;
 }
 
-/* Custom smooth white-tinted scrollbar */
+/* Custom smooth cyan-tinted scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
+::-webkit-scrollbar-track { background: rgba(7, 13, 30, 0.6); }
+::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.5); }
+
+/* Unified Card Surface Standard */
+.card-theme {
+  background: rgba(17, 28, 56, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(56, 189, 248, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-theme:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(56, 189, 248, 0.15);
+}
 
 /* Typing Indicator Animation */
 @keyframes pulseDot {
@@ -64,12 +81,13 @@ body {
   transition: all 0.35s ease-out;
 }
 
+/* Push chat column safely below the fold so it never peeks in hero view */
 #workspaceSection.hero-layout #chatColumn {
-  margin-top: 1.5rem;
+  margin-top: 7rem;
   transition: all 0.4s ease-out;
 }
 
-/* 2. SCROLLED STATE (When scrolling down) */
+/* 2. SCROLLED STATE (When scrolled down) */
 @media (min-width: 1024px) {
   #workspaceSection.scrolled-layout #workspaceGrid {
     display: grid;
@@ -100,6 +118,6 @@ body {
   overflow: visible;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(56, 189, 248, 0.15);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

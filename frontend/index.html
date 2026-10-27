@@ -24,17 +24,17 @@
   </script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen flex flex-col relative selection:bg-white/20 selection:text-white">
+<body class="min-h-screen flex flex-col relative selection:bg-sky-500/30 selection:text-white">
 
-<!-- BACKGROUND -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" style="background-image: linear-gradient(rgba(8, 13, 26, 0.75), rgba(8, 13, 26, 0.92)), url('assets/bg_campus.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat; background-attachment: fixed;">
-  <div class="absolute inset-0 bg-[#080d1a]/85"></div>
+<!-- 1. DEEP MIDNIGHT NAVY BACKGROUND -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" style="background-image: linear-gradient(rgba(7, 13, 30, 0.78), rgba(7, 13, 30, 0.94)), url('assets/bg_campus.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat; background-attachment: fixed;">
+  <div class="absolute inset-0 bg-[#070d1e]/85"></div>
 </div>
 
-<!-- TOP HEADER -->
-<header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+<!-- 2. TOP HEADER -->
+<header class="sticky top-0 z-40 bg-[#0f1b38]/90 backdrop-blur-md border-b border-sky-400/20 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-lg shadow-black/30">
   <div class="flex items-center gap-3.5">
-    <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl shadow-sm text-white flex-shrink-0">
+    <div class="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-xl shadow-sm text-sky-400 flex-shrink-0">
       <span class="material-symbols-outlined text-xl">sensors</span>
     </div>
     <div>
@@ -42,23 +42,23 @@
         <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
           Smart Environmental Sensing System (ESS)
         </h1>
-        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-white/15 bg-white/5 text-white/80 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Lab Sehat
+        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Lab Sehat &amp; Aman
         </span>
       </div>
-      <p class="text-xs text-white/60 font-medium">Laboratorium &amp; Bengkel Teknik Mekatronika, POLTEKOM</p>
+      <p class="text-xs text-slate-400 font-medium">Laboratorium &amp; Bengkel Teknik Mekatronika, POLTEKOM</p>
     </div>
   </div>
 
   <div class="flex items-center gap-3">
-    <!-- Status pill: ONLINE / OFFLINE -->
-    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/15 bg-white/5 text-white text-xs font-mono" id="systemStatusPill">
-      <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+    <!-- Status pill: ONLINE / OFFLINE (K3 Green/Red Indicator) -->
+    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/15 text-emerald-400 text-xs font-mono font-semibold" id="systemStatusPill">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
       <span id="systemStatusText">ONLINE</span>
     </div>
 
     <!-- Audio Mute Toggle -->
-    <button class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/80 hover:text-white transition" id="btnAudioMute" onclick="toggleAudio()" title="Nyalakan/Matikan Suara Peringatan">
+    <button class="p-2 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-sky-400/25 text-white/80 hover:text-white transition" id="btnAudioMute" onclick="toggleAudio()" title="Nyalakan/Matikan Suara Peringatan">
       <span class="material-symbols-outlined text-[18px] block" id="audioIcon">volume_up</span>
     </button>
   </div>
@@ -67,64 +67,64 @@
 <!-- MAIN DASHBOARD CONTENT -->
 <main class="flex-1 max-w-[1550px] w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 relative z-10">
 
-  <!-- 1. SLIDER KAMPUS POLTEKOM -->
-  <section class="relative overflow-hidden rounded-3xl bg-slate-900/80 backdrop-blur-md border border-white/10 text-white shadow-2xl transition-all duration-500 group" id="mainStatusBanner">
+  <!-- 1. SLIDER KAMPUS POLTEKOM (TINGGI DIOPTIMALKAN SUPAYA FIT & TIDAK MENYEBABKAN ESI PEEKING DI HERO STATE) -->
+  <section class="relative overflow-hidden rounded-3xl card-theme text-white transition-all duration-500 group" id="mainStatusBanner">
     <!-- Carousel Viewport -->
-    <div class="relative w-full h-60 sm:h-72 md:h-[340px] overflow-hidden select-none" id="campusCarousel">
+    <div class="relative w-full h-72 sm:h-80 md:h-[400px] lg:h-[430px] overflow-hidden select-none" id="campusCarousel">
       <!-- Slides Container -->
       <div class="flex w-full h-full transition-transform duration-700 ease-out" id="carouselTrack" style="transform: translateX(0%);">
         
         <!-- Slide 1 -->
         <div class="w-full h-full flex-shrink-0 relative">
           <img src="assets/campus_1.jpg" alt="Gedung Utama &amp; Fakultas POLTEKOM" class="w-full h-full object-cover object-center">
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-black/30"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#070d1e] via-[#070d1e]/50 to-transparent"></div>
           <div class="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-8 sm:right-8 flex flex-col gap-1.5 z-10 pointer-events-none">
             <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white border border-white/15 flex items-center gap-1.5 backdrop-blur-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Gedung Terpadu
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-emerald-400 border border-emerald-500/35 flex items-center gap-1.5 backdrop-blur-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Gedung Terpadu
               </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white/80 border border-white/15 backdrop-blur-md">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-sky-300 border border-sky-400/30 backdrop-blur-md">
                 Arsitektur Modern POLTEKOM
               </span>
             </div>
             <h2 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md">Gedung Utama &amp; Fakultas POLTEKOM</h2>
-            <p class="text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed drop-shadow-sm">Tampak perspektif modern kampus dengan aksen merah dan biru, menaungi ruang laboratorium dan perkuliahan vokasi terintegrasi.</p>
+            <p class="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed drop-shadow-sm">Tampak perspektif modern kampus dengan aksen merah dan biru, menaungi ruang laboratorium dan perkuliahan vokasi terintegrasi.</p>
           </div>
         </div>
 
         <!-- Slide 2 -->
         <div class="w-full h-full flex-shrink-0 relative">
           <img src="assets/campus_2.jpg" alt="Gedung Kuliah &amp; Atrium Terbuka POLTEKOM" class="w-full h-full object-cover object-center">
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-black/30"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#070d1e] via-[#070d1e]/50 to-transparent"></div>
           <div class="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-8 sm:right-8 flex flex-col gap-1.5 z-10 pointer-events-none">
             <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white border border-white/15 flex items-center gap-1.5 backdrop-blur-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Fasilitas Perkuliahan
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-emerald-400 border border-emerald-500/35 flex items-center gap-1.5 backdrop-blur-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Fasilitas Perkuliahan
               </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white/80 border border-white/15 backdrop-blur-md">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-sky-300 border border-sky-400/30 backdrop-blur-md">
                 Atrium Terbuka Asri
               </span>
             </div>
             <h2 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md">Gedung Kuliah &amp; Atrium Terbuka POLTEKOM</h2>
-            <p class="text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed drop-shadow-sm">Perspektif koridor dan atrium terbuka bertingkat di POLTEKOM yang sejuk dengan sirkulasi udara alami dan kolam asri.</p>
+            <p class="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed drop-shadow-sm">Perspektif koridor dan atrium terbuka bertingkat di POLTEKOM yang sejuk dengan sirkulasi udara alami dan kolam asri.</p>
           </div>
         </div>
 
         <!-- Slide 3 -->
         <div class="w-full h-full flex-shrink-0 relative">
           <img src="assets/campus_3.jpg" alt="Gedung Rektorat &amp; Gerbang Utama POLTEKOM" class="w-full h-full object-cover object-center">
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-black/30"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#070d1e] via-[#070d1e]/50 to-transparent"></div>
           <div class="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-8 sm:right-8 flex flex-col gap-1.5 z-10 pointer-events-none">
             <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white border border-white/15 flex items-center gap-1.5 backdrop-blur-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Fasad Ikonik
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-emerald-400 border border-emerald-500/35 flex items-center gap-1.5 backdrop-blur-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Fasad Ikonik
               </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-950/70 text-white/80 border border-white/15 backdrop-blur-md">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0f1b38]/85 text-sky-300 border border-sky-400/30 backdrop-blur-md">
                 Pusat Administrasi &amp; Rektorat
               </span>
             </div>
             <h2 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md">Gedung Rektorat &amp; Gerbang Utama POLTEKOM</h2>
-            <p class="text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed drop-shadow-sm">Tampak depan simetris ikonik Politeknik Kota Malang dengan pilar gagah cerah serta sistem pemantauan terpusat.</p>
+            <p class="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed drop-shadow-sm">Tampak depan simetris ikonik Politeknik Kota Malang dengan pilar gagah cerah serta sistem pemantauan terpusat.</p>
           </div>
         </div>
 
@@ -132,33 +132,33 @@
 
       <!-- Top Badges Overlay -->
       <div class="absolute top-4 left-4 right-4 sm:top-5 sm:left-6 sm:right-6 flex items-center justify-between pointer-events-none z-20">
-        <div class="flex items-center gap-2 bg-slate-950/70 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/15 pointer-events-auto shadow-md">
-          <span class="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-sm text-white">
+        <div class="flex items-center gap-2 bg-[#070d1e]/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-sky-400/25 pointer-events-auto shadow-md">
+          <span class="w-7 h-7 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sm text-sky-400">
             🏛️
           </span>
           <div class="flex flex-col">
             <span class="text-[11px] font-bold text-white tracking-tight">POLTEKOM</span>
-            <span class="text-[9px] text-white/60 font-mono">Galeri Kampus</span>
+            <span class="text-[9px] text-sky-300/80 font-mono">Galeri Kampus</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 bg-slate-950/70 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/15 pointer-events-auto shadow-md text-xs font-mono text-white font-semibold">
-          <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+        <div class="flex items-center gap-2 bg-[#070d1e]/85 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-emerald-500/35 pointer-events-auto shadow-md text-xs font-mono text-emerald-400 font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Kampus Terpantau</span>
         </div>
       </div>
 
       <!-- Prev & Next Arrows -->
-      <button onclick="prevSlide()" aria-label="Slide Sebelumnya" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-2xl bg-slate-950/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg">
+      <button onclick="prevSlide()" aria-label="Slide Sebelumnya" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-2xl bg-[#070d1e]/75 hover:bg-[#0f1b38] text-white border border-sky-400/30 backdrop-blur-md flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg">
         <span class="material-symbols-outlined text-lg block">chevron_left</span>
       </button>
-      <button onclick="nextSlide()" aria-label="Slide Selanjutnya" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-2xl bg-slate-950/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg">
+      <button onclick="nextSlide()" aria-label="Slide Selanjutnya" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-2xl bg-[#070d1e]/75 hover:bg-[#0f1b38] text-white border border-sky-400/30 backdrop-blur-md flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg">
         <span class="material-symbols-outlined text-lg block">chevron_right</span>
       </button>
 
       <!-- Slide Dots Indicators -->
-      <div class="absolute bottom-3 sm:bottom-4 right-4 sm:right-8 z-20 flex items-center gap-2 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15">
-        <button onclick="goToSlide(0)" class="carousel-dot w-6 h-2 rounded-full bg-white transition-all duration-300" aria-label="Slide 1"></button>
+      <div class="absolute bottom-3 sm:bottom-4 right-4 sm:right-8 z-20 flex items-center gap-2 bg-[#070d1e]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-400/25">
+        <button onclick="goToSlide(0)" class="carousel-dot w-6 h-2 rounded-full bg-sky-400 transition-all duration-300" aria-label="Slide 1"></button>
         <button onclick="goToSlide(1)" class="carousel-dot w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition-all duration-300" aria-label="Slide 2"></button>
         <button onclick="goToSlide(2)" class="carousel-dot w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition-all duration-300" aria-label="Slide 3"></button>
       </div>
@@ -173,85 +173,87 @@
       <div id="cardsColumn" class="w-full transition-all duration-500">
         <div id="cardsGrid" class="transition-all duration-500">
           
-          <!-- Card 1: Suhu Ruangan -->
-          <div class="rounded-2xl p-4 border border-white/10 bg-slate-900/80 backdrop-blur-md shadow-lg transition-all duration-300" id="cardComfort">
+          <!-- Card 1: Suhu Ruangan & Kelembapan (Font Disetarakan!) -->
+          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardComfort">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
                   <span class="material-symbols-outlined text-xl">thermostat</span>
                 </div>
                 <div>
-                  <span class="text-[11px] font-semibold text-white/60 block">Suhu Ruangan</span>
-                  <div class="flex items-baseline gap-2">
-                    <span class="text-2xl font-extrabold text-white tracking-tight" id="displayComfort">25.0°C</span>
-                    <span class="text-xs text-white/60 font-mono" id="badgeHumidity">52% RH</span>
+                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Suhu &amp; Kelembapan</span>
+                  <!-- Suhu dan Humidity font disamakan setara -->
+                  <div class="flex items-baseline gap-1.5 flex-wrap">
+                    <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displayComfort">25.0°C</span>
+                    <span class="text-sm text-sky-400/60 font-bold mx-0.5">•</span>
+                    <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="badgeHumidity">52% RH</span>
                   </div>
                 </div>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-white/20 bg-white/5 text-white" id="badgeComfort">Optimal</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeComfort">Optimal</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 1 -->
             <div class="card-graph-drawer">
-              <div class="flex items-center justify-between text-[10px] text-white/50 font-mono mb-1.5">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1.5">
                 <span>TREN SUHU REAL-TIME</span>
-                <span>Ambang K3: &lt; 35.0°C</span>
+                <span class="text-sky-300/80">Ambang K3: &lt; 35.0°C</span>
               </div>
-              <div class="w-full bg-slate-950/60 rounded-xl p-2 border border-white/5">
+              <div class="w-full bg-[#070d1e]/70 rounded-xl p-2 border border-sky-400/15">
                 <canvas id="canvasTemp" class="w-full h-[65px] block"></canvas>
               </div>
             </div>
           </div>
 
           <!-- Card 2: Gas & Asap -->
-          <div class="rounded-2xl p-4 border border-white/10 bg-slate-900/80 backdrop-blur-md shadow-lg transition-all duration-300" id="cardSmoke">
+          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardSmoke">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0" id="iconSmokeBox">
+                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconSmokeBox">
                   <span class="material-symbols-outlined text-xl">cloud</span>
                 </div>
                 <div>
-                  <span class="text-[11px] font-semibold text-white/60 block">Gas &amp; Asap</span>
-                  <span class="text-2xl font-extrabold text-white tracking-tight" id="displaySmoke">20 PPM</span>
+                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Gas &amp; Asap</span>
+                  <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displaySmoke">20 PPM</span>
                 </div>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-white/20 bg-white/5 text-white" id="badgeSmoke">Aman</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeSmoke">Aman</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 2 -->
             <div class="card-graph-drawer">
-              <div class="flex items-center justify-between text-[10px] text-white/50 font-mono mb-1.5">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1.5">
                 <span>TREN GAS &amp; ASAP REAL-TIME</span>
-                <span>Ambang K3: &lt; 150 PPM</span>
+                <span class="text-sky-300/80">Ambang K3: &lt; 150 PPM</span>
               </div>
-              <div class="w-full bg-slate-950/60 rounded-xl p-2 border border-white/5">
+              <div class="w-full bg-[#070d1e]/70 rounded-xl p-2 border border-sky-400/15">
                 <canvas id="canvasSmoke" class="w-full h-[65px] block"></canvas>
               </div>
             </div>
           </div>
 
           <!-- Card 3: Karbon Monoksida (CO) -->
-          <div class="rounded-2xl p-4 border border-white/10 bg-slate-900/80 backdrop-blur-md shadow-lg transition-all duration-300" id="cardTox">
+          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardTox">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0" id="iconToxBox">
+                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconToxBox">
                   <span class="material-symbols-outlined text-xl">air</span>
                 </div>
                 <div>
-                  <span class="text-[11px] font-semibold text-white/60 block">Karbon Monoksida (CO)</span>
-                  <span class="text-2xl font-extrabold text-white tracking-tight" id="displayTox">5 PPM</span>
+                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Karbon Monoksida (CO)</span>
+                  <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displayTox">5 PPM</span>
                 </div>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-white/20 bg-white/5 text-white" id="badgeTox">Aman</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeTox">Aman</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 3 -->
             <div class="card-graph-drawer">
-              <div class="flex items-center justify-between text-[10px] text-white/50 font-mono mb-1.5">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1.5">
                 <span>TREN CO REAL-TIME</span>
-                <span>Ambang K3: &lt; 50 PPM</span>
+                <span class="text-sky-300/80">Ambang K3: &lt; 50 PPM</span>
               </div>
-              <div class="w-full bg-slate-950/60 rounded-xl p-2 border border-white/5">
+              <div class="w-full bg-[#070d1e]/70 rounded-xl p-2 border border-sky-400/15">
                 <canvas id="canvasTox" class="w-full h-[65px] block"></canvas>
               </div>
             </div>
@@ -262,47 +264,47 @@
 
       <!-- Kolom Chat ESI (Compact, Pinned Sticky di Scrolled State) -->
       <aside id="chatColumn" class="w-full transition-all duration-500">
-        <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-col h-[400px] shadow-2xl relative">
+        <div class="card-theme rounded-2xl p-4 flex flex-col h-[400px] shadow-2xl relative">
           <!-- ESI Chat Header -->
-          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <div class="flex items-center justify-between pb-3 border-b border-sky-400/20">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0">
+              <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
                 <span class="material-symbols-outlined text-lg">smart_toy</span>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">ESI Assistant <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/70 border border-white/10">AI</span></h3>
-                <div class="text-[10px] text-white/50">Environmental Sensing Intelligence</div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">ESI Assistant <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">AI</span></h3>
+                <div class="text-[10px] text-slate-400">Environmental Sensing Intelligence</div>
               </div>
             </div>
-            <span class="text-[10px] px-2 py-0.5 rounded-full border border-white/15 bg-white/5 text-white/80">Online</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/35 bg-emerald-500/15 text-emerald-400 font-medium">Online</span>
           </div>
 
           <!-- Chat Feed -->
           <div class="flex-1 overflow-y-auto my-3 space-y-2.5 pr-1.5 text-xs" id="chatFeed">
             <div class="flex gap-2 items-start">
-              <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-white">
+              <div class="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-400/30 flex-shrink-0 flex items-center justify-center text-sky-400">
                 <span class="material-symbols-outlined text-base">smart_toy</span>
               </div>
-              <div class="bg-slate-950/60 rounded-xl rounded-tl-none p-3 border border-white/10 text-white leading-relaxed">
+              <div class="bg-[#070d1e]/70 rounded-xl rounded-tl-none p-3 border border-sky-400/15 text-slate-100 leading-relaxed">
                 Halo! Saya <strong>ESI</strong>. Laboratorium &amp; Bengkel Mekatronika POLTEKOM aman dan udaranya bersih. Ada pertanyaan terkait kualitas udara, suhu, atau SOP bengkel?
               </div>
             </div>
           </div>
 
           <!-- Quick Question Chips -->
-          <div class="py-2 border-t border-white/10">
+          <div class="py-2 border-t border-sky-400/20">
             <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-              <button class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-left truncate transition" onclick="askPrompt('Apakah udara lab sehat?')">Kualitas udara lab?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-left truncate transition" onclick="askPrompt('Bagaimana suhu ruangan lab?')">Suhu &amp; kelembapan?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-left truncate transition" onclick="askPrompt('Apakah ada asap atau gas?')">Asap &amp; gas bocor?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-left truncate transition" onclick="askPrompt('Tips keselamatan lab')">Tips keselamatan K3</button>
+              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah udara lab sehat?')">Kualitas udara lab?</button>
+              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Bagaimana suhu ruangan lab?')">Suhu &amp; kelembapan?</button>
+              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah ada asap atau gas?')">Asap &amp; gas bocor?</button>
+              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Tips keselamatan lab')">Tips keselamatan K3</button>
             </div>
           </div>
 
           <!-- Chat Input Form -->
-          <form class="flex items-center gap-2 pt-2 border-t border-white/10" onsubmit="handleUserSubmit(event)">
-            <input class="flex-1 bg-slate-950/70 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition shadow-inner" id="inputMessage" placeholder="Tanyakan kondisi lab ke ESI..." type="text">
-            <button class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition flex-shrink-0 border border-white/15 active:scale-95" type="submit">
+          <form class="flex items-center gap-2 pt-2 border-t border-sky-400/20" onsubmit="handleUserSubmit(event)">
+            <input class="flex-1 bg-[#070d1e]/70 border border-sky-400/25 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 transition shadow-inner" id="inputMessage" placeholder="Tanyakan kondisi lab ke ESI..." type="text">
+            <button class="px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold transition flex-shrink-0 shadow-md shadow-sky-500/20 active:scale-95" type="submit">
               <span class="material-symbols-outlined text-sm block">send</span>
             </button>
           </form>
