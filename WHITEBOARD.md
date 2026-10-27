@@ -319,10 +319,10 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 |---|---|---|---|---|---|
 | **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, resilient ETL | 2 items (CORS, Config) | 1 item (SEC-02) | **9.5/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
-| **Frontend (Web JS)** | 3 | ✅ Functional, fallback chat | 1 item (TD-F01) | — | **5.5/10** |
+| **Frontend (Web JS)** | 3 | ✅ Functional, compact floating cards, scroll morphing split layout | 1 item (TD-F01) | — | **7.5/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **37 files** | **—** | **4 items** | **1 item** | **9.6/10** |
+| **TOTAL** | **37 files** | **—** | **4 items** | **1 item** | **9.7/10** |
 
 ---
 
