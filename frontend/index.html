@@ -32,45 +32,43 @@
 </div>
 
 <!-- 2. TOP HEADER -->
-<header class="sticky top-0 z-40 bg-[#0f1b38]/90 backdrop-blur-md border-b border-sky-400/20 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-lg shadow-black/30">
-  <div class="flex items-center gap-3.5">
-    <div class="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-xl shadow-sm text-sky-400 flex-shrink-0">
-      <span class="material-symbols-outlined text-xl">sensors</span>
-    </div>
-    <div>
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
+<header class="sticky top-0 z-40 bg-[#0f1b38]/90 backdrop-blur-md border-b border-sky-400/20 px-4 sm:px-8 py-3.5 shadow-lg shadow-black/30">
+  <div class="max-w-[1300px] w-full mx-auto flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <!-- Dynamic K3 Status Indicator Icon (Hijau / Kuning / Merah Real-Time) -->
+      <div id="headerK3Indicator" class="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-xl shadow-sm text-emerald-400 flex-shrink-0 transition-all duration-300" title="Status K3: AMAN - Kondisi Lingkungan Laboratorium Optimal">
+        <span class="material-symbols-outlined text-xl">sensors</span>
+      </div>
+      <div>
+        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">
           Smart Environmental Sensing System (ESS)
         </h1>
-        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Lab Sehat &amp; Aman
-        </span>
+        <p class="text-xs text-slate-400 font-medium">Laboratorium &amp; Bengkel Teknik Mekatronika, POLTEKOM</p>
       </div>
-      <p class="text-xs text-slate-400 font-medium">Laboratorium &amp; Bengkel Teknik Mekatronika, POLTEKOM</p>
-    </div>
-  </div>
-
-  <div class="flex items-center gap-3">
-    <!-- Status pill: ONLINE / OFFLINE (K3 Green/Red Indicator) -->
-    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/15 text-emerald-400 text-xs font-mono font-semibold" id="systemStatusPill">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span id="systemStatusText">ONLINE</span>
     </div>
 
-    <!-- Audio Mute Toggle -->
-    <button class="p-2 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-sky-400/25 text-white/80 hover:text-white transition" id="btnAudioMute" onclick="toggleAudio()" title="Nyalakan/Matikan Suara Peringatan">
-      <span class="material-symbols-outlined text-[18px] block" id="audioIcon">volume_up</span>
-    </button>
+    <div class="flex items-center gap-3">
+      <!-- Status pill: ONLINE / OFFLINE (K3 Green/Red Indicator) -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/15 text-emerald-400 text-xs font-mono font-semibold" id="systemStatusPill">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="systemStatusText">ONLINE</span>
+      </div>
+
+      <!-- Audio Mute Toggle -->
+      <button class="p-2 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-sky-400/25 text-white/80 hover:text-white transition" id="btnAudioMute" onclick="toggleAudio()" title="Nyalakan/Matikan Suara Peringatan">
+        <span class="material-symbols-outlined text-[18px] block" id="audioIcon">volume_up</span>
+      </button>
+    </div>
   </div>
 </header>
 
 <!-- MAIN DASHBOARD CONTENT -->
-<main class="flex-1 max-w-[1550px] w-full mx-auto p-3 sm:p-5 lg:p-6 space-y-3.5 sm:space-y-4 relative z-10">
+<main class="flex-1 max-w-[1300px] w-full mx-auto p-3 sm:p-5 lg:p-6 space-y-3.5 sm:space-y-4 relative z-10">
 
   <!-- 1. SLIDER KAMPUS POLTEKOM (TINGGI DIOPTIMALKAN SUPAYA FIT & TIDAK MENYEBABKAN ESI PEEKING DI HERO STATE) -->
   <section class="relative overflow-hidden rounded-3xl card-theme text-white transition-all duration-500 group" id="mainStatusBanner">
     <!-- Carousel Viewport -->
-    <div class="relative w-full h-56 sm:h-64 md:h-[285px] lg:h-[305px] overflow-hidden select-none" id="campusCarousel">
+    <div class="relative w-full h-64 sm:h-72 md:h-[325px] lg:h-[345px] overflow-hidden select-none" id="campusCarousel">
       <!-- Slides Container -->
       <div class="flex w-full h-full transition-transform duration-700 ease-out" id="carouselTrack" style="transform: translateX(0%);">
         
@@ -173,24 +171,24 @@
       <div id="cardsColumn" class="w-full transition-all duration-500">
         <div id="cardsGrid" class="transition-all duration-500">
           
-          <!-- Card 1: Suhu Ruangan & Kelembapan (Font Disetarakan!) -->
-          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardComfort">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
-                  <span class="material-symbols-outlined text-xl">thermostat</span>
+          <!-- Card 1: Suhu Ruangan & Kelembapan (2-Baris Elegan) -->
+          <div class="rounded-2xl p-4 sm:p-5 card-theme transition-all duration-300" id="cardComfort">
+            <!-- Baris 1: Icon + Label & Badge K3 -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
+                  <span class="material-symbols-outlined text-lg">thermostat</span>
                 </div>
-                <div>
-                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Suhu &amp; Kelembapan</span>
-                  <!-- Suhu dan Humidity font disamakan setara -->
-                  <div class="flex items-baseline gap-1.5 flex-wrap">
-                    <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displayComfort">25.0°C</span>
-                    <span class="text-sm text-sky-400/60 font-bold mx-0.5">•</span>
-                    <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="badgeHumidity">52% RH</span>
-                  </div>
-                </div>
+                <span class="text-xs font-semibold text-slate-300">Suhu &amp; Kelembapan</span>
               </div>
               <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeComfort">Optimal</span>
+            </div>
+
+            <!-- Baris 2: Nilai Telemetri Utama -->
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight" id="displayComfort">25.0°C</span>
+              <span class="text-base text-sky-400/60 font-bold mx-0.5">•</span>
+              <span class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight" id="badgeHumidity">52% RH</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 1 -->
@@ -205,19 +203,22 @@
             </div>
           </div>
 
-          <!-- Card 2: Gas & Asap -->
-          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardSmoke">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconSmokeBox">
-                  <span class="material-symbols-outlined text-xl">cloud</span>
+          <!-- Card 2: Gas & Asap (2-Baris Elegan) -->
+          <div class="rounded-2xl p-4 sm:p-5 card-theme transition-all duration-300" id="cardSmoke">
+            <!-- Baris 1: Icon + Label & Badge K3 -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconSmokeBox">
+                  <span class="material-symbols-outlined text-lg">cloud</span>
                 </div>
-                <div>
-                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Gas &amp; Asap</span>
-                  <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displaySmoke">20 PPM</span>
-                </div>
+                <span class="text-xs font-semibold text-slate-300">Gas &amp; Asap</span>
               </div>
               <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeSmoke">Aman</span>
+            </div>
+
+            <!-- Baris 2: Nilai Telemetri Utama -->
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight" id="displaySmoke">20 PPM</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 2 -->
@@ -232,19 +233,22 @@
             </div>
           </div>
 
-          <!-- Card 3: Karbon Monoksida (CO) -->
-          <div class="rounded-2xl p-4 card-theme transition-all duration-300" id="cardTox">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconToxBox">
-                  <span class="material-symbols-outlined text-xl">air</span>
+          <!-- Card 3: Karbon Monoksida (CO) (2-Baris Elegan) -->
+          <div class="rounded-2xl p-4 sm:p-5 card-theme transition-all duration-300" id="cardTox">
+            <!-- Baris 1: Icon + Label & Badge K3 -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0" id="iconToxBox">
+                  <span class="material-symbols-outlined text-lg">air</span>
                 </div>
-                <div>
-                  <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Karbon Monoksida (CO)</span>
-                  <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="displayTox">5 PPM</span>
-                </div>
+                <span class="text-xs font-semibold text-slate-300">Karbon Monoksida (CO)</span>
               </div>
               <span class="px-2.5 py-1 rounded-full text-xs font-bold border border-emerald-500/40 bg-emerald-500/20 text-emerald-400 transition-colors" id="badgeTox">Aman</span>
+            </div>
+
+            <!-- Baris 2: Nilai Telemetri Utama -->
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight" id="displayTox">5 PPM</span>
             </div>
 
             <!-- Mini Sparkline Graph Drawer Card 3 -->
@@ -264,7 +268,7 @@
 
       <!-- Kolom Chat ESI (Compact, Pinned Sticky di Scrolled State) -->
       <aside id="chatColumn" class="w-full transition-all duration-500">
-        <div class="card-theme rounded-2xl p-4 flex flex-col h-[495px] shadow-2xl relative">
+        <div class="card-theme rounded-2xl p-4 flex flex-col h-[525px] shadow-2xl relative">
           <!-- ESI Chat Header -->
           <div class="flex items-center justify-between pb-3 border-b border-sky-400/20">
             <div class="flex items-center gap-2.5">

@@ -348,8 +348,24 @@ function applyDisplay(state) {
   // Push latest reading to all 3 sparkline canvases
   pushTelemetryToSparklines(tempVal, mq7Val, mq2Val);
 
-  // Siren Trigger jika ada bahaya aktual
+  // Siren Trigger jika ada bahaya aktual & Update Header K3 Status Indicator
   const isDanger = (state.status === "DANGER") || (tempVal > 35.0) || (mq2Val > 300) || (mq7Val > 50);
+  const isWarning = (tempVal > 30.0) || (mq2Val > 150) || (mq7Val > 25);
+
+  const headerK3 = document.getElementById('headerK3Indicator');
+  if (headerK3) {
+    if (isDanger) {
+      headerK3.className = "w-10 h-10 rounded-2xl bg-rose-500/25 border border-rose-500/60 flex items-center justify-center text-rose-400 flex-shrink-0 animate-pulse transition-all duration-300 shadow-lg shadow-rose-500/30";
+      headerK3.title = "Status K3: BAHAYA - Parameter Lingkungan Kritis!";
+    } else if (isWarning) {
+      headerK3.className = "w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-300 flex-shrink-0 transition-all duration-300 shadow-md shadow-amber-500/20";
+      headerK3.title = "Status K3: WASPADA - Parameter Lingkungan Meningkat";
+    } else {
+      headerK3.className = "w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 transition-all duration-300 shadow-sm";
+      headerK3.title = "Status K3: AMAN - Kondisi Lingkungan Laboratorium Optimal";
+    }
+  }
+
   if (isDanger) {
     startSiren();
   } else {
