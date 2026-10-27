@@ -9,6 +9,7 @@ import '../widgets/emergency_banner_widget.dart';
 import '../widgets/sensor_metric_card.dart';
 import '../widgets/telemetry_chart_widget.dart';
 import '../widgets/esi_chat_bottom_sheet.dart';
+import '../widgets/esi_chat_panel.dart';
 import 'settings_dialog.dart';
 
 /// Halaman Dashboard Utama ESS (Web & Mobile Responsive)
@@ -61,12 +62,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
+  Widget _buildMetricGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = 1;
+        double childAspectRatio = 2.6;
+        if (constraints.maxWidth > 700) {
+          crossAxisCount = 3;
+          childAspectRatio = 1.25;
+        } else if (constraints.maxWidth > 480) {
+          crossAxisCount = 2;
+          childAspectRatio = 1.35;
+        }
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: childAspectRatio,
+          children: [
+            SensorMetricCard(
+              title: 'Suhu & Kelembapan',
+              pinLabel: 'DHT22 • GPIO 10',
+              value: '${_current.temperature.toStringAsFixed(1)}°C',
+              unit: '${_current.humidity.toStringAsFixed(0)}% RH',
+              badgeText: _current.temperature >= 35 ? 'Overheat' : 'Optimal',
+              isDanger: _current.temperature >= 35,
+              accentColor: AppColors.primary,
+              icon: Icons.thermostat,
+              progressPercent: (_current.temperature / 50),
+            ),
+            SensorMetricCard(
+              title: 'Karbon Monoksida (CO)',
+              pinLabel: 'MQ-7 • GPIO 1',
+              value: '${_current.mq7CoPpm}',
+              unit: 'PPM',
+              badgeText: _current.mq7CoPpm >= 50 ? 'TOXIC HAZARD!' : 'Safe (<50 PPM)',
+              isDanger: _current.mq7CoPpm >= 50,
+              accentColor: _current.mq7CoPpm >= 50 ? AppColors.dangerRed : AppColors.primary,
+              icon: Icons.warning_rounded,
+              progressPercent: (_current.mq7CoPpm / 80),
+            ),
+            SensorMetricCard(
+              title: 'Asap & Gas Las',
+              pinLabel: 'MQ-2 • GPIO 0',
+              value: '${_current.mq2SmokePpm}',
+              unit: 'PPM',
+              badgeText: _current.mq2SmokePpm >= 300 ? 'SMOKE DETECTED!' : 'Clean Air',
+              isDanger: _current.mq2SmokePpm >= 300,
+              accentColor: _current.mq2SmokePpm >= 300 ? AppColors.warningAmber : AppColors.primary,
+              icon: Icons.cloud,
+              progressPercent: (_current.mq2SmokePpm / 500),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDanger = _current.temperature >= ApiConstants.tempMaxThreshold ||
         _current.mq7CoPpm >= ApiConstants.mq7MaxThreshold ||
         _current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold ||
         _current.status == 'DANGER';
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktopWeb = screenWidth > 900;
 
     return Scaffold(
       appBar: AppBar(
@@ -113,77 +176,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
-            const SizedBox(height: 16),
-            // Kartu Metriks Sensor
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 700;
-                return GridView.count(
-                  crossAxisCount: isWide ? 3 : 1,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: isWide ? 1.4 : 2.6,
-                  children: [
-                    SensorMetricCard(
-                      title: 'Suhu & Kelembapan',
-                      pinLabel: 'DHT22 • GPIO 10',
-                      value: '${_current.temperature.toStringAsFixed(1)}°C',
-                      unit: '${_current.humidity.toStringAsFixed(0)}% RH',
-                      badgeText: _current.temperature >= 35 ? 'Overheat' : 'Optimal',
-                      isDanger: _current.temperature >= 35,
-                      accentColor: AppColors.tempCyan,
-                      icon: Icons.thermostat,
-                      progressPercent: (_current.temperature / 50),
+      body: isDesktopWeb
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Kolom Kiri: Metriks Sensor & Grafik Tren (Bisa Di-scroll)
+                Expanded(
+                  flex: 7,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
+                        const SizedBox(height: 16),
+                        _buildMetricGrid(),
+                        const SizedBox(height: 16),
+                        TelemetryChartWidget(history: _history),
+                      ],
                     ),
-                    SensorMetricCard(
-                      title: 'Karbon Monoksida (CO)',
-                      pinLabel: 'MQ-7 • GPIO 1',
-                      value: '${_current.mq7CoPpm}',
-                      unit: 'PPM',
-                      badgeText: _current.mq7CoPpm >= 50 ? 'TOXIC HAZARD!' : 'Safe (<50 PPM)',
-                      isDanger: _current.mq7CoPpm >= 50,
-                      accentColor: AppColors.coPurple,
-                      icon: Icons.warning_rounded,
-                      progressPercent: (_current.mq7CoPpm / 80),
+                  ),
+                ),
+                // Kolom Kanan: Pinned ESI AI Chat Panel (Stay in Place, Tidak Ikut Scroll)
+                Expanded(
+                  flex: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+                    child: EsiChatPanel(
+                      chatService: _chatService,
+                      showHeaderClose: false,
                     ),
-                    SensorMetricCard(
-                      title: 'Asap & Gas Las',
-                      pinLabel: 'MQ-2 • GPIO 0',
-                      value: '${_current.mq2SmokePpm}',
-                      unit: 'PPM',
-                      badgeText: _current.mq2SmokePpm >= 300 ? 'SMOKE DETECTED!' : 'Clean Air',
-                      isDanger: _current.mq2SmokePpm >= 300,
-                      accentColor: AppColors.smokeAmber,
-                      icon: Icons.cloud,
-                      progressPercent: (_current.mq2SmokePpm / 500),
-                    ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
+                  const SizedBox(height: 16),
+                  _buildMetricGrid(),
+                  const SizedBox(height: 16),
+                  TelemetryChartWidget(history: _history),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            TelemetryChartWidget(history: _history),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.coPurple,
-        icon: const Icon(Icons.smart_toy, color: Colors.white),
-        label: const Text('Tanya ESI AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => EsiChatBottomSheet(chatService: _chatService),
-        ),
-      ),
+      floatingActionButton: isDesktopWeb
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.smart_toy, color: Colors.white),
+              label: const Text('Tanya ESI AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => EsiChatBottomSheet(chatService: _chatService),
+              ),
+            ),
     );
   }
 }
