@@ -1,43 +1,22 @@
 /* =============================================================================
-   Smart Environmental Sensing System (ESS) - Stylesheet
-   Bengkel Mekatronika Politeknik Kota Malang (POLTEKOM)
+   Smart Environmental Sensing System (ESS) - 3-Color Strict Minimalist Stylesheet
+   1. Background: #080d1a
+   2. Card Surface: rgba(15, 23, 42, 0.85) / #0f172a
+   3. Typography & UI: #ffffff (White with Opacities)
    ============================================================================= */
 
 body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      color: #f1f5f9;
-      background-color: #0b1120;
-    }
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #ffffff;
+  background-color: #080d1a;
+  overflow-x: hidden;
+}
 
-    .glass-acrylic {
-      background: rgba(15, 23, 42, 0.58);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45);
-    }
-
-    .glass-card-clean {
-      background: rgba(15, 23, 42, 0.52);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.4);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .glass-card-clean:hover {
-      background: rgba(15, 23, 42, 0.65);
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-3px);
-      box-shadow: 0 20px 38px -6px rgba(0, 0, 0, 0.55);
-    }
-
-    /* Custom smooth scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.3); }
-    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
+/* Custom smooth white-tinted scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
 
 /* Typing Indicator Animation */
 @keyframes pulseDot {
@@ -52,26 +31,75 @@ body {
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
 /* =============================================================================
-   Sticky Layout & Clean Glassmorphism Styles
+   Scroll Morphing & Pinned Layout Transitions
    ============================================================================= */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.4);
+#workspaceSection {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-panel:hover {
-  border-color: rgba(56, 189, 248, 0.3);
+/* 1. HERO STATE (At top of page) */
+#workspaceSection.hero-layout #workspaceGrid {
+  display: block;
 }
 
-/* Chat sticky container */
-.sticky-chat-box {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 5rem;
-  height: calc(100vh - 7rem);
-  max-height: 720px;
-  min-height: 520px;
+#workspaceSection.hero-layout #cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  #workspaceSection.hero-layout #cardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+#workspaceSection.hero-layout .card-graph-drawer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  transition: all 0.35s ease-out;
+}
+
+#workspaceSection.hero-layout #chatColumn {
+  margin-top: 1.5rem;
+  transition: all 0.4s ease-out;
+}
+
+/* 2. SCROLLED STATE (When scrolling down) */
+@media (min-width: 1024px) {
+  #workspaceSection.scrolled-layout #workspaceGrid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+  }
+  #workspaceSection.scrolled-layout #cardsColumn {
+    grid-column: span 7 / span 7;
+  }
+  #workspaceSection.scrolled-layout #cardsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #workspaceSection.scrolled-layout #chatColumn {
+    grid-column: span 5 / span 5;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 5rem;
+    margin-top: 0;
+  }
+}
+
+#workspaceSection.scrolled-layout .card-graph-drawer {
+  max-height: 160px;
+  opacity: 1;
+  overflow: visible;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

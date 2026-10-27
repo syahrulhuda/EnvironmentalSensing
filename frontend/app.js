@@ -1,14 +1,15 @@
 /**
  * ==============================================================================
- * Smart Environmental Sensing System (ESS) - Frontend Engine & Data Stream Controller
+ * Smart Environmental Sensing System (ESS) - Frontend Engine
  * Bengkel Mekatronika Politeknik Kota Malang (POLTEKOM)
- * Mengikuti Konstitusi RULEBOOK.md & Kontrak Arsitektur 5-Layer
+ * 3-Color Strict Minimalist Architecture:
+ * 1. Background: #080d1a
+ * 2. Card Surface: #0f172a (rgba(15, 23, 42, 0.85))
+ * 3. Typography & UI: #ffffff (White with Opacity Tints)
  * ==============================================================================
  */
 
 // --- 1. GLOBAL STATE ---
-let isSimulatedDanger = false;
-let isRealDanger = false;
 let audioAllowed = true;
 let audioCtx = null;
 let sirenOsc = null;
@@ -39,9 +40,9 @@ function updateSlidePosition() {
   const dots = document.querySelectorAll('.carousel-dot');
   dots.forEach((dot, idx) => {
     if (idx === currentSlideIndex) {
-      dot.className = 'carousel-dot w-6 h-2 rounded-full bg-emerald-400 transition-all duration-300';
+      dot.className = 'carousel-dot w-6 h-2 rounded-full bg-white transition-all duration-300';
     } else {
-      dot.className = 'carousel-dot w-2 h-2 rounded-full bg-white/40 hover:bg-white/80 transition-all duration-300';
+      dot.className = 'carousel-dot w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition-all duration-300';
     }
   });
 }
@@ -72,7 +73,7 @@ function restartSlideTimer() {
   }, 5000);
 }
 
-// --- 3. WEB AUDIO SIREN ALARM ---
+// --- 3. WEB AUDIO ALARM ---
 function initAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -129,31 +130,22 @@ function toggleAudio() {
 
   if (audioAllowed) {
     icon.innerText = 'volume_up';
-    btn.classList.remove('text-red-400', 'border-red-500/40');
-    btn.classList.add('text-slate-300');
-    if (isSimulatedDanger || isRealDanger) startSiren();
+    btn.classList.remove('opacity-50');
   } else {
     icon.innerText = 'volume_off';
-    btn.classList.add('text-red-400', 'border-red-500/40');
-    btn.classList.remove('text-slate-300');
+    btn.classList.add('opacity-50');
     stopSiren();
   }
 }
 
-// --- 4. TOGGLE MANUAL SIMULASI BAHAYA ---
-function toggleDangerSimulation() {
-  isSimulatedDanger = !isSimulatedDanger;
-  applyDisplay(currentSensorState);
-}
-
-// --- 4.5 TELEMETRY PROGRESSION CHART CANVAS RENDERER ---
+// --- 4. INDIVIDUAL CARD SPARKLINE GRAPH CANVAS RENDERER ---
 const MAX_CHART_POINTS = 20;
 let telemetryHistory = [];
 
-// Pre-fill history buffer with initial baseline points
+// Inisialisasi buffer awal
 (function initTelemetryBuffer() {
   const now = Date.now();
-  for (let i = 6; i >= 1; i--) {
+  for (let i = 8; i >= 1; i--) {
     const d = new Date(now - i * 2500);
     telemetryHistory.push({
       time: d.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -164,7 +156,7 @@ let telemetryHistory = [];
   }
 })();
 
-function pushTelemetryToChart(temp, mq7, mq2) {
+function pushTelemetryToSparklines(temp, mq7, mq2) {
   const timestamp = new Date().toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   telemetryHistory.push({
     time: timestamp,
@@ -175,19 +167,21 @@ function pushTelemetryToChart(temp, mq7, mq2) {
   if (telemetryHistory.length > MAX_CHART_POINTS) {
     telemetryHistory.shift();
   }
-  renderTelemetryCanvas();
+  renderAllSparklines();
 }
 
-function renderTelemetryCanvas() {
-  const canvas = document.getElementById('telemetryChartCanvas');
+function renderSparkline(canvasId, getValue, maxVal) {
+  const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const width = rect.width || canvas.parentElement.clientWidth || 320;
-  const height = rect.height || 140;
+  const width = rect.width || canvas.parentElement.clientWidth || 240;
+  const height = rect.height || 65;
+
+  if (width <= 0) return;
 
   if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
     canvas.width = Math.floor(width * dpr);
@@ -198,233 +192,127 @@ function renderTelemetryCanvas() {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
 
-  // Background subtle horizontal grid lines
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+  // Background subtle horizontal grid line (pure monochromatic white)
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
   ctx.lineWidth = 1;
-  const gridRows = 4;
-  for (let i = 0; i <= gridRows; i++) {
-    const y = (height / gridRows) * i;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.5);
+  ctx.lineTo(width, height * 0.5);
+  ctx.stroke();
 
   if (telemetryHistory.length < 2) {
     ctx.restore();
     return;
   }
 
-  const paddingLeft = 32;
-  const paddingRight = 10;
-  const paddingTop = 12;
-  const paddingBottom = 20;
+  const paddingLeft = 6;
+  const paddingRight = 6;
+  const paddingTop = 8;
+  const paddingBottom = 8;
   const plotW = width - paddingLeft - paddingRight;
   const plotH = height - paddingTop - paddingBottom;
   const stepX = plotW / (telemetryHistory.length - 1);
 
-  function drawSeries(getValue, strokeColor, maxVal) {
-    ctx.beginPath();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 2;
-    ctx.lineJoin = "round";
+  // Draw smooth sparkline curve
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.lineWidth = 1.75;
+  ctx.lineJoin = "round";
 
-    telemetryHistory.forEach((pt, idx) => {
-      const val = getValue(pt);
-      const normY = Math.min(Math.max(val / maxVal, 0), 1);
-      const x = paddingLeft + (idx * stepX);
-      const y = paddingTop + plotH - (normY * plotH);
+  telemetryHistory.forEach((pt, idx) => {
+    const val = getValue(pt);
+    const normY = Math.min(Math.max(val / maxVal, 0), 1);
+    const x = paddingLeft + (idx * stepX);
+    const y = paddingTop + plotH - (normY * plotH);
 
-      if (idx === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    ctx.stroke();
+    if (idx === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
 
-    // Draw active dot at latest value
-    const lastPt = telemetryHistory[telemetryHistory.length - 1];
-    const lastVal = getValue(lastPt);
-    const lastNormY = Math.min(Math.max(lastVal / maxVal, 0), 1);
-    const lastX = paddingLeft + ((telemetryHistory.length - 1) * stepX);
-    const lastY = paddingTop + plotH - (lastNormY * plotH);
+  // Gradient fill under the curve (monochromatic white tint)
+  ctx.lineTo(paddingLeft + plotW, height);
+  ctx.lineTo(paddingLeft, height);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, paddingTop, 0, height);
+  grad.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  grad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+  ctx.fillStyle = grad;
+  ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = strokeColor;
-    ctx.fill();
-    ctx.strokeStyle = "#0f172a";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
+  // Active dot at latest reading
+  const lastPt = telemetryHistory[telemetryHistory.length - 1];
+  const lastVal = getValue(lastPt);
+  const lastNormY = Math.min(Math.max(lastVal / maxVal, 0), 1);
+  const lastX = paddingLeft + ((telemetryHistory.length - 1) * stepX);
+  const lastY = paddingTop + plotH - (lastNormY * plotH);
 
-  // 1. Suhu (°C, max 50) -> Primary (Sky Blue #38bdf8)
-  drawSeries(pt => pt.temp, "#38bdf8", 50);
-
-  // 2. Asap (PPM, max 500) -> Accent (Emerald #10b981)
-  drawSeries(pt => pt.mq2, "#10b981", 500);
-
-  // 3. Karbon Monoksida CO (PPM, max 100) -> Primary tint (Light Sky #93c5fd)
-  drawSeries(pt => pt.mq7, "#93c5fd", 100);
-
-  // Y-axis indicators
-  ctx.fillStyle = "rgba(148, 163, 184, 0.6)";
-  ctx.font = "9px 'JetBrains Mono', monospace";
-  ctx.textAlign = "right";
-  ctx.fillText("MAX", paddingLeft - 4, paddingTop + 6);
-  ctx.fillText("MID", paddingLeft - 4, paddingTop + plotH / 2 + 3);
-  ctx.fillText("0", paddingLeft - 4, paddingTop + plotH);
-
-  // X-axis latest timestamp
-  const latestTime = telemetryHistory[telemetryHistory.length - 1]?.time || "";
-  ctx.textAlign = "right";
-  ctx.fillText(latestTime, width - paddingRight, height - 4);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
 
   ctx.restore();
 }
 
-// --- 5. RENDER UI KE TAMPILAN DASHBOARD (3-COLOR MINIMALIST PALETTE) ---
+function renderAllSparklines() {
+  renderSparkline('canvasTemp', pt => pt.temp, 50);
+  renderSparkline('canvasSmoke', pt => pt.mq2, 500);
+  renderSparkline('canvasTox', pt => pt.mq7, 100);
+}
+
+// --- 5. RENDER UI KE TAMPILAN DASHBOARD ---
 function applyDisplay(state) {
-  const isDanger = isSimulatedDanger || isRealDanger;
-
-  // Tombol Simulasi
-  const btnLabel = document.getElementById('btnDangerLabel');
-  const btnIcon = document.getElementById('btnDangerIcon');
-  const btnDanger = document.getElementById('btnDangerToggle');
-  if (btnLabel && btnIcon && btnDanger) {
-    if (isSimulatedDanger) {
-      btnLabel.innerText = "Kembalikan Normal";
-      btnIcon.innerText = "check_circle";
-      btnDanger.className = "group px-4 py-2 rounded-xl bg-red-600 text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-lg shadow-red-600/50 scale-105";
-    } else {
-      btnLabel.innerText = "Simulasi Status: Bahaya";
-      btnIcon.innerText = "emergency_home";
-      btnDanger.className = "group px-4 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/35 text-red-200 text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95";
-    }
-  }
-
-  // Header System Status Pill
-  const statusPill = document.getElementById('systemStatusPill');
-  const statusText = document.getElementById('systemStatusText');
-  if (statusText) {
-    if (isDanger) {
-      statusText.innerHTML = '<span class="text-red-400 font-bold">DANGER ALERT</span>';
-      if (statusPill) statusPill.className = "hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-medium animate-pulse";
-    } else {
-      statusText.innerText = "ONLINE";
-      if (statusPill) statusPill.className = "hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-medium";
-    }
-  }
-
-  // Ambient Glow
-  const bannerGlow = document.getElementById('bannerGlow');
-  if (bannerGlow) {
-    bannerGlow.className = isDanger
-      ? "absolute -right-16 -top-16 w-80 h-80 bg-red-600/30 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
-      : "absolute -right-16 -top-16 w-80 h-80 bg-sky-500/15 rounded-full blur-3xl pointer-events-none transition-colors duration-500";
-  }
-
-  const tempVal = isSimulatedDanger ? 41.5 : (state.temp || 25.0);
-  const humVal = isSimulatedDanger ? 32.0 : (state.hum || 52.0);
-  const mq2Val = isSimulatedDanger ? 1000 : (state.mq2_ppm || 0);
-  const mq7Val = isSimulatedDanger ? 150 : (state.mq7_ppm || 0);
+  const tempVal = state.temp || 25.0;
+  const humVal = state.hum || 52.0;
+  const mq2Val = state.mq2_ppm || 0;
+  const mq7Val = state.mq7_ppm || 0;
 
   // 1. Card 1: Suhu Ruangan
-  const cardComfort = document.getElementById('cardComfort');
-  const badgeComfort = document.getElementById('badgeComfort');
   const displayComfort = document.getElementById('displayComfort');
   const badgeHumidity = document.getElementById('badgeHumidity');
+  const badgeComfort = document.getElementById('badgeComfort');
 
   if (displayComfort) {
     displayComfort.innerText = `${tempVal.toFixed(1)}°C`;
-    if (tempVal > 35.0) {
-      displayComfort.className = "text-2xl font-extrabold text-red-400 tracking-tight";
-      if (badgeComfort) {
-        badgeComfort.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse";
-        badgeComfort.innerText = "Bahaya";
-      }
-      if (cardComfort) cardComfort.className = "rounded-2xl px-4 py-3 border border-red-500/60 bg-red-950/40 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300";
-    } else {
-      displayComfort.className = "text-2xl font-extrabold text-white tracking-tight";
-      if (badgeComfort) {
-        badgeComfort.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-        badgeComfort.innerText = "Optimal";
-      }
-      if (cardComfort) cardComfort.className = "rounded-2xl px-4 py-3 border border-white/10 bg-slate-900/60 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300 hover:border-sky-400/40";
-    }
   }
-
   if (badgeHumidity) {
     badgeHumidity.innerText = `${humVal.toFixed(0)}% RH`;
   }
+  if (badgeComfort) {
+    badgeComfort.innerText = tempVal > 35.0 ? "Bahaya" : "Optimal";
+  }
 
   // 2. Card 2: Gas & Asap
-  const cardSmoke = document.getElementById('cardSmoke');
-  const badgeSmoke = document.getElementById('badgeSmoke');
   const displaySmoke = document.getElementById('displaySmoke');
-  const iconSmokeBox = document.getElementById('iconSmokeBox');
+  const badgeSmoke = document.getElementById('badgeSmoke');
 
   if (displaySmoke) {
     displaySmoke.innerText = `${mq2Val} PPM`;
-    if (mq2Val > 300) {
-      displaySmoke.className = "text-2xl font-extrabold text-red-400 tracking-tight";
-      if (badgeSmoke) {
-        badgeSmoke.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse";
-        badgeSmoke.innerText = "Bahaya";
-      }
-      if (iconSmokeBox) {
-        iconSmokeBox.className = "w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 flex-shrink-0 animate-pulse";
-      }
-      if (cardSmoke) cardSmoke.className = "rounded-2xl px-4 py-3 border border-red-500/60 bg-red-950/40 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300";
-    } else {
-      displaySmoke.className = "text-2xl font-extrabold text-white tracking-tight";
-      if (badgeSmoke) {
-        badgeSmoke.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-        badgeSmoke.innerText = "Aman";
-      }
-      if (iconSmokeBox) {
-        iconSmokeBox.className = "w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0";
-      }
-      if (cardSmoke) cardSmoke.className = "rounded-2xl px-4 py-3 border border-white/10 bg-slate-900/60 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300 hover:border-sky-400/40";
-    }
+  }
+  if (badgeSmoke) {
+    badgeSmoke.innerText = mq2Val > 150 ? "Bahaya" : "Aman";
   }
 
-  // 3. Card 3: Gas Karbon Monoksida (CO)
-  const cardTox = document.getElementById('cardTox');
-  const badgeTox = document.getElementById('badgeTox');
+  // 3. Card 3: Karbon Monoksida (CO)
   const displayTox = document.getElementById('displayTox');
-  const iconToxBox = document.getElementById('iconToxBox');
+  const badgeTox = document.getElementById('badgeTox');
 
   if (displayTox) {
     displayTox.innerText = `${mq7Val} PPM`;
-    if (mq7Val > 50) {
-      displayTox.className = "text-2xl font-extrabold text-red-400 tracking-tight";
-      if (badgeTox) {
-        badgeTox.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse";
-        badgeTox.innerText = "Bahaya";
-      }
-      if (iconToxBox) {
-        iconToxBox.className = "w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 flex-shrink-0 animate-pulse";
-      }
-      if (cardTox) cardTox.className = "rounded-2xl px-4 py-3 border border-red-500/60 bg-red-950/40 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300";
-    } else {
-      displayTox.className = "text-2xl font-extrabold text-white tracking-tight";
-      if (badgeTox) {
-        badgeTox.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-        badgeTox.innerText = "Aman";
-      }
-      if (iconToxBox) {
-        iconToxBox.className = "w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0";
-      }
-      if (cardTox) cardTox.className = "rounded-2xl px-4 py-3 border border-white/10 bg-slate-900/60 backdrop-blur-md flex items-center justify-between shadow-lg transition-all duration-300 hover:border-sky-400/40";
-    }
+  }
+  if (badgeTox) {
+    badgeTox.innerText = mq7Val > 50 ? "Bahaya" : "Aman";
   }
 
-  // Push latest reading to telemetry progression chart
-  pushTelemetryToChart(tempVal, mq7Val, mq2Val);
+  // Push latest reading to all 3 sparkline canvases
+  pushTelemetryToSparklines(tempVal, mq7Val, mq2Val);
 
-  // Siren Trigger
+  // Siren Trigger jika ada bahaya aktual
+  const isDanger = (state.status === "DANGER") || (tempVal > 35.0) || (mq2Val > 150) || (mq7Val > 50);
   if (isDanger) {
     startSiren();
   } else {
@@ -443,14 +331,14 @@ async function fetchLatestTelemetry() {
     const res = await fetch(CONFIG.FIREBASE_DATABASE_URL);
     if (!res.ok) {
       if (statusText) statusText.innerText = "OFFLINE";
-      if (statusPill) statusPill.className = "hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800/60 border border-slate-600 text-slate-400 text-xs font-medium";
+      if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
       return;
     }
 
     const data = await res.json();
     if (!data) {
       if (statusText) statusText.innerText = "OFFLINE";
-      if (statusPill) statusPill.className = "hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800/60 border border-slate-600 text-slate-400 text-xs font-medium";
+      if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
       return;
     }
 
@@ -460,7 +348,6 @@ async function fetchLatestTelemetry() {
       return;
     }
 
-    // Ambil data terbaru berdasarkan key atau timestamp
     const latestKey = keys[keys.length - 1];
     const record = data[latestKey];
     if (!record) return;
@@ -474,31 +361,27 @@ async function fetchLatestTelemetry() {
     currentSensorState.status = record.status || "NORMAL";
     currentSensorState.lastUpdated = new Date();
 
-    // Deteksi bahaya riil dari sensor fisik
-    const isOverheat = currentSensorState.temp > (CONFIG.THRESHOLDS?.TEMP_MAX || 35.0);
-    const isGasDanger = currentSensorState.mq2_ppm > (CONFIG.THRESHOLDS?.MQ2_MAX || 300);
-    const isToxDanger = currentSensorState.mq7_ppm > (CONFIG.THRESHOLDS?.MQ7_MAX || 50);
-
-    isRealDanger = (currentSensorState.status === "DANGER") || isOverheat || isGasDanger || isToxDanger;
+    if (statusText) statusText.innerText = "ONLINE";
+    if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/15 bg-white/5 text-white text-xs font-mono";
 
     // Terapkan ke tampilan UI
     applyDisplay(currentSensorState);
 
   } catch (err) {
     console.warn("[Firebase RTDB] Fetch stream error:", err);
-    if (statusText && !isSimulatedDanger) statusText.innerText = "OFFLINE";
-    if (statusPill && !isSimulatedDanger) statusPill.className = "hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800/60 border border-slate-600 text-slate-400 text-xs font-medium";
+    if (statusText) statusText.innerText = "OFFLINE";
+    if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
   }
 }
 
-// --- 7. ESI (ENVIRONMENTAL SENSING INTELLIGENCE) CHATBOT SYSTEM ---
+// --- 7. ESI CHATBOT SYSTEM ---
 function appendUserMessage(text) {
   const feed = document.getElementById('chatFeed');
   if (!feed) return;
   const div = document.createElement('div');
   div.className = "flex gap-2 justify-end animate-fadeIn";
   div.innerHTML = `
-    <div class="bg-sky-500/25 border border-sky-400/35 text-sky-100 rounded-2xl rounded-tr-none px-4 py-2.5 max-w-[85%] leading-relaxed shadow-sm">
+    <div class="bg-white/10 border border-white/15 text-white rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[85%] leading-relaxed shadow-sm">
       ${text}
     </div>
   `;
@@ -512,15 +395,17 @@ function showTypingIndicator() {
   if (!feed) return;
   const ind = document.createElement('div');
   ind.id = "typingIndicator";
-  ind.className = "flex gap-3 items-center animate-fadeIn";
+  ind.className = "flex gap-2 items-center animate-fadeIn";
   ind.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-indigo-600/35 border border-indigo-400/30 flex-shrink-0 flex items-center justify-center text-base shadow-sm">🤖</div>
-    <div class="bg-slate-900/80 rounded-2xl rounded-tl-none p-3 border border-white/10 text-slate-300 text-xs flex items-center gap-2">
-      <span>ESI sedang menganalisis data sensor...</span>
+    <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-white">
+      <span class="material-symbols-outlined text-base">smart_toy</span>
+    </div>
+    <div class="bg-slate-950/60 rounded-xl rounded-tl-none p-2.5 border border-white/10 text-white/70 text-xs flex items-center gap-2">
+      <span>ESI sedang memproses...</span>
       <span class="inline-flex gap-1">
-        <span class="w-1.5 h-1.5 bg-sky-400 rounded-full typing-dot"></span>
-        <span class="w-1.5 h-1.5 bg-sky-400 rounded-full typing-dot"></span>
-        <span class="w-1.5 h-1.5 bg-sky-400 rounded-full typing-dot"></span>
+        <span class="w-1 h-1 bg-white rounded-full typing-dot"></span>
+        <span class="w-1 h-1 bg-white rounded-full typing-dot"></span>
+        <span class="w-1 h-1 bg-white rounded-full typing-dot"></span>
       </span>
     </div>
   `;
@@ -538,12 +423,12 @@ function appendBotMessage(text) {
   const feed = document.getElementById('chatFeed');
   if (!feed) return;
   const div = document.createElement('div');
-  div.className = "flex gap-3 items-start animate-fadeIn";
+  div.className = "flex gap-2 items-start animate-fadeIn";
   div.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-indigo-600/35 border border-indigo-400/30 flex-shrink-0 flex items-center justify-center text-base shadow-sm">
-      🤖
+    <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-white">
+      <span class="material-symbols-outlined text-base">smart_toy</span>
     </div>
-    <div class="bg-slate-900/80 rounded-2xl rounded-tl-none p-3.5 border border-white/10 text-slate-100 max-w-[90%] leading-relaxed shadow-sm">
+    <div class="bg-slate-950/60 rounded-xl rounded-tl-none p-3 border border-white/10 text-white max-w-[88%] leading-relaxed shadow-sm">
       ${text}
     </div>
   `;
@@ -567,7 +452,6 @@ function handleUserSubmit(e) {
   processChatQuery(val);
 }
 
-// Terhubung ke Layer 4 FastAPI Gateway (POST /api/chat) dengan timeout 20 detik & payload history
 async function processChatQuery(query) {
   showTypingIndicator();
   const baseBackend = (typeof CONFIG !== 'undefined' && CONFIG.BACKEND_API_URL) ? CONFIG.BACKEND_API_URL.replace(/\/+$/, "") : "";
@@ -610,27 +494,18 @@ async function processChatQuery(query) {
   setTimeout(() => {
     removeTypingIndicator();
     const q = query.toLowerCase();
-    const isDanger = isSimulatedDanger || isRealDanger;
     let answer = "";
 
     if (q.includes('sehat') || q.includes('kualitas') || q.includes('udara')) {
-      if (isDanger) {
-        answer = "⚠️ <strong>Status Udara Lab: WASPADA!</strong> Sensor mendeteksi kenaikan partikel asap dan gas di ruangan. Disarankan membuka pintu/jendela atau segera evakuasi ke tempat terbuka.";
-      } else {
-        answer = `🍃 <strong>Udara Sangat Sehat & Bersih!</strong> Kadar Karbon Monoksida (CO) terpantau <strong>${currentSensorState.mq7_ppm} PPM</strong> (jauh di bawah batas bahaya 50 PPM). Sirkulasi udara ruangan sangat baik untuk kegiatan praktikum.`;
-      }
+      answer = `Kadar Karbon Monoksida (CO) terpantau <strong>${currentSensorState.mq7_ppm} PPM</strong> (di bawah batas ambang 50 PPM). Sirkulasi udara ruangan aman dan bersih untuk kegiatan praktikum.`;
     } else if (q.includes('suhu') || q.includes('panas') || q.includes('dingin') || q.includes('cuaca') || q.includes('temp')) {
-      answer = `🌡️ Suhu ruangan saat ini tercatat <strong>${currentSensorState.temp.toFixed(1)}°C</strong> dengan kelembapan <strong>${currentSensorState.hum.toFixed(1)}%</strong>. Suhu ${currentSensorState.temp > 35 ? 'terlalu panas' : 'sejuk dan optimal'} untuk ruangan laboratorium.`;
+      answer = `Suhu ruangan saat ini tercatat <strong>${currentSensorState.temp.toFixed(1)}°C</strong> dengan kelembapan <strong>${currentSensorState.hum.toFixed(1)}% RH</strong>. Kondisi ruangan optimal.`;
     } else if (q.includes('asap') || q.includes('bahaya') || q.includes('bocor') || q.includes('kebakaran') || q.includes('gas')) {
-      if (isDanger) {
-        answer = `🚨 <strong>PERINGATAN BAHAYA:</strong> Sensor MQ-2 mendeteksi konsentrasi asap/gas sebesar <strong>${currentSensorState.mq2_ppm} PPM</strong>! Segera periksa sumber panas, kompor solder, atau tabung gas.`;
-      } else {
-        answer = `🛡️ <strong>Alhamdulillah aman!</strong> Sensor MQ-2 mendeteksi konsentrasi asap sebesar <strong>${currentSensorState.mq2_ppm} PPM</strong> (Batas aman < 300 PPM). Tidak ada indikasi kebakaran atau kebocoran gas LPG.`;
-      }
+      answer = `Sensor gas & asap mendeteksi konsentrasi sebesar <strong>${currentSensorState.mq2_ppm} PPM</strong> (Batas aman < 150 PPM). Ruang laboratorium terpantau aman dari risiko kebakaran.`;
     } else if (q.includes('tips') || q.includes('hemat') || q.includes('jaga') || q.includes('k3')) {
-      answer = "💡 <strong>Tips Keselamatan & K3 Laboratorium:</strong><br>1. Matikan solder dan alat pemanas listrik setelah selesai digunakan.<br>2. Pastikan ventilasi udara terbuka saat melakukan praktikum pengelasan atau perakitan.<br>3. Hubungi teknisi bengkel jika alarm sensor gas menyala.";
+      answer = "<strong>Tips K3 Laboratorium:</strong><br>1. Matikan solder dan alat pemanas listrik setelah selesai praktikum.<br>2. Pastikan ventilasi udara terbuka saat pengerjaan PCB.<br>3. Hubungi teknisi bengkel bila alarm sensor menyala.";
     } else {
-      answer = `Terima kasih pertanyaannya! Berdasarkan pembacaan sensor node <code>${currentSensorState.nodeId}</code> secara langsung: Suhu: <strong>${currentSensorState.temp.toFixed(1)}°C</strong>, Kelembapan: <strong>${currentSensorState.hum.toFixed(1)}%</strong>, MQ-7 (CO): <strong>${currentSensorState.mq7_ppm} PPM</strong>, MQ-2 (Asap): <strong>${currentSensorState.mq2_ppm} PPM</strong>. Status: <strong>${currentSensorState.status}</strong>.`;
+      answer = `Data telemetri node <code>${currentSensorState.nodeId}</code> terkini: Suhu: <strong>${currentSensorState.temp.toFixed(1)}°C</strong>, Kelembapan: <strong>${currentSensorState.hum.toFixed(1)}% RH</strong>, CO: <strong>${currentSensorState.mq7_ppm} PPM</strong>, Asap: <strong>${currentSensorState.mq2_ppm} PPM</strong>. Status: <strong>${currentSensorState.status}</strong>.`;
     }
 
     appendBotMessage(answer);
@@ -639,24 +514,59 @@ async function processChatQuery(query) {
   }, 400);
 }
 
-// --- 7. RESIZE LISTENER FOR TELEMETRY CANVAS ---
+// --- 8. SCROLL MORPHING CONTROLLER ---
+function initScrollMorphing() {
+  const section = document.getElementById('workspaceSection');
+  if (!section) return;
+
+  let isTicking = false;
+  const onScroll = () => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    if (scrollY > 70) {
+      if (!section.classList.contains('scrolled-layout')) {
+        section.classList.remove('hero-layout');
+        section.classList.add('scrolled-layout');
+        // Redraw sparklines when drawer expands
+        setTimeout(renderAllSparklines, 200);
+      }
+    } else if (scrollY < 30) {
+      if (!section.classList.contains('hero-layout')) {
+        section.classList.remove('scrolled-layout');
+        section.classList.add('hero-layout');
+      }
+    }
+    isTicking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!isTicking) {
+      window.requestAnimationFrame(onScroll);
+      isTicking = true;
+    }
+  }, { passive: true });
+
+  onScroll();
+}
+
+// --- 9. INITIALIZATION ON PAGE LOAD ---
 window.addEventListener('resize', () => {
-  renderTelemetryCanvas();
+  renderAllSparklines();
 });
 
-// --- 8. INITIALIZATION ON PAGE LOAD ---
 document.addEventListener("DOMContentLoaded", () => {
-  // Inisialisasi Carousel
+  // Carousel
   restartSlideTimer();
 
-  // Initial UI Render & Telemetry Canvas Draw
-  applyDisplay(currentSensorState);
-  renderTelemetryCanvas();
+  // Scroll Morphing
+  initScrollMorphing();
 
-  // Polling data telemetri pertama dan berulang
+  // Initial UI Render & Sparklines
+  applyDisplay(currentSensorState);
+  renderAllSparklines();
+
+  // Polling stream telemetri
   fetchLatestTelemetry();
   setInterval(fetchLatestTelemetry, (typeof CONFIG !== 'undefined' && CONFIG.POLL_INTERVAL) ? CONFIG.POLL_INTERVAL : 2500);
 
   console.log("🏭 Smart Environmental Sensing System (ESS) POLTEKOM initialized successfully!");
 });
-
