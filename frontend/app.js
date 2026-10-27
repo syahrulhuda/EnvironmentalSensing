@@ -210,24 +210,24 @@ function applyDisplay(state) {
         summaryComfort.className = "font-bold text-red-400 flex items-center gap-1 text-xs";
         summaryComfort.innerHTML = "<span>⚠️</span> Suhu ruangan melebihi batas aman!";
       }
-      if (cardComfort) cardComfort.className = "rounded-2xl p-4 sm:p-5 border border-red-500/50 bg-red-950/30 relative overflow-hidden flex flex-col justify-between backdrop-blur-md";
+      if (cardComfort) cardComfort.className = "rounded-2xl p-4 border border-red-500/50 bg-red-950/40 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl";
     } else {
       displayComfort.innerText = `${tempVal.toFixed(1)}°C • Suhu Nyaman & Sejuk`;
-      displayComfort.className = "text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm";
+      displayComfort.className = "text-xl sm:text-2xl font-extrabold text-white tracking-tight drop-shadow-sm";
       if (badgeComfort) {
-        badgeComfort.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30 flex-shrink-0";
+        badgeComfort.className = "px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30 flex-shrink-0";
         badgeComfort.innerText = "Optimal";
       }
       if (summaryComfort) {
         summaryComfort.className = "font-bold text-emerald-400 flex items-center gap-1 text-xs";
         summaryComfort.innerHTML = "<span>✅</span> Sangat nyaman untuk riset & praktikum";
       }
-      if (cardComfort) cardComfort.className = "rounded-2xl p-4 sm:p-5 border border-sky-400/30 relative overflow-hidden flex flex-col justify-between backdrop-blur-md transition-all duration-300 hover:border-white/20";
+      if (cardComfort) cardComfort.className = "rounded-2xl p-4 border border-sky-400/30 bg-slate-950/50 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl transition-all duration-300 hover:border-sky-400/60";
     }
   }
 
   if (badgeHumidity) {
-    badgeHumidity.innerHTML = `<span>💧</span> Kelembapan ${humVal.toFixed(1)}%`;
+    badgeHumidity.innerHTML = `<span>💧</span> ${humVal.toFixed(1)}% RH`;
   }
   if (barComfort) {
     const comfortPercent = Math.min(Math.max((tempVal / 50) * 100, 10), 100);
@@ -248,9 +248,9 @@ function applyDisplay(state) {
   if (displaySmoke) {
     if (mq2Val > 300) {
       displaySmoke.innerText = `BAHAYA! TERDETEKSI ASAP (${mq2Val} PPM)`;
-      displaySmoke.className = "text-2xl sm:text-3xl font-extrabold text-red-400 tracking-tight drop-shadow-sm";
+      displaySmoke.className = "text-xl sm:text-2xl font-extrabold text-red-400 tracking-tight drop-shadow-sm";
       if (badgeSmoke) {
-        badgeSmoke.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/30 text-red-200 border border-red-500/50 animate-pulse";
+        badgeSmoke.className = "px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/30 text-red-200 border border-red-500/50 animate-pulse";
         badgeSmoke.innerText = "Risiko Tinggi!";
       }
       if (labelSmokeRisk) labelSmokeRisk.innerText = "Sensor mendeteksi kepulan asap pekat atau kebocoran gas LPG mudah terbakar!";
@@ -259,15 +259,15 @@ function applyDisplay(state) {
         summarySmoke.innerHTML = "<span>🚨</span> Waspada bahaya kebakaran atau kebocoran gas!";
       }
       if (iconSmokeBox) {
-        iconSmokeBox.className = "w-11 h-11 rounded-xl bg-red-500/30 border border-red-500/50 flex items-center justify-center text-2xl shadow-sm text-red-400 animate-pulse";
+        iconSmokeBox.className = "w-8 h-8 rounded-lg bg-red-500/30 border border-red-500/50 flex items-center justify-center text-lg shadow-sm text-red-400 animate-pulse";
         iconSmokeBox.innerText = "🔥";
       }
-      if (cardSmoke) cardSmoke.className = "rounded-2xl p-4 sm:p-5 border border-red-500/60 bg-red-950/35 relative overflow-hidden flex flex-col justify-between backdrop-blur-md";
+      if (cardSmoke) cardSmoke.className = "rounded-2xl p-4 border border-red-500/60 bg-red-950/40 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl";
     } else {
       displaySmoke.innerText = `BERSIH (${mq2Val} PPM • Aman)`;
-      displaySmoke.className = "text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight drop-shadow-sm";
+      displaySmoke.className = "text-xl sm:text-2xl font-extrabold text-emerald-400 tracking-tight drop-shadow-sm";
       if (badgeSmoke) {
-        badgeSmoke.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0";
+        badgeSmoke.className = "px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0";
         badgeSmoke.innerText = "0% Risiko";
       }
       if (labelSmokeRisk) labelSmokeRisk.innerText = "Sensor tidak menemukan adanya kepulan asap kebakaran maupun kebocoran gas LPG.";
@@ -276,10 +276,10 @@ function applyDisplay(state) {
         summarySmoke.innerHTML = "<span>🛡️</span> Aman dari kebakaran & kebocoran LPG";
       }
       if (iconSmokeBox) {
-        iconSmokeBox.className = "w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center text-2xl shadow-sm";
+        iconSmokeBox.className = "w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center text-lg shadow-sm";
         iconSmokeBox.innerText = "🛡️";
       }
-      if (cardSmoke) cardSmoke.className = "rounded-2xl p-4 sm:p-5 border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between backdrop-blur-md transition-all duration-300 hover:border-white/20";
+      if (cardSmoke) cardSmoke.className = "rounded-2xl p-4 border border-emerald-500/30 bg-slate-950/50 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl transition-all duration-300 hover:border-emerald-400/60";
     }
   }
   if (barSmoke) {
@@ -301,9 +301,9 @@ function applyDisplay(state) {
   if (displayTox) {
     if (mq7Val > 50) {
       displayTox.innerText = `TERCEMAR GAS CO (${mq7Val} PPM)`;
-      displayTox.className = "text-2xl sm:text-3xl font-extrabold text-red-400 tracking-tight drop-shadow-sm";
+      displayTox.className = "text-xl sm:text-2xl font-extrabold text-red-400 tracking-tight drop-shadow-sm";
       if (badgeTox) {
-        badgeTox.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/30 text-red-200 border border-red-500/50 animate-pulse";
+        badgeTox.className = "px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/30 text-red-200 border border-red-500/50 animate-pulse";
         badgeTox.innerText = "Berbahaya!";
       }
       if (labelToxDesc) labelToxDesc.innerText = "Kandungan Karbon Monoksida (CO) beracun jika terhirup. Buka ventilasi dan nyalakan exhaust fan!";
@@ -312,15 +312,15 @@ function applyDisplay(state) {
         summaryTox.innerHTML = "<span>☠️</span> Terdeteksi konsentrasi gas CO beracun!";
       }
       if (iconToxBox) {
-        iconToxBox.className = "w-11 h-11 rounded-xl bg-red-500/30 border border-red-500/50 flex items-center justify-center text-2xl shadow-sm text-red-400 animate-pulse";
+        iconToxBox.className = "w-8 h-8 rounded-lg bg-red-500/30 border border-red-500/50 flex items-center justify-center text-lg shadow-sm text-red-400 animate-pulse";
         iconToxBox.innerText = "⚠️";
       }
-      if (cardTox) cardTox.className = "rounded-2xl p-4 sm:p-5 border border-red-500/60 bg-red-950/35 relative overflow-hidden flex flex-col justify-between backdrop-blur-md";
+      if (cardTox) cardTox.className = "rounded-2xl p-4 border border-red-500/60 bg-red-950/40 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl";
     } else {
       displayTox.innerText = `BEBAS RACUN (${mq7Val} PPM CO)`;
-      displayTox.className = "text-2xl sm:text-3xl font-extrabold text-teal-300 tracking-tight drop-shadow-sm";
+      displayTox.className = "text-xl sm:text-2xl font-extrabold text-teal-300 tracking-tight drop-shadow-sm";
       if (badgeTox) {
-        badgeTox.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex-shrink-0";
+        badgeTox.className = "px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex-shrink-0";
         badgeTox.innerText = "Sangat Bersih";
       }
       if (labelToxDesc) labelToxDesc.innerText = "Kadar udara murni dan sangat bersih untuk dihirup oleh mahasiswa dan teknisi lab.";
@@ -329,10 +329,10 @@ function applyDisplay(state) {
         summaryTox.innerHTML = "<span>🍃</span> Kadar Karbon Monoksida dalam batas aman";
       }
       if (iconToxBox) {
-        iconToxBox.className = "w-11 h-11 rounded-xl bg-teal-500/20 border border-teal-400/35 flex items-center justify-center text-2xl shadow-sm";
+        iconToxBox.className = "w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-400/35 flex items-center justify-center text-lg shadow-sm";
         iconToxBox.innerText = "🫁";
       }
-      if (cardTox) cardTox.className = "rounded-2xl p-4 sm:p-5 border border-teal-500/30 relative overflow-hidden flex flex-col justify-between backdrop-blur-md transition-all duration-300 hover:border-white/20";
+      if (cardTox) cardTox.className = "rounded-2xl p-4 border border-teal-500/30 bg-slate-950/50 relative overflow-hidden flex flex-col justify-between backdrop-blur-md shadow-xl transition-all duration-300 hover:border-teal-400/60";
     }
   }
   if (barTox) {
@@ -539,10 +539,46 @@ async function processChatQuery(query) {
   }, 400);
 }
 
+// --- 7. SCROLL DYNAMICS & MORPHING CONTROLLER (OPSI 1) ---
+function initScrollMorphing() {
+  const workspace = document.getElementById('workspaceContainer');
+  if (!workspace) return;
+
+  let isTicking = false;
+  const updateLayout = () => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    // Hysteresis threshold: 110px to enter scrolled split-view, 50px to revert to hero
+    if (scrollY > 110) {
+      if (!workspace.classList.contains('scrolled-state')) {
+        workspace.classList.remove('hero-state');
+        workspace.classList.add('scrolled-state');
+      }
+    } else if (scrollY < 50) {
+      if (!workspace.classList.contains('hero-state')) {
+        workspace.classList.remove('scrolled-state');
+        workspace.classList.add('hero-state');
+      }
+    }
+    isTicking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!isTicking) {
+      window.requestAnimationFrame(updateLayout);
+      isTicking = true;
+    }
+  }, { passive: true });
+
+  updateLayout();
+}
+
 // --- 8. INITIALIZATION ON PAGE LOAD ---
 document.addEventListener("DOMContentLoaded", () => {
   // Inisialisasi Carousel
   restartSlideTimer();
+
+  // Inisialisasi Scroll Morphing & Pinned Layout
+  initScrollMorphing();
 
   // Initial UI Render
   applyDisplay(currentSensorState);
@@ -553,3 +589,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("🏭 Smart Environmental Sensing System (ESS) POLTEKOM initialized successfully!");
 });
+

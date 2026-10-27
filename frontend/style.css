@@ -50,3 +50,117 @@ body {
 }
 .typing-dot:nth-child(1) { animation-delay: -0.32s; }
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+/* =============================================================================
+   Scroll Morphing & Pinned Layout Transitions (Opsi 1)
+   ============================================================================= */
+#workspaceContainer {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 1. HERO STATE (At top of page) */
+#workspaceContainer.hero-state #workspaceGrid {
+  display: block;
+}
+
+#workspaceContainer.hero-state #cardsColumn {
+  width: 100%;
+}
+
+#workspaceContainer.hero-state #cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: -2.5rem;
+  position: relative;
+  z-index: 20;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  #workspaceContainer.hero-state #cardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: -3.5rem;
+  }
+}
+
+#workspaceContainer.hero-state #extraContent {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(16px);
+  transition: all 0.4s ease-out;
+}
+
+#workspaceContainer.hero-state #chatColumn {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(24px);
+  transition: all 0.4s ease-out;
+}
+
+#workspaceContainer.hero-state #scrollHint {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* 2. SCROLLED STATE (When scrolling down) */
+#workspaceContainer.scrolled-state #workspaceGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  #workspaceContainer.scrolled-state #workspaceGrid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  #workspaceContainer.scrolled-state #cardsColumn {
+    grid-column: span 5 / span 5;
+  }
+  #workspaceContainer.scrolled-state #chatColumn {
+    grid-column: span 7 / span 7;
+  }
+}
+
+#workspaceContainer.scrolled-state #cardsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 0;
+  gap: 1rem;
+  position: relative;
+  z-index: 10;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#workspaceContainer.scrolled-state #extraContent {
+  opacity: 1;
+  max-height: 800px;
+  overflow: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#workspaceContainer.scrolled-state #chatColumn {
+  opacity: 1;
+  max-height: 900px;
+  overflow: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#workspaceContainer.scrolled-state #scrollHint {
+  opacity: 0;
+  pointer-events: none;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
