@@ -105,3 +105,15 @@ async def trigger_etl(x_ess_admin_key: Optional[str] = Header(None, alias="X-ESS
         )
     success = run_etl()
     return {"status": "success" if success else "failed", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@router.get("/api/devices", tags=["Devices"])
+async def get_registered_devices():
+    """Mengambil daftar perangkat/node IoT yang terdaftar di Supabase PostgreSQL (ess_devices)."""
+    from app.core.database import query_devices
+    devices = query_devices()
+    return {
+        "status": "success",
+        "count": len(devices),
+        "data": devices,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }

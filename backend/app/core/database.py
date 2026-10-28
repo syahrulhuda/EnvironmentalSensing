@@ -173,3 +173,20 @@ def query_anomalies(device_id: str = settings.DEFAULT_NODE_ID, limit: int = 50) 
         print(f"[ESS DB] Supabase Anomaly Query error: {e}")
     return []
 
+def query_devices() -> List[Dict[str, Any]]:
+    """Mengambil daftar node/perangkat yang terdaftar di Supabase PostgreSQL."""
+    endpoint = f"{settings.SUPABASE_URL}/rest/v1/{settings.TABLE_DEVICES}?order=created_at.asc"
+    headers = {
+        "apikey": settings.SUPABASE_KEY,
+        "Authorization": f"Bearer {settings.SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    req = urllib.request.Request(endpoint, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as res:
+            if res.status in (200, 206):
+                return json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[ESS DB] Supabase Devices Query error: {e}")
+    return []
+
