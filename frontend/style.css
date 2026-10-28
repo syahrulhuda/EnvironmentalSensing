@@ -111,12 +111,13 @@ body {
 @media (min-width: 1024px) {
   #workspaceSection.scrolled-layout #workspaceGrid {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: 35fr 65fr;
     gap: 1.5rem;
     align-items: start;
   }
   #workspaceSection.scrolled-layout #cardsColumn {
-    grid-column: span 6 / span 6;
+    grid-column: 1 / 2;
+    min-width: 0;
   }
   #workspaceSection.scrolled-layout #cardsGrid {
     display: flex;
@@ -124,7 +125,8 @@ body {
     gap: 1rem;
   }
   #workspaceSection.scrolled-layout #chatColumn {
-    grid-column: span 6 / span 6;
+    grid-column: 2 / 3;
+    min-width: 0;
     position: -webkit-sticky;
     position: sticky;
     top: 5rem;
