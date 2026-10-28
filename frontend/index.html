@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Smart Environmental Sensing System (ESS) - POLTEKOM</title>
+  <title>Environmental Sensing System (ESS) - POLTEKOM</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -41,23 +41,28 @@
       </div>
       <div>
         <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">
-          Smart Environmental Sensing System (ESS)
+          Environmental Sensing System (ESS)
         </h1>
-        <p class="text-xs text-slate-400 font-medium">Laboratorium &amp; Bengkel Teknik Mekatronika, POLTEKOM</p>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
+      <!-- Dropdown NODE terhubung ke Supabase PostgreSQL (ess_devices) -->
+      <div class="relative flex items-center">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-400/30 bg-[#070d1e]/85 text-white text-xs font-mono backdrop-blur-md shadow-sm">
+          <span class="material-symbols-outlined text-sm text-sky-400 flex-shrink-0">developer_board</span>
+          <label for="nodeSelector" class="sr-only">Pilih Node ESS</label>
+          <select id="nodeSelector" class="bg-transparent text-xs font-mono text-sky-300 font-bold focus:outline-none cursor-pointer pr-1" onchange="handleNodeChange(this.value)">
+            <option value="NODE-MRS01" class="bg-[#0f1b38] text-white">NODE-MRS01 (Soldering Station 1)</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Status pill: ONLINE / OFFLINE (K3 Green/Red Indicator) -->
       <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/15 text-emerald-400 text-xs font-mono font-semibold" id="systemStatusPill">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="systemStatusText">ONLINE</span>
       </div>
-
-      <!-- Audio Mute Toggle -->
-      <button class="p-2 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-sky-400/25 text-white/80 hover:text-white transition" id="btnAudioMute" onclick="toggleAudio()" title="Nyalakan/Matikan Suara Peringatan">
-        <span class="material-symbols-outlined text-[18px] block" id="audioIcon">volume_up</span>
-      </button>
     </div>
   </div>
 </header>

@@ -10,10 +10,6 @@
  */
 
 // --- 1. GLOBAL STATE ---
-let audioAllowed = true;
-let audioCtx = null;
-let sirenOsc = null;
-let sirenTimer = null;
 let chatHistory = [];
 
 // Data sensor real-time terkini
@@ -73,69 +69,83 @@ function restartSlideTimer() {
   }, 5000);
 }
 
-// --- 3. WEB AUDIO ALARM ---
-function initAudio() {
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) audioCtx = new AudioContextClass();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
+// --- 3. NODE SELECTION & SUPABASE INTEGRATION CONTROLLER ---
+async function fetchRegisteredNodes() {
+  const selector = document.getElementById('nodeSelector');
+  if (!selector) return;
 
-function startSiren() {
-  if (!audioAllowed) return;
-  initAudio();
-  if (!audioCtx || sirenOsc) return;
+  const savedNode = localStorage.getItem('ess_cfg_node_id') || CONFIG.DEFAULT_NODE_ID || 'NODE-MRS01';
 
   try {
-    sirenOsc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    sirenOsc.type = 'sawtooth';
-    sirenOsc.frequency.setValueAtTime(650, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
-    sirenOsc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    sirenOsc.start();
-
-    let toggle = false;
-    sirenTimer = setInterval(() => {
-      if (!sirenOsc || !audioCtx) return;
-      toggle = !toggle;
-      sirenOsc.frequency.setValueAtTime(toggle ? 1100 : 650, audioCtx.currentTime);
-    }, 450);
-  } catch (e) {
-    console.warn("[Siren Warning] Autoplay audio restricted:", e);
+    // 1. Ambil daftar node resmi dari Supabase PostgreSQL via FastAPI Backend Gateway
+    const res = await fetch(`${CONFIG.BACKEND_API_URL}/api/devices`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json && Array.isArray(json.data) && json.data.length > 0) {
+        populateNodeDropdown(json.data, savedNode);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn("[Node Selector] Backend gateway offline, fallback ke RTDB/cache:", err);
   }
+
+  // 2. Fallback: Ekstrak node unik dari Firebase RTDB buffer
+  try {
+    const res = await fetch(CONFIG.FIREBASE_DATABASE_URL);
+    if (res.ok) {
+      const buffer = await res.json();
+      if (buffer && typeof buffer === 'object') {
+        const uniqueNodes = new Set();
+        Object.values(buffer).forEach(item => {
+          if (item && (item.node_id || item.device_id)) {
+            uniqueNodes.add(item.node_id || item.device_id);
+          }
+        });
+        if (uniqueNodes.size > 0) {
+          const deviceList = Array.from(uniqueNodes).map(id => ({
+            id: id,
+            device_name: id === 'NODE-MRS01' ? 'Soldering Station Node 1' : 'Environmental Node'
+          }));
+          populateNodeDropdown(deviceList, savedNode);
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[Node Selector] RTDB buffer fallback error:", err);
+  }
+
+  // 3. Default fallback jika koneksi belum terbentuk
+  populateNodeDropdown([
+    { id: 'NODE-MRS01', device_name: 'Soldering Station Node 1' }
+  ], savedNode);
 }
 
-function stopSiren() {
-  if (sirenTimer) {
-    clearInterval(sirenTimer);
-    sirenTimer = null;
-  }
-  if (sirenOsc) {
-    try { sirenOsc.stop(); } catch (e) {}
-    sirenOsc.disconnect();
-    sirenOsc = null;
-  }
+function populateNodeDropdown(deviceList, selectedNode) {
+  const selector = document.getElementById('nodeSelector');
+  if (!selector) return;
+
+  selector.innerHTML = '';
+  deviceList.forEach(dev => {
+    const opt = document.createElement('option');
+    opt.value = dev.id;
+    opt.className = "bg-[#0f1b38] text-white";
+    opt.innerText = dev.device_name ? `${dev.id} (${dev.device_name})` : dev.id;
+    if (dev.id === selectedNode) {
+      opt.selected = true;
+    }
+    selector.appendChild(opt);
+  });
 }
 
-function toggleAudio() {
-  audioAllowed = !audioAllowed;
-  const icon = document.getElementById('audioIcon');
-  const btn = document.getElementById('btnAudioMute');
-  if (!icon || !btn) return;
-
-  if (audioAllowed) {
-    icon.innerText = 'volume_up';
-    btn.classList.remove('opacity-50');
-  } else {
-    icon.innerText = 'volume_off';
-    btn.classList.add('opacity-50');
-    stopSiren();
-  }
+function handleNodeChange(nodeId) {
+  if (!nodeId) return;
+  CONFIG.DEFAULT_NODE_ID = nodeId;
+  localStorage.setItem('ess_cfg_node_id', nodeId);
+  currentSensorState.nodeId = nodeId;
+  console.log(`[ESS Node Switch] Monitoring aktif dialihkan ke node: ${nodeId}`);
+  fetchLatestTelemetry();
 }
 
 // --- 4. INDIVIDUAL CARD SPARKLINE GRAPH CANVAS RENDERER ---
@@ -366,11 +376,7 @@ function applyDisplay(state) {
     }
   }
 
-  if (isDanger) {
-    startSiren();
-  } else {
-    stopSiren();
-  }
+  // (Silent monitoring mode aktif - audio buzzer dihilangkan)
 }
 
 // --- 6. REAL-TIME DATA STREAM (FIREBASE RTDB POLLING) ---
@@ -401,8 +407,24 @@ async function fetchLatestTelemetry() {
       return;
     }
 
-    const latestKey = keys[keys.length - 1];
-    const record = data[latestKey];
+    const targetNode = CONFIG.DEFAULT_NODE_ID || "NODE-MRS01";
+    let record = null;
+
+    // Cari record terbaru milik targetNode
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const item = data[keys[i]];
+      if (item && typeof item === 'object') {
+        const itemNode = item.node_id || item.device_id;
+        if (!itemNode || itemNode === targetNode) {
+          record = item;
+          break;
+        }
+      }
+    }
+
+    if (!record) {
+      record = data[keys[keys.length - 1]];
+    }
     if (!record) return;
 
     // Update state sensor
@@ -617,9 +639,12 @@ document.addEventListener("DOMContentLoaded", () => {
   applyDisplay(currentSensorState);
   renderAllSparklines();
 
+  // Inisialisasi daftar node dari Supabase
+  fetchRegisteredNodes();
+
   // Polling stream telemetri
   fetchLatestTelemetry();
   setInterval(fetchLatestTelemetry, (typeof CONFIG !== 'undefined' && CONFIG.POLL_INTERVAL) ? CONFIG.POLL_INTERVAL : 2500);
 
-  console.log("🏭 Smart Environmental Sensing System (ESS) POLTEKOM initialized successfully!");
+  console.log("🏭 Environmental Sensing System (ESS) POLTEKOM initialized successfully!");
 });
