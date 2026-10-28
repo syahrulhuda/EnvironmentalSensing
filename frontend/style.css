@@ -47,6 +47,22 @@ body {
 .typing-dot:nth-child(1) { animation-delay: -0.32s; }
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
+/* Custom Node Dropdown Animation */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#nodeDropdownMenu:not(.hidden) {
+  animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* =============================================================================
    Scroll Morphing & Pinned Layout Transitions
    ============================================================================= */

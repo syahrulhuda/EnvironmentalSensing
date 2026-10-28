@@ -50,16 +50,24 @@
     </div>
 
     <div class="flex items-center gap-3">
-      <!-- Dropdown NODE terhubung ke Supabase PostgreSQL (ess_devices) - Seamless Minimalist -->
-      <div class="relative flex items-center">
-        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-colors duration-200">
-          <span class="material-symbols-outlined text-sm text-sky-400 flex-shrink-0">developer_board</span>
-          <label for="nodeSelector" class="sr-only">Pilih Node ESS</label>
-          <div class="relative flex items-center">
-            <select id="nodeSelector" class="bg-transparent text-xs font-mono font-bold text-sky-300 focus:outline-none cursor-pointer appearance-none pr-4" onchange="handleNodeChange(this.value)">
-              <option value="NODE-MRS01" class="bg-[#0f1b38] text-white">NODE-MRS01</option>
-            </select>
-            <span class="material-symbols-outlined text-sm text-slate-400 pointer-events-none absolute right-0">expand_more</span>
+      <!-- Custom Dropdown Node Selector (Mirip persis Gambar 2 referensi: rounded-2xl, bersih tanpa kotak tajam, chevron atas saat terbuka) -->
+      <div class="relative" id="nodeDropdownWrapper">
+        <button type="button" id="nodeDropdownBtn" onclick="toggleNodeDropdown(event)" class="flex items-center justify-between gap-3 px-3.5 py-1.5 sm:py-2 rounded-2xl border border-sky-400/25 bg-[#0f1b38] hover:bg-[#14234b] text-white text-xs font-mono transition-all duration-200 shadow-md active:scale-95 focus:outline-none cursor-pointer" aria-haspopup="listbox" aria-expanded="false">
+          <span id="nodeDropdownSelectedText" class="font-bold text-sky-300 tracking-wide">NODE-MRS01</span>
+          <span class="material-symbols-outlined text-sm text-slate-400 transition-transform duration-200" id="nodeDropdownChevron">expand_more</span>
+        </button>
+
+        <!-- Floating Dropdown Menu Card (Replika Gambar 2: Header Current Selection + Divider + Pilled Items) -->
+        <div id="nodeDropdownMenu" class="hidden absolute right-0 top-full mt-2 w-64 rounded-2xl card-theme shadow-2xl z-50 overflow-hidden" role="listbox">
+          <!-- Top Row Header inside Card (Persis Gambar 2 dengan panah chevron ke atas) -->
+          <div class="px-4 py-2.5 flex items-center justify-between border-b border-sky-400/20 bg-[#070d1e]/60 cursor-pointer hover:bg-[#070d1e]/80 transition-colors" onclick="closeNodeDropdown()">
+            <span id="nodeDropdownMenuCurrentText" class="text-xs font-mono font-bold text-sky-300 tracking-wide">NODE-MRS01</span>
+            <span class="material-symbols-outlined text-sm text-slate-400">expand_less</span>
+          </div>
+
+          <!-- Items list matching Image 2 Item 1, Item 2, Item 3 -->
+          <div id="nodeDropdownList" class="p-2 space-y-1 max-h-56 overflow-y-auto">
+            <!-- Diisi secara dinamis oleh app.js -->
           </div>
         </div>
       </div>
