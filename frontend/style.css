@@ -108,7 +108,7 @@ body {
   margin-top: 1.5rem;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 992px) {
   #workspaceSection.scrolled-layout #workspaceGrid {
     display: grid;
     grid-template-columns: 35fr 65fr;
