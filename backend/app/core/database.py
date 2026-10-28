@@ -174,8 +174,8 @@ def query_anomalies(device_id: str = settings.DEFAULT_NODE_ID, limit: int = 50) 
     return []
 
 def query_devices() -> List[Dict[str, Any]]:
-    """Mengambil daftar node/perangkat yang terdaftar di Supabase PostgreSQL."""
-    endpoint = f"{settings.SUPABASE_URL}/rest/v1/{settings.TABLE_DEVICES}?order=created_at.asc"
+    """Mengambil daftar node/perangkat yang terdaftar di Supabase PostgreSQL beserta relasi zonanya."""
+    endpoint = f"{settings.SUPABASE_URL}/rest/v1/{settings.TABLE_DEVICES}?select=*,ess_zones(*)&order=created_at.asc"
     headers = {
         "apikey": settings.SUPABASE_KEY,
         "Authorization": f"Bearer {settings.SUPABASE_KEY}",
