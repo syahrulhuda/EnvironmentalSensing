@@ -122,7 +122,34 @@ async function fetchRegisteredNodes() {
   ], savedNode);
 }
 
+let registeredDevicesCache = [];
+
+function updateNodeLocationSubtitle(nodeId) {
+  const subtitle = document.getElementById('nodeLocationSubtitle');
+  if (!subtitle) return;
+
+  const dev = registeredDevicesCache.find(d => d.id === nodeId);
+  if (dev) {
+    if (dev.id === 'NODE-MRS01') {
+      subtitle.innerText = 'Bengkel Mekatronika POLTEKOM (Soldering Zone 1)';
+    } else if (dev.ess_zones && dev.ess_zones.zone_name) {
+      subtitle.innerText = `Bengkel Mekatronika POLTEKOM (${dev.ess_zones.zone_name})`;
+    } else if (dev.device_name) {
+      subtitle.innerText = `Bengkel Mekatronika POLTEKOM (${dev.device_name})`;
+    } else {
+      subtitle.innerText = `Bengkel Mekatronika POLTEKOM (${dev.id})`;
+    }
+  } else {
+    if (nodeId === 'NODE-MRS01') {
+      subtitle.innerText = 'Bengkel Mekatronika POLTEKOM (Soldering Zone 1)';
+    } else {
+      subtitle.innerText = `Bengkel Mekatronika POLTEKOM (${nodeId})`;
+    }
+  }
+}
+
 function populateNodeDropdown(deviceList, selectedNode) {
+  registeredDevicesCache = deviceList || [];
   const selector = document.getElementById('nodeSelector');
   if (!selector) return;
 
@@ -131,12 +158,15 @@ function populateNodeDropdown(deviceList, selectedNode) {
     const opt = document.createElement('option');
     opt.value = dev.id;
     opt.className = "bg-[#0f1b38] text-white";
-    opt.innerText = dev.device_name ? `${dev.id} (${dev.device_name})` : dev.id;
+    // Tulis Node ID ringkas saja (misal: NODE-MRS01)
+    opt.innerText = dev.id;
     if (dev.id === selectedNode) {
       opt.selected = true;
     }
     selector.appendChild(opt);
   });
+
+  updateNodeLocationSubtitle(selectedNode);
 }
 
 function handleNodeChange(nodeId) {
@@ -145,6 +175,7 @@ function handleNodeChange(nodeId) {
   localStorage.setItem('ess_cfg_node_id', nodeId);
   currentSensorState.nodeId = nodeId;
   console.log(`[ESS Node Switch] Monitoring aktif dialihkan ke node: ${nodeId}`);
+  updateNodeLocationSubtitle(nodeId);
   fetchLatestTelemetry();
 }
 

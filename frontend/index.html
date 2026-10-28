@@ -40,21 +40,27 @@
         <span class="material-symbols-outlined text-xl">sensors</span>
       </div>
       <div>
-        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">
+        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white leading-tight">
           Environmental Sensing System (ESS)
         </h1>
+        <p id="nodeLocationSubtitle" class="text-xs text-slate-400 font-medium mt-0.5 transition-all duration-300">
+          Bengkel Mekatronika POLTEKOM (Soldering Zone 1)
+        </p>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
-      <!-- Dropdown NODE terhubung ke Supabase PostgreSQL (ess_devices) -->
+      <!-- Dropdown NODE terhubung ke Supabase PostgreSQL (ess_devices) - Seamless Minimalist -->
       <div class="relative flex items-center">
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-400/30 bg-[#070d1e]/85 text-white text-xs font-mono backdrop-blur-md shadow-sm">
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-colors duration-200">
           <span class="material-symbols-outlined text-sm text-sky-400 flex-shrink-0">developer_board</span>
           <label for="nodeSelector" class="sr-only">Pilih Node ESS</label>
-          <select id="nodeSelector" class="bg-transparent text-xs font-mono text-sky-300 font-bold focus:outline-none cursor-pointer pr-1" onchange="handleNodeChange(this.value)">
-            <option value="NODE-MRS01" class="bg-[#0f1b38] text-white">NODE-MRS01 (Soldering Station 1)</option>
-          </select>
+          <div class="relative flex items-center">
+            <select id="nodeSelector" class="bg-transparent text-xs font-mono font-bold text-sky-300 focus:outline-none cursor-pointer appearance-none pr-4" onchange="handleNodeChange(this.value)">
+              <option value="NODE-MRS01" class="bg-[#0f1b38] text-white">NODE-MRS01</option>
+            </select>
+            <span class="material-symbols-outlined text-sm text-slate-400 pointer-events-none absolute right-0">expand_more</span>
+          </div>
         </div>
       </div>
 
