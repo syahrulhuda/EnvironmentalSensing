@@ -422,7 +422,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
 
 **5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
-- [ ] Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`).
+- [x] Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`). *(Selesai)*
 - [ ] Setup GitHub Self-Hosted Runner di Raspberry Pi 3B & Workflow CD Backend (`.github/workflows/deploy-backend.yml`).
 - [ ] Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking.
 - [ ] Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).

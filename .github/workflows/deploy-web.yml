@@ -1,0 +1,45 @@
+name: Deploy Web to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hosting-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Web Dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via Firebase Service Account
+        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}"
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          channelId: live
+          projectId: environmental-sensing-f6e1c
+
+      - name: Deploy via Firebase CI Token (Fallback)
+        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT == '' }}"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "::error::Kredensial Firebase belum disetel di GitHub Secrets! Silakan tambahkan FIREBASE_SERVICE_ACCOUNT atau FIREBASE_TOKEN."
+            exit 1
+          fi
+          npx --yes firebase-tools deploy --only hosting --token "$FIREBASE_TOKEN"
