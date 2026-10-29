@@ -11,6 +11,9 @@
 #define SECRET_WIFI_PASS    "PASSWORD_WIFI_ANDA"
 
 // Endpoint Firebase Realtime Database Buffer
+// CATATAN (SEC-02): Jika rules Firebase RTDB dikunci (auth != null),
+// tambahkan query parameter ?auth=DATABASE_SECRET pada URL di bawah:
+// #define SECRET_FIREBASE_URL "https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json?auth=YOUR_SECRET_KEY"
 #define SECRET_FIREBASE_URL "https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
 
 // Kunci Otentikasi / Provisioning Perangkat

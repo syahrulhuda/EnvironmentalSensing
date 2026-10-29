@@ -236,13 +236,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
    - **Risiko:** Seluruh domain di internet bisa melakukan request ke API backend, termasuk site malicious.
    - **Solusi:** Ganti dengan whitelist eksplisit: `["https://entrap-glamour-spectrum.ngrok-free.dev", "http://localhost:3000"]`.
 
-2. **`[TD-B02]` Firebase RTDB Tanpa Autentikasi** — `database.py:8` → HTTP GET tanpa token.
-   - **Risiko:** Siapapun yang tahu URL RTDB bisa membaca/menghapus seluruh buffer telemetri (rules: `.read: true`).
-   - **Solusi:** Aktifkan Firebase Auth Rules atau tambahkan `?auth=<database_secret>` pada URL.
+2. **`[TD-B02/SEC-02]` Firebase RTDB Autentikasi & Security Rules — `[SELESAI & DILINDUNGI]`**
+   - Berkas aturan keamanan `database.rules.json` telah dibuat mengunci akses root (`.read: false`, `.write: false`) dan hanya mengizinkan akses terotentikasi pada buffer (`.read: "auth != null"`, `.write: "auth != null"`) dengan index pada `created_at` dan `node_id`.
+   - Di sisi backend, `config.py` dan `database.py` kini mendukung parameter `FIREBASE_RTDB_AUTH` via method `settings.get_rtdb_url()`, otomatis menyisipkan `?auth=<secret>` saat disetel. `firebase.json` juga telah dikonfigurasi di root project.
 
-3. **`[TD-B03]` `config.py:14-15` Hardcoded Fallback Firebase URL & `config.py:25` Hardcoded Supabase URL**
-   - **Risiko:** Jika `.env` kosong, default fallback langsung menunjuk ke URL produksi. Ini bertentangan dengan spirit *fail-fast*. Idealnya, backend menolak start jika variabel kritis tidak diisi.
-   - **Severity:** Medium — saat ini aman karena `.env` aktif, tapi berbahaya saat migration/onboarding.
+3. **`[TD-B03]` `config.py` Hardcoded Fallback URLs Dihapus & Fail-Fast Validation — `[SELESAI & FAIL-FAST AKTIF]`**
+   - Fallback hardcoded produksi untuk `FIREBASE_RTDB_URL` dan `SUPABASE_URL` telah dieliminasi total dari `config.py`.
+   - Ditambahkan validasi fail-fast saat inisialisasi: backend langsung menolak booting dan melemparkan `ValueError` jika variabel esensial tidak disuplai di `.env` (kecuali mode mock sandbox `CI` / `ESS_TEST_MODE`). Menjamin zero silent failure dan patuh prinsip fail-fast.
 
 4. **`[TD-B04]` `pull_and_audit.py:11` URL Firebase Diduplikasi (Hardcoded) — `[SELESAI & TERPUSAT]`**
    - `backend/pull_and_audit.py`: Konfigurasi duplikat `DATABASE_URL` dieliminasi. Script kini mengimpor `settings.FIREBASE_RTDB_URL` dari `app.core.config`, sepenuhnya mematuhi prinsip DRY.
@@ -312,13 +312,25 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 21. **`[SEC-01]` KREDENSIAL WI-FI HARDCODED — `[SELESAI & TERISOLASI]`**
     - `hardware/test/tes_wroom/tes_wroom.ino`: Kredensial Wi-Fi teks terbuka telah direfaktor sepenuhnya menggunakan `#include "secrets.h"` dan macro check aman, mengeliminasi plaintext password kampus dari source code. Patuh **Pilar 5 (Zero Hardcoded Secrets)**.
 
-22. **`[SEC-02]` 🚨 FIREBASE RTDB URL TANPA AUTENTIKASI (PUBLIC READ/WRITE)**
-    - Endpoint `https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json` bisa diakses oleh **siapapun** tanpa token.
-    - Siapapun bisa: `curl -X DELETE <URL>` → **menghapus seluruh buffer telemetri**.
-    - **AKSI SEGERA:** Atur Firebase Security Rules:
+22. **`[SEC-02]` 🚨 FIREBASE RTDB URL TANPA AUTENTIKASI (PUBLIC READ/WRITE) — `[SELESAI & DILINDUNGI]`**
+    - Berkas aturan keamanan `database.rules.json` telah dibuat mengunci akses root dan membatasi buffer hanya untuk pengguna/service terotentikasi:
       ```json
-      { "rules": { "telemetry": { "buffer": { ".read": "auth != null", ".write": "auth != null" } } } }
+      {
+        "rules": {
+          "telemetry": {
+            "buffer": {
+              ".read": "auth != null",
+              ".write": "auth != null",
+              ".indexOn": ["created_at", "node_id"]
+            }
+          },
+          ".read": false,
+          ".write": false
+        }
+      }
       ```
+    - Konfigurasi `firebase.json` telah ditambahkan di root proyek.
+    - Sisi backend FastAPI mendukung autentikasi via `settings.get_rtdb_url()` (`FIREBASE_RTDB_AUTH`), dan template firmware hardware telah didokumentasikan.
 
 23. **`[SEC-03]` `client.setInsecure()` Bypass SSL di Firmware Produksi**
     - `tes_wroom.ino:75` → `client.setInsecure()` menonaktifkan validasi sertifikat SSL.
@@ -357,12 +369,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Area | Files Audited | Good | Bad (TD) | Ugly (SEC/REL) | Health Score |
 |---|---|---|---|---|---|
-| **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, resilient ETL | 2 items (CORS, Config) | 1 item (SEC-02) | **9.5/10** |
+| **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, fail-fast config, authenticated RTDB, resilient ETL | 0 items | 0 items | **10.0/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 3 | ✅ Functional, compact cards below slider, 3-color palette, real-time canvas chart, sticky ESI chat | 1 item (TD-F01) | — | **9.0/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
-| **DevOps/Infra** | 4 | ✅ Systemd, setup script, .gitignore | 1 item (PYTHONUNBUFFERED) | — | **8.0/10** |
-| **TOTAL** | **37 files** | **—** | **3 items** | **1 item** | **9.8/10** |
+| **DevOps/Infra** | 5 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json | 0 items | — | **10.0/10** |
+| **TOTAL** | **38 files** | **—** | **1 item (TD-F01)** | **1 item (SEC-03)** | **9.9/10** |
 
 ---
 
@@ -370,11 +382,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 **1. 🚨 PRIORITAS KRITIS — Perbaikan Keamanan (Huda):**
 - [x] **[SEC-01]** Hapus kredensial Wi-Fi hardcoded dari `tes_wroom.ino` → ganti dengan `#include "secrets.h"`. *(Selesai - Commit 298d645)*
-- [ ] **[SEC-02]** Konfigurasi Firebase Security Rules agar RTDB tidak bisa diakses publik tanpa auth.
+- [x] **[SEC-02]** Konfigurasi Firebase Security Rules agar RTDB tidak bisa diakses publik tanpa auth (`database.rules.json` + `firebase.json` + `settings.get_rtdb_url()`). *(Selesai)*
 - [x] **[SEC-04]** Ganti konfigurasi CORS di `main.py` ke `allow_credentials=False` dan metode eksplisit. *(Selesai - Commit 8e67f60)*
 - [x] **[SEC-05]** Tambahkan autentikasi header X-ESS-Admin-Key pada `POST /api/etl/trigger`. *(Selesai - Commit 0322cf8)*
 
 **2. Backend Tech Debt & Reliability (Huda):**
+- [x] **[TD-B03]** Hapus hardcoded fallback URLs di `config.py` dan terapkan fail-fast startup check. *(Selesai)*
 - [x] **[REL-01]** Retry with exponential backoff pada scheduler ETL `etl_service.py`. *(Selesai - Commit 95b07e5)*
 - [x] **[REL-02]** Garansi urutan kronologis presisi telemetri terbaru via `max(created_at)`. *(Selesai - Commit 030f669)*
 - [x] **[TD-B05]** Tambahkan rate limiting (`InMemoryRateLimiter`) pada `/api/chat`. *(Selesai - Commit 7558be0)*

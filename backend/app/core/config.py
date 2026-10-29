@@ -10,10 +10,27 @@ def _normalize_rtdb_url(url: str) -> str:
         return url.rstrip("/") + "/telemetry/buffer.json"
     return url
 
-_raw_rtdb = os.getenv(
-    "FIREBASE_RTDB_URL",
-    "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
-)
+_raw_rtdb = os.getenv("FIREBASE_RTDB_URL", "").strip()
+_raw_supabase = os.getenv("SUPABASE_URL", "").strip()
+
+# Fail-Fast Validation (TD-B03): Backend menolak start jika variabel kritis tidak disuplai
+_missing_vars = []
+if not _raw_rtdb:
+    _missing_vars.append("FIREBASE_RTDB_URL")
+if not _raw_supabase:
+    _missing_vars.append("SUPABASE_URL")
+
+if _missing_vars:
+    # Izinkan mock fallback hanya saat pengujian sandbox CI otomatis
+    if os.getenv("CI") or os.getenv("ESS_TEST_MODE"):
+        _raw_rtdb = _raw_rtdb or "https://mock-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json"
+        _raw_supabase = _raw_supabase or "https://mock-supabase.supabase.co"
+    else:
+        raise ValueError(
+            f"[ESS CONFIG FATAL] Variabel lingkungan wajib berikut tidak disetel di .env: {', '.join(_missing_vars)}. "
+            f"Backend menolak booting dalam status unconfigured untuk mencegah silent failure / salah database. "
+            f"Silakan salin .env.example menjadi .env dan isi kredensial dengan benar."
+        )
 
 @dataclass(frozen=True)
 class Settings:
@@ -22,15 +39,18 @@ class Settings:
     AGENT_NAME: str = "ESI"
 
     FIREBASE_RTDB_URL: str = _normalize_rtdb_url(_raw_rtdb)
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://lrnmbhobpymxmzocrfto.supabase.co")
-    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+    # Autentikasi Firebase RTDB via Database Secret / Auth Token (SEC-02)
+    FIREBASE_RTDB_AUTH: str = os.getenv("FIREBASE_RTDB_AUTH", "").strip()
+
+    SUPABASE_URL: str = _raw_supabase
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()
 
     TABLE_LOGS: str = os.getenv("TABLE_LOGS", "ess_logs")
     TABLE_ANOMALIES: str = os.getenv("TABLE_ANOMALIES", "ess_anomalies")
     TABLE_DEVICES: str = os.getenv("TABLE_DEVICES", "ess_devices")
     TABLE_ZONES: str = os.getenv("TABLE_ZONES", "ess_zones")
 
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL_NAME", "gemini-flash-lite-latest")
 
     DEFAULT_NODE_ID: str = "NODE-MRS01"
@@ -41,5 +61,15 @@ class Settings:
     HOST: str = os.getenv("HOST", "0.0.0.0")
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "ess-secret-admin-key-2026")
     CHAT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "15"))
+
+    def get_rtdb_url(self) -> str:
+        """
+        Mengembalikan URL Firebase RTDB yang aman (SEC-02).
+        Menyisipkan query parameter ?auth=<secret> jika FIREBASE_RTDB_AUTH disetel.
+        """
+        if self.FIREBASE_RTDB_AUTH:
+            sep = "&" if "?" in self.FIREBASE_RTDB_URL else "?"
+            return f"{self.FIREBASE_RTDB_URL}{sep}auth={self.FIREBASE_RTDB_AUTH}"
+        return self.FIREBASE_RTDB_URL
 
 settings = Settings()

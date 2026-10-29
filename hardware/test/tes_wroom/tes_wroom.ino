@@ -36,6 +36,7 @@
 #endif
 
 // Endpoint Firebase RTDB (Region: asia-southeast1 / Singapura)
+// CATATAN (SEC-02): Jika rules RTDB dikunci (auth != null), tambahkan '?auth=DATABASE_SECRET' pada URL
 const char* FIREBASE_URL = "https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json";
 
 // =============================================================================

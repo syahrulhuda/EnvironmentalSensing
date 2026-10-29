@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "telemetry": {
+      "buffer": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["created_at", "node_id"]
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}

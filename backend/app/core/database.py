@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 from app.core.config import settings
 
 def fetch_rtdb() -> Optional[Dict[str, Any]]:
-    req = urllib.request.Request(settings.FIREBASE_RTDB_URL, headers={"User-Agent": "ESS-Backend"})
+    req = urllib.request.Request(settings.get_rtdb_url(), headers={"User-Agent": "ESS-Backend"})
     try:
         with urllib.request.urlopen(req, timeout=10) as res:
             if res.status == 200:
@@ -19,7 +19,7 @@ def fetch_rtdb() -> Optional[Dict[str, Any]]:
 def patch_rtdb(payload: Dict[str, Any]) -> bool:
     data_bytes = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        settings.FIREBASE_RTDB_URL,
+        settings.get_rtdb_url(),
         data=data_bytes,
         headers={"Content-Type": "application/json", "X-HTTP-Method-Override": "PATCH"},
         method="POST"

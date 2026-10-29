@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.config import settings
 
-DATABASE_URL = settings.FIREBASE_RTDB_URL
+DATABASE_URL = settings.get_rtdb_url()
 
 def fetch_telemetry_data():
     print(f"[1/4] Mengunduh data dari Firebase RTDB: {DATABASE_URL} ...")
