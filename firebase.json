@@ -3,6 +3,7 @@
     "rules": "database.rules.json"
   },
   "hosting": {
+    "site": "poltekom-ess",
     "public": "frontend",
     "ignore": [
       "firebase.json",
