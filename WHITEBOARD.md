@@ -7,7 +7,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
 > **Fokus Utama Saat Ini:** Validasi prototipe breadboard ESP32-C3 SuperMini (OLED SSD1306, DHT22, MQ-7, MQ-2, LED RGB CC, Filter C1/C2) telah tuntas 100%. Fokus transisi berikutnya: pengujian beban inrush kipas DC 4010 + transistor SS8050 saat kipas tiba, persiapan cetak PCB `PCB_ESS_5`, serta integrasi streaming live ke Firebase RTDB buffer.
-> **Affected Areas:** `hardware/`, `schematics/`, `deploy/`.
+> **Affected Areas:** `hardware/`, `schematics/`, `deploy/`, `.github/workflows/`, `frontend/`.
 > **Success Criteria:** 
 > 1. Verifikasi offline seluruh sensor & display via `tes_c3.ino` (SELESAI - Teruji fisik).
 > 2. Proof of concept peredaman noise rangkaian filter C1/C2 (SELESAI - 5.10-5.15V diredam ke 5.13-5.14V).
@@ -15,6 +15,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 > 4. Kompensasi mikroklimat thermal cross-heating DHT22 via `TEMP_OFFSET` (SELESAI).
 > 5. Uji inrush current & PWM kipas 4010 via transistor SS8050 & diode 1N4007 (Menunggu kedatangan kipas).
 > 6. Fabrikasi & penyolderan PCB single-layer 70x40 mm `PCB_ESS_5`.
+> 7. Otomasi 3-Tier CI/CD: Pipeline Web Dashboard ke Firebase Hosting (`poltekom-ess.web.app`) via GitHub Actions (SELESAI - Operasional).
 
 ---
 
@@ -96,7 +97,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Menghindari kerentanan MAC spoofing dan menjamin integritas data ESS.
 - **Keputusan:** `[24-09-24]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
 
-### [Status: DITERIMA - ROADMAP DEVOPS & CI/CD] 3-Tier Multiplatform CI/CD Pipeline & In-App OTA Update Engine
+### [Status: IMPLEMENTED - TAHAP 1 SELESAI] 3-Tier Multiplatform CI/CD Pipeline & In-App OTA Update Engine
 - **Tanggal & Inisiator:** `[29-10-2026]` - Huda
 - **Latar Belakang & Filosofi Zero-Manual-Ops:**
   - Tidak ada tim DevOps khusus dalam proyek ini; seluruh infrastruktur dan delivery sistem dipelihara mandiri secara otomatis, aman, dan *zero-touch*.
@@ -117,12 +118,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
          sudo systemctl restart ess-backend.service
          curl -f http://127.0.0.1:8000/api/telemetry/latest || exit 1
          ```
-  2. **Pipeline 2: Web App Continuous Deployment ke Firebase Hosting**
-     - **Lingkungan Kompilasi:** GitHub-hosted runner `ubuntu-latest` (komputasi cloud gratis).
+  2. **Pipeline 2: Web App Continuous Deployment ke Firebase Hosting — [SELESAI & OPERASIONAL]**
+     - **Lingkungan Kompilasi:** GitHub-hosted runner `ubuntu-latest` (Node 20 LTS).
      - **Workflow (`.github/workflows/deploy-web.yml`):**
-       - *Trigger:* `push` ke branch `main` pada path `frontend/**`.
-       - *Langkah:* Checkout repositori -> Setup Flutter SDK channel `stable` -> `flutter pub get` -> Build Web release: `flutter build web --release --base-href "/"` -> Deploy ke Firebase Hosting via `FirebaseExtended/action-hosting-deploy` dengan secret `FIREBASE_SERVICE_ACCOUNT_ESS`.
-       - Web app dashboard selalu sinkron dan ter-deploy ke URL hosting publik dalam 2-3 menit secara otomatis.
+       - *Trigger:* `push` ke branch `main` pada path `frontend/**`, `firebase.json`, `.firebaserc`, atau file workflow.
+       - *Mekanisme Autentikasi:* Menggunakan Google Application Default Credentials (`GOOGLE_APPLICATION_CREDENTIALS`) dengan secret terenkripsi `FIREBASE_SERVICE_ACCOUNT` di GitHub Repository Secrets. Kredensial sementara ditulis ke `$RUNNER_TEMP/sa.json` dan langsung dihapus setelah deploy.
+       - *Target Site:* Multi-site Firebase `poltekom-ess` (`https://poltekom-ess.web.app`) pada project `environmental-sensing-f6e1c`.
+       - *Waktu Delivery:* ~1-2 menit secara otomatis tanpa intervensi manual.
   3. **Pipeline 3: Mobile Android APK CI & In-App OTA (Over-The-Air) Update Engine**
      - **Tantangan Distribusi Non-PlayStore:** Aplikasi mobile ESS didistribusikan secara internal tanpa Google Play Store ($25 fee & review time). Jika ada rilis baru, pengguna enggan repot mengunduh ulang file APK melalui web browser.
      - **Automated Build & Release Workflow (`.github/workflows/release-mobile.yml`):**
@@ -144,7 +146,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
        - Jika `latest_version > currentVersion`, aplikasi memunculkan dialog pembaruan (`UpdateAvailableDialog`):
          - Menampilkan changelog fitur terbaru.
          - Tombol *"Perbarui Sekarang"* mengunduh APK ke penyimpanan lokal via background downloader dan memicu Android `PackageInstaller` intent untuk instalasi langsung tanpa membuka browser.
-- **Keputusan:** `[29-10-2026]` - **[DITERIMA - BLUEPRINT RESMI DEVOPS]** Diadopsi sebagai arsitektur continuous deployment mandiri untuk backend Raspi, Web Firebase Hosting, dan Mobile APK release.
+- **Keputusan:** `[29-10-2026]` - **[DITERIMA & TAHAP 1 SELESAI]** Pipeline 2 (Web Dashboard ke Firebase Hosting) telah beroperasi penuh dan terverifikasi via commit `0190916`. Pipeline 1 (Edge Raspi CD) dan Pipeline 3 (Mobile OTA) dalam antrean eksekusi berikutnya.
 ### [Status: DITERIMA & SELESAI] Hasil Uji Empiris Rangkaian Filter Daya C1/C2 (Proof of Concept)
 - **Tanggal & Inisiator:** `[09-10-2026]` - Huda
 - **Ide & Pengujian:** Menguji rangkaian low-pass / decoupling filter daya input (C1 Elco 100uF + C2 Keramik 100nF + KF301-2P) menggunakan sumber daya 5V dari pin VIN ESP32 WROOM sebelum pemasangan barrel jack DC permanen.
@@ -379,8 +381,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 8 | ✅ Modular (<200 baris/file), zero-build, 3-color palette, real-time canvas chart, sticky ESI chat | 0 items | — | **10.0/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
-| **DevOps/Infra** | 5 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json | 0 items | — | **10.0/10** |
-| **TOTAL** | **43 files** | **—** | **0 items** | **1 item (SEC-03)** | **10.0/10** |
+| **DevOps/Infra** | 6 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json, deploy-web.yml CI/CD | 0 items | — | **10.0/10** |
+| **TOTAL** | **44 files** | **—** | **0 items** | **1 item (SEC-03)** | **10.0/10** |
 
 ---
 
@@ -428,11 +430,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
 
 **5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
-- [x] Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`). *(Selesai)*
-- [ ] Setup GitHub Self-Hosted Runner di Raspberry Pi 3B & Workflow CD Backend (`.github/workflows/deploy-backend.yml`).
-- [ ] Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking.
-- [ ] Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).
-- [ ] Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
+- [x] **[DEVOPS-01]** Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`) via Google ADC Service Account & multi-site `poltekom-ess`. *(Selesai - Commit 0190916)*
+- [ ] **[DEVOPS-02]** Setup GitHub Self-Hosted Runner di Raspberry Pi 3B & Workflow CD Backend (`.github/workflows/deploy-backend.yml`).
+- [ ] **[DEVOPS-03]** Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking.
+- [ ] **[DEVOPS-04]** Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).
+- [ ] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
+
 
 
 

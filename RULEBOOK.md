@@ -1,6 +1,6 @@
 # 📜 RULEBOOK (The Constitution of Environmental Sensing)
 
-Dokumen ini adalah konstitusi dan aturan main tertinggi dalam pengembangan sistem **Smart Environmental Sensing System (ESS)** (Bengkel Mekatronika POLTEKOM). Setiap kontributor (baik programmer manusia maupun asisten AI) **WAJIB** mematuhi 5 pilar di bawah ini.
+Dokumen ini adalah konstitusi dan aturan main tertinggi dalam pengembangan sistem **Smart Environmental Sensing System (ESS)** (Bengkel Mekatronika POLTEKOM). Setiap kontributor (baik programmer manusia maupun asisten AI) **WAJIB** mematuhi 6 pilar di bawah ini.
 
 ---
 
@@ -50,3 +50,14 @@ Setiap file dokumentasi memiliki tanggung jawab spesifik dan tidak boleh saling 
 1. **Zero Hardcoded Secrets:** DILARANG KERAS menuliskan API Key Gemini, Service Role Key Supabase, maupun Firebase Private Key langsung di dalam file kode sumber publik.
 2. **Environment Variables:** Semua kredensial wajib dibaca melalui variabel lingkungan (`.env` di backend) dan hanya file `.env.example` yang boleh di-commit ke Git.
 3. **Client-Side Protection:** Aplikasi frontend (Flutter) tidak boleh memegang kredensial admin database. Seluruh interaksi AI dan database historis wajib melalui backend API (FastAPI Gateway).
+
+---
+
+## 🚀 Pilar 6: Standar Otomasi & CI/CD (Zero-Manual-Ops)
+1. **Automated Web Deployment:** Seluruh rilis antarmuka Web Dashboard ke Firebase Hosting (`poltekom-ess.web.app`) dieksekusi secara otomatis oleh GitHub Actions (`.github/workflows/deploy-web.yml`) pada setiap `push` ke branch `main`. Dilarang melakukan kompilasi atau deployment hosting manual secara ad-hoc dari workstation lokal untuk lingkungan produksi.
+2. **Secure CI/CD Credential Management:**
+   - Kredensial Google Service Account disimpan secara terenkripsi di GitHub Repository Secrets (`FIREBASE_SERVICE_ACCOUNT`).
+   - Dilarang memanggil context `secrets` di dalam ekspresi conditional `if:` pada workflow schema GitHub Actions.
+   - Kredensial diinjeksi melalui environment variable runner dan ditulis ke berkas sementara di dalam `$RUNNER_TEMP`, yang wajib langsung dihapus (`rm -f`) setelah proses deployment selesai.
+3. **Explicit Project & Site Scoping:** Setiap eksekusi deploy hosting wajib menyertakan target project (`environmental-sensing-f6e1c`) dan mengacu pada konfigurasi multi-site `firebase.json` (`site: poltekom-ess`) untuk mencegah salah sasaran hosting.
+4. **Resilient Edge & Mobile Delivery:** Pembaruan backend Raspberry Pi wajib diarahkan melalui self-hosted runner terisolasi, dan distribusi APK mobile wajib melalui automated tagged release (`v*`) dengan verifikasi integritas in-app OTA.
