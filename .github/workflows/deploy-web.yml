@@ -24,22 +24,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Deploy via Firebase Service Account
-        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}"
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
-          channelId: live
-          projectId: environmental-sensing-f6e1c
+          node-version: 20
 
-      - name: Deploy via Firebase CI Token (Fallback)
-        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT == '' }}"
+      - name: Deploy to Firebase Hosting
         env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          if [ -z "$FIREBASE_TOKEN" ]; then
-            echo "::error::Kredensial Firebase belum disetel di GitHub Secrets! Silakan tambahkan FIREBASE_SERVICE_ACCOUNT atau FIREBASE_TOKEN."
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "Menggunakan autentikasi Google Service Account..."
+            echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+            export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c
+            rm -f "$RUNNER_TEMP/sa.json"
+          elif [ -n "$FIREBASE_TOKEN" ]; then
+            echo "Menggunakan autentikasi Firebase CI Token..."
+            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c --token "$FIREBASE_TOKEN"
+          else
+            echo "::error::Kredensial Firebase belum disetel di GitHub Secrets! Pastikan FIREBASE_SERVICE_ACCOUNT sudah diatur."
             exit 1
           fi
-          npx --yes firebase-tools deploy --only hosting --token "$FIREBASE_TOKEN"
