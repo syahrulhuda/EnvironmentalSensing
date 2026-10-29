@@ -38,11 +38,11 @@ jobs:
             echo "Menggunakan autentikasi Google Service Account..."
             echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
             export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c
+            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c --non-interactive
             rm -f "$RUNNER_TEMP/sa.json"
           elif [ -n "$FIREBASE_TOKEN" ]; then
             echo "Menggunakan autentikasi Firebase CI Token..."
-            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c --token "$FIREBASE_TOKEN"
+            npx --yes firebase-tools deploy --only hosting --project environmental-sensing-f6e1c --token "$FIREBASE_TOKEN" --non-interactive
           else
             echo "::error::Kredensial Firebase belum disetel di GitHub Secrets! Pastikan FIREBASE_SERVICE_ACCOUNT sudah diatur."
             exit 1
