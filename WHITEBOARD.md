@@ -96,15 +96,55 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - Menghindari kerentanan MAC spoofing dan menjamin integritas data ESS.
 - **Keputusan:** `[24-09-24]` - **[PENDING - ROADMAP]** Akan diimplementasikan saat fondasi antarmuka Flutter mulai dibangun.
 
-### [Status: DIAJUKAN - ROADMAP DEPLOYMENT] Automated CI/CD & Cloud Sandbox Testing untuk Auto-Update Raspberry Pi
-- **Tanggal & Inisiator:** `[30-09-2026]` - Huda
-- **Ide:** Mengintegrasikan GitHub Actions CI untuk pengujian otomatis di lingkungan tertutup (*isolated sandbox*) setiap kali ada commit/push. Jika seluruh pengujian (*smoke test*, validasi skema endpoint, *mocking* RTDB/Supabase/Gemini ReAct) lolos, Raspberry Pi 3B secara otomatis menarik pembaruan (`git pull`) dan merestart service tanpa intervensi manual SSH, menjaga fase pemeliharaan (*maintenance*) tetap terukur, aman, dan tidak asal-asalan.
-- **Diskusi Arsitektur:**
-  - **Fase CI (Cloud):** Berjalan di GitHub Actions runner Ubuntu (16 GB RAM) agar tidak membebani komputasi Raspi 3B (1 GB RAM). Menguji rute FastAPI, fungsi ETL, dan penalaran AI secara terisolasi.
-  - **Fase CD (Edge Deployment):** Dua opsi viable:
-    1. *Webhook Push*: Trigger via domain Ngrok terproteksi token rahasia.
-    2. *GitOps Poller Pull*: Script bash ringan via systemd timer di Raspi yang mengecek kelulusan status CI GitHub sebelum mengeksekusi `git pull`.
-  - **Pertimbangan Waktu:** Fitur ini tidak diimplementasikan saat ini di masa aktif *development*, melainkan disiapkan saat arsitektur fondasi sudah solid dan sistem bersiap memasuki fase transisi *deployment* menuju *production maintenance*.
+### [Status: DITERIMA - ROADMAP DEVOPS & CI/CD] 3-Tier Multiplatform CI/CD Pipeline & In-App OTA Update Engine
+- **Tanggal & Inisiator:** `[29-10-2026]` - Huda
+- **Latar Belakang & Filosofi Zero-Manual-Ops:**
+  - Tidak ada tim DevOps khusus dalam proyek ini; seluruh infrastruktur dan delivery sistem dipelihara mandiri secara otomatis, aman, dan *zero-touch*.
+  - Mengeliminasi beban operasional berulang: tidak perlu SSH manual ke Raspberry Pi untuk menarik kode (`git pull`) dan restart service, tidak perlu kompilasi manual Flutter Web di lokal, serta tidak memaksa pengguna mobile mengunduh ulang APK secara manual dari browser setiap ada pembaruan fitur.
+- **Arsitektur 3 Pipeline Utama:**
+  1. **Pipeline 1: Backend Continuous Deployment ke Raspberry Pi 3B On-Premise via GitHub Self-Hosted Runner**
+     - **Tantangan Lingkungan Edge:** Raspberry Pi 3B berada di balik NAT dan firewall kampus POLTEKOM tanpa IP publik statis. Port 22 SSH tidak dapat dijangkau oleh runner cloud GitHub Actions tanpa VPN/tunnel khusus yang rentan terputus.
+     - **Solusi Arsitektur:** Memasang daemon `actions-runner` (GitHub Self-Hosted Runner) langsung di dalam Raspberry Pi 3B, didaftarkan sebagai daemon systemd (`actions.runner.*.service`).
+     - **Mekanisme Polling Outbound:** Runner lokal melakukan *long polling* keluar (outbound HTTPS port 443) ke GitHub, sehingga sama sekali **tidak membutuhkan port inbound terbuka** di router/firewall kampus.
+     - **Workflow (`.github/workflows/deploy-backend.yml`):**
+       - *Trigger:* `push` ke branch `main` pada path `backend/**` atau `deploy/**`.
+       - *Stage 1 (Cloud CI - `ubuntu-latest`):* Menjalankan linting (flake8/ruff) dan pengujian otomatis (Pydantic schema validation, mock ETL, mock ReAct) di cloud runner agar tidak membebani komputasi Raspi (1 GB RAM).
+       - *Stage 2 (Edge CD - `runs-on: [self-hosted, raspi3b]`):* Setelah Stage 1 lulus, runner lokal Raspi otomatis mengeksekusi pipeline:
+         ```bash
+         cd /home/pi/environmentalsensing/backend
+         git pull origin main
+         source venv/bin/activate && pip install -r requirements.txt
+         sudo systemctl restart ess-backend.service
+         curl -f http://127.0.0.1:8000/api/telemetry/latest || exit 1
+         ```
+  2. **Pipeline 2: Web App Continuous Deployment ke Firebase Hosting**
+     - **Lingkungan Kompilasi:** GitHub-hosted runner `ubuntu-latest` (komputasi cloud gratis).
+     - **Workflow (`.github/workflows/deploy-web.yml`):**
+       - *Trigger:* `push` ke branch `main` pada path `frontend/**`.
+       - *Langkah:* Checkout repositori -> Setup Flutter SDK channel `stable` -> `flutter pub get` -> Build Web release: `flutter build web --release --base-href "/"` -> Deploy ke Firebase Hosting via `FirebaseExtended/action-hosting-deploy` dengan secret `FIREBASE_SERVICE_ACCOUNT_ESS`.
+       - Web app dashboard selalu sinkron dan ter-deploy ke URL hosting publik dalam 2-3 menit secara otomatis.
+  3. **Pipeline 3: Mobile Android APK CI & In-App OTA (Over-The-Air) Update Engine**
+     - **Tantangan Distribusi Non-PlayStore:** Aplikasi mobile ESS didistribusikan secara internal tanpa Google Play Store ($25 fee & review time). Jika ada rilis baru, pengguna enggan repot mengunduh ulang file APK melalui web browser.
+     - **Automated Build & Release Workflow (`.github/workflows/release-mobile.yml`):**
+       - *Trigger:* Pembuatan git tag rilis versi (contoh: `git tag v1.2.0 && git push origin v1.2.0`).
+       - Cloud runner mengeksekusi `flutter build apk --release` -> Mengunggah artifact `app-release.apk` ke GitHub Releases publik secara otomatis.
+     - **In-App OTA Engine (Sisi Flutter Mobile):**
+       - Flutter client menggunakan `package_info_plus` untuk mendeteksi versi aplikasi lokal yang sedang berjalan (`currentVersion`).
+       - Setiap kali aplikasi dibuka (*cold start*), service melakukan pengecekan ke endpoint backend: `GET /api/app/version`.
+       - *Payload Respon Backend:*
+         ```json
+         {
+           "latest_version": "1.2.0",
+           "min_required_version": "1.0.0",
+           "download_url": "https://github.com/mrzakist/environmentalsensing/releases/download/v1.2.0/app-release.apk",
+           "release_notes": "Optimasi kalibrasi zero-baseline MQ-2 & responsivitas layout chat ESI.",
+           "force_update": false
+         }
+         ```
+       - Jika `latest_version > currentVersion`, aplikasi memunculkan dialog pembaruan (`UpdateAvailableDialog`):
+         - Menampilkan changelog fitur terbaru.
+         - Tombol *"Perbarui Sekarang"* mengunduh APK ke penyimpanan lokal via background downloader dan memicu Android `PackageInstaller` intent untuk instalasi langsung tanpa membuka browser.
+- **Keputusan:** `[29-10-2026]` - **[DITERIMA - BLUEPRINT RESMI DEVOPS]** Diadopsi sebagai arsitektur continuous deployment mandiri untuk backend Raspi, Web Firebase Hosting, dan Mobile APK release.
 ### [Status: DITERIMA & SELESAI] Hasil Uji Empiris Rangkaian Filter Daya C1/C2 (Proof of Concept)
 - **Tanggal & Inisiator:** `[09-10-2026]` - Huda
 - **Ide & Pengujian:** Menguji rangkaian low-pass / decoupling filter daya input (C1 Elco 100uF + C2 Keramik 100nF + KF301-2P) menggunakan sumber daya 5V dari pin VIN ESP32 WROOM sebelum pemasangan barrel jack DC permanen.
@@ -367,5 +407,13 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Dokumentasikan solusi USB flapping C3 via tombol BOOT+RST download mode.
 - [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline.
 - [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
+
+**5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
+- [ ] Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`).
+- [ ] Setup GitHub Self-Hosted Runner di Raspberry Pi 3B & Workflow CD Backend (`.github/workflows/deploy-backend.yml`).
+- [ ] Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking.
+- [ ] Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).
+- [ ] Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
+
 
 
