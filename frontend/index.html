@@ -84,10 +84,10 @@
 <!-- MAIN DASHBOARD CONTENT -->
 <main class="flex-1 max-w-[1000px] w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-3.5 sm:space-y-4 relative z-10">
 
-  <!-- 1. SLIDER KAMPUS POLTEKOM (TINGGI DIOPTIMALKAN SUPAYA FIT & TIDAK MENYEBABKAN ESI PEEKING DI HERO STATE) -->
+  <!-- 1. SLIDER KAMPUS POLTEKOM (FLUID VIEWPORT HEIGHT SCALING) -->
   <section class="relative overflow-hidden rounded-3xl card-theme text-white transition-all duration-500 group" id="mainStatusBanner">
     <!-- Carousel Viewport -->
-    <div class="relative w-full h-64 sm:h-72 md:h-[325px] lg:h-[345px] overflow-hidden select-none" id="campusCarousel">
+    <div class="relative w-full hero-carousel overflow-hidden select-none" id="campusCarousel">
       <!-- Slides Container -->
       <div class="flex w-full h-full transition-transform duration-700 ease-out" id="carouselTrack" style="transform: translateX(0%);">
         
@@ -338,6 +338,24 @@
   </section>
 
 </main>
+
+<!-- 3. FLOATING ACTION BUTTON (FAB): ESI AI ASSISTANT -->
+<div id="esiFabContainer" class="fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out">
+  <button type="button" id="esiFabBtn" onclick="openEsiFromFab()" class="group flex items-center gap-2.5 p-2.5 sm:p-3 rounded-full bg-[#0f1b38]/90 hover:bg-[#14234b] border border-sky-400/40 text-white shadow-2xl shadow-sky-500/25 backdrop-blur-xl transition-all duration-300 active:scale-95 cursor-pointer hover:border-sky-300 hover:shadow-sky-400/35" aria-label="Tanya Asisten AI ESI">
+    <!-- Bot Avatar Icon with ambient glow -->
+    <div class="relative w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-cyan-300 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-sky-500/30 flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+      <span class="material-symbols-outlined text-lg block">smart_toy</span>
+      <!-- Pulsing Online Indicator Dot -->
+      <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0f1b38] animate-pulse"></span>
+    </div>
+    
+    <!-- Collapsed by default, expands smoothly on hover with 'Tanya ESI?' -->
+    <div class="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-xs group-hover:opacity-100 group-hover:pr-2 transition-all duration-300 ease-out flex items-center gap-1.5">
+      <span class="text-xs font-bold tracking-wide text-white">Tanya ESI?</span>
+      <span class="material-symbols-outlined text-xs text-sky-300 animate-bounce">arrow_downward</span>
+    </div>
+  </button>
+</div>
 
 <!-- SCRIPTS ENGINE (Modular Architecture TD-F01) -->
 <script src="config.js"></script>

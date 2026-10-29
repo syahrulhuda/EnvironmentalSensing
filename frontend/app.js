@@ -10,6 +10,7 @@
 // --- 1. SCROLL MORPHING CONTROLLER (Hero State <-> Scrolled Split-View) ---
 function initScrollMorphing() {
   const section = document.getElementById('workspaceSection');
+  const fab = document.getElementById('esiFabContainer');
   if (!section) return;
 
   let isTicking = false;
@@ -24,11 +25,13 @@ function initScrollMorphing() {
           if (typeof renderAllSparklines === 'function') renderAllSparklines();
         }, 200);
       }
+      if (fab) fab.classList.add('fab-hidden');
     } else if (scrollY < 30) {
       if (!section.classList.contains('hero-layout')) {
         section.classList.remove('scrolled-layout');
         section.classList.add('hero-layout');
       }
+      if (fab) fab.classList.remove('fab-hidden');
     }
     isTicking = false;
   };
@@ -41,6 +44,22 @@ function initScrollMorphing() {
   }, { passive: true });
 
   onScroll();
+}
+
+// --- 2. FLOATING ACTION BUTTON (FAB) ESI HANDLER ---
+function openEsiFromFab() {
+  const chatSection = document.getElementById('chatColumn') || document.getElementById('workspaceSection');
+  if (chatSection) {
+    const targetY = chatSection.getBoundingClientRect().top + window.pageYOffset - 90;
+    window.scrollTo({ top: Math.max(140, targetY), behavior: 'smooth' });
+  } else {
+    window.scrollTo({ top: 380, behavior: 'smooth' });
+  }
+  // Otomatis fokus ke input chat agar user langsung bisa mengetik
+  setTimeout(() => {
+    const input = document.getElementById('chatInput');
+    if (input) input.focus();
+  }, 450);
 }
 
 // --- 2. RESIZE LISTENER ---

@@ -143,3 +143,32 @@ body {
   border-top: 1px solid rgba(56, 189, 248, 0.15);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* =============================================================================
+   Fluid Viewport-Height Carousel Scaling (Hero State Auto-Fit)
+   ============================================================================= */
+.hero-carousel {
+  height: 285px; /* Fallback */
+  height: clamp(285px, calc(100dvh - 290px), 520px);
+}
+
+@media (max-width: 640px) {
+  .hero-carousel {
+    height: clamp(260px, 45vh, 320px);
+  }
+}
+
+/* =============================================================================
+   Floating Action Button (FAB) ESI Bot
+   ============================================================================= */
+#esiFabContainer {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#esiFabContainer.fab-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.9);
+}
+
