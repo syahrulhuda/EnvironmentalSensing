@@ -3,11 +3,17 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "frontend/build/web",
+    "public": "frontend",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "lib/**",
+      "android/**",
+      "web/**",
+      "test/**",
+      "build/**",
+      "pubspec.*",
+      "analysis_options.yaml"
     ],
     "rewrites": [
       {
