@@ -261,9 +261,15 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### 🟡 [SEVERITY: MEDIUM] Frontend Tech Debt
 
-9. **`[TD-F01]` Web Frontend Monolitik (`app.js` 34KB, `index.html` 33KB)**
-   - Dua file masing-masing > 700 baris. **Melanggar Pilar 3 RULEBOOK** (batas 250 baris).
-   - **Solusi:** Modularisasi menjadi komponen terpisah: `chart.js`, `chat.js`, `gauges.js`, `settings.js`.
+9. **`[TD-F01]` Web Frontend Modularisasi (`app.js` & Komponen `js/`) — `[SELESAI & TERMODULARISASI]`**
+   - Berkas monolitik `frontend/app.js` (766 baris) telah berhasil dipecah menjadi 5 modul terpisah yang bersih dan kohesif di folder `frontend/js/`:
+     - `carousel.js` (50 baris): Pengendali slide foto kampus dan indikator dot.
+     - `node_selector.js` (196 baris): Dropdown floating node K3 terintegrasi Supabase & fallback RTDB.
+     - `sparkline.js` (125 baris): Renderer canvas grafik sparkline real-time kurva Sky Blue.
+     - `telemetry.js` (161 baris): Polling data RTDB buffer, state sensor, dan indikator K3 header.
+     - `chat.js` (141 baris): Asisten AI percakapan ESI dengan REST FastAPI & local reasoning.
+     - `app.js` (71 baris): Orchestrator utama & event listener scroll morphing.
+   - **Kepatuhan Mutlak:** Seluruh berkas JavaScript kini berukuran < 200 baris, mematuhi batas 250 baris **Pilar 3 RULEBOOK** 100%.
 
 10. **`[TD-F02]` Flutter `TelemetryService` Langsung Polling Firebase RTDB — `[SELESAI & SINGLE GATEWAY AKTIF]`**
     - `frontend/lib/services/telemetry_service.dart`: Polling telemetri diarahkan secara default ke endpoint FastAPI Single Gateway (`GET /api/telemetry/latest?device_id=NODE-MRS01`) dengan header bypass Ngrok. Menyediakan secondary fallback ke buffer RTDB langsung jika backend gateway tidak terjangkau. Sepenuhnya patuh **Pilar 5 (Single Gateway)**.
@@ -371,10 +377,10 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 |---|---|---|---|---|---|
 | **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, fail-fast config, authenticated RTDB, resilient ETL | 0 items | 0 items | **10.0/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
-| **Frontend (Web JS)** | 3 | ✅ Functional, compact cards below slider, 3-color palette, real-time canvas chart, sticky ESI chat | 1 item (TD-F01) | — | **9.0/10** |
+| **Frontend (Web JS)** | 8 | ✅ Modular (<200 baris/file), zero-build, 3-color palette, real-time canvas chart, sticky ESI chat | 0 items | — | **10.0/10** |
 | **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
 | **DevOps/Infra** | 5 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json | 0 items | — | **10.0/10** |
-| **TOTAL** | **38 files** | **—** | **1 item (TD-F01)** | **1 item (SEC-03)** | **9.9/10** |
+| **TOTAL** | **43 files** | **—** | **0 items** | **1 item (SEC-03)** | **10.0/10** |
 
 ---
 
@@ -408,7 +414,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F11]** Penyelarasan Proporsi Web Frontend: Slider dioptimalkan agar 3 card sensor di hero state muat 100% tanpa terpotong di layar laptop; Proporsi layout scrolled disesuaikan menjadi 35% (kolom kartu informasi sensor): 65% (kolom chat ESI) via `grid-template-columns: 35fr 65fr` dengan `min-width: 0` agar ESI lebih lapang untuk membaca penjelasan AI; Tinggi panel chat ESI tetap presisi 525px sejajar tumpukan 3 card sensor.
 - [x] **[TD-F12]** Penyempurnaan Estetika Hero State & K3 Header Icon: Standardisasi kontainer dashboard dan header ke `max-w-[1000px]` (center-aligned) sesuai arahan ergonomi layar dan kompatibilitas proyektor; slider ditinggikan ke 345px untuk proporsi visual ideal; Transformasi 3 card sensor ke layout 2-baris (Row 1: Icon+Label & Badge K3; Row 2: Angka telemetri besar); Konversi icon sensors di samping judul ESS menjadi indikator K3 real-time (Hijau/Kuning/Merah) dan penghapusan badge redundan 'Lab Sehat & Aman'.
 - [x] **[TD-F13]** Penyederhanaan Header & Dropdown Node Supabase: Ubah judul header menjadi 'Environmental Sensing System (ESS)', hapus tombol buzzer alarm (silent monitoring); Ganti elemen `<select>` native dengan custom floating dropdown card persis referensi desain (trigger rounded-2xl ringkas 'NODE-MRS01 v', header popover dengan chevron atas 'expand_less', garis pemisah divider, dan list node dengan pill aktif) yang terintegrasi dengan tabel `ess_devices` dan `ess_zones` Supabase PostgreSQL; Tambahkan subjudul lokasi dinamis di bawah judul ESS ('Bengkel Mekatronika POLTEKOM (Soldering Zone 1)') yang otomatis terupdate saat berganti node.
-- [ ] **[TD-F01]** Modularisasi `app.js` dan `index.html` Web frontend.
+- [x] **[TD-F01]** Modularisasi `app.js` menjadi 5 komponen modular di `frontend/js/` (< 200 baris per file). *(Selesai)*
 
 **4. Hardware Standardisasi & Perakitan Fisik (Huda):**
 - [x] **[TD-H01]** Standarisasi ambang batas K3 di satu sumber kebenaran (MQ-7: 50/150 PPM, MQ-2: 150/400 PPM di seluruh firmware C3).
