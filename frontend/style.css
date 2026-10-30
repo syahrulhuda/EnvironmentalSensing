@@ -106,22 +106,121 @@ body {
 /* Smart Header Transitions (Auto-Hide on Scroll Down) */
 #mainHeader {
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease;
+              opacity 0.25s ease,
+              background-color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease,
+              padding 0.3s ease;
   will-change: transform, opacity;
 }
 
+#headerTitleBlock {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#nodeDropdownWrapper {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#nodeDropdownBtn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#systemStatusPill {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Default (< 1150px): Header sembunyi penuh ke atas, Scrolled Zone Bar aktif */
 #mainHeader.header-hidden {
   transform: translateY(-130%) !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-/* Scrolled Zone Bar (Lokasi & Node aktif saat Header ter-hide) */
+/* Scrolled Zone Bar (Lokasi & Node aktif saat Header ter-hide di layar < 1150px) */
 #scrolledZoneBar {
   display: none;
 }
 #workspaceSection.scrolled-layout #scrolledZoneBar {
   display: flex !important;
+}
+
+/* =============================================================================
+   Adaptive Responsive HUD (Opsi A: Layar Lebar >= 1150px)
+   Header memudar, Dropdown melayang di kiri luar frame, Status di kanan luar frame
+   ============================================================================= */
+@media (min-width: 1150px) {
+  /* Di layar lebar: Bar horizontal transparan, tidak memblokir klik */
+  #mainHeader.header-hidden {
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Judul ESS & Subtitle Bengkel memudar ke atas */
+  #mainHeader.header-hidden #headerTitleBlock {
+    opacity: 0 !important;
+    transform: translateY(-24px) !important;
+    pointer-events: none !important;
+  }
+
+  /* Node Dropdown meluncur mulus ke pojok kiri luar frame kartu */
+  #mainHeader.header-hidden #nodeDropdownWrapper {
+    position: fixed !important;
+    top: 1.25rem !important;
+    left: 1.75rem !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Styling tombol node saat melayang: Glassmorphism bercahaya */
+  #mainHeader.header-hidden #nodeDropdownBtn {
+    background-color: rgba(15, 27, 56, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(56, 189, 248, 0.45) !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.65), 0 0 16px -2px rgba(56, 189, 248, 0.25) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Dropdown popup saat melayang: sejajar kiri agar membuka ke arah tengah layar */
+  #mainHeader.header-hidden #nodeDropdownMenu {
+    right: auto !important;
+    left: 0 !important;
+    top: calc(100% + 0.5rem) !important;
+  }
+
+  /* Status Pill meluncur mulus ke pojok kanan luar frame kartu */
+  #mainHeader.header-hidden #systemStatusPill {
+    position: fixed !important;
+    top: 1.25rem !important;
+    right: 1.75rem !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+    background-color: rgba(15, 27, 56, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.65), 0 0 16px -2px rgba(16, 185, 129, 0.25) !important;
+    padding: 0.5rem 0.95rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Sembunyikan Scrolled Zone Bar di layar lebar karena sudah ada floating HUD */
+  #workspaceSection.scrolled-layout #scrolledZoneBar {
+    display: none !important;
+  }
 }
 
 /* 2. SCROLLED STATE (When scrolled down) */
