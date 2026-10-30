@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 import google.generativeai as genai
 from app.core.config import settings
-from app.tools import get_telemetry, get_history, get_sop
+from app.tools import get_telemetry, get_fleet_summary, get_devices, get_history, get_sop
 
 if settings.GEMINI_API_KEY:
     genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -17,7 +17,7 @@ Lingkup Pemantauan Sensor Multi-Parameter:
 3. Gas Mudah Terbakar & Asap / LPG/Smoke (MQ-2): Aman < 150 PPM, Peringatan/Warning 150-400 PPM, Bahaya/Danger > 400 PPM.
 
 Tugas Utama:
-1. Membantu memantau kualitas udara bengkel secara real-time.
+1. Membantu memantau kualitas udara bengkel secara real-time di seluruh area praktikum.
 2. Mengevaluasi keamanan area kerja praktikum (las, soldering, mesin bubut/frais, dsb.).
 3. Memberikan panduan SOP keselamatan kerja berbasis data ilmiah dan pembacaan sensor riil.
 
@@ -66,7 +66,11 @@ def _sanitize_history(raw_history: List[Any]) -> List[Dict[str, Any]]:
 
     return sanitized
 
-def ask_esi(user_message: str, history: Optional[List[Any]] = None) -> Dict[str, Any]:
+def ask_esi(
+    user_message: str,
+    history: Optional[List[Any]] = None,
+    active_node_id: Optional[str] = None
+) -> Dict[str, Any]:
     if not settings.GEMINI_API_KEY:
         return {
             "reply": "⚠️ [KONFIGURASI]: GEMINI_API_KEY belum disetel di environment backend.",
@@ -74,16 +78,21 @@ def ask_esi(user_message: str, history: Optional[List[Any]] = None) -> Dict[str,
         }
 
     try:
-        tools = [get_telemetry, get_history, get_sop]
+        tools = [get_telemetry, get_fleet_summary, get_devices, get_history, get_sop]
         tz_wib = timezone(timedelta(hours=settings.TIMEZONE_OFFSET_HOURS))
         current_wib = datetime.now(tz_wib).strftime("%A, %d %B %Y pukul %H:%M:%S WIB")
+        target_node = active_node_id if active_node_id else settings.DEFAULT_NODE_ID
 
         dynamic_prompt = f"""{SYSTEM_PROMPT}
 
-Konteks Waktu Saat Ini:
+Konteks Operasional & Layar Pengguna Saat Ini:
 - Waktu saat ini: {current_wib} (Zona Waktu: WIB / UTC+7).
+- Node yang sedang aktif dipantau pengguna di layar: `{target_node}`.
+- Jika pengguna bertanya tentang kondisi saat ini tanpa menyebutkan nama node tertentu (misal: "gimana suhunya?", "apakah aman?"), prioritaskan memeriksa node aktif `{target_node}` menggunakan tool `get_telemetry`.
+- Jika pengguna bertanya tentang kondisi seluruh bengkel, membandingkan antar ruangan, atau mengecek apakah ada node yang offline/bahaya, gunakan tool `get_fleet_summary`.
+- Jika pengguna menanyakan daftar perangkat yang terpasang, letak ruangan, atau metadata node, gunakan tool `get_devices`.
+- PERINGATAN WATCHDOG OFFLINE: Perhatikan field `is_online` dan `status_koneksi` pada data sensor! Jika suatu node terdeteksi OFFLINE (`is_online = false`), JANGAN katakan kondisi ruangan saat ini normal/aman berdasarkan angka lama. Beritahu pengguna secara jelas bahwa perangkat tersebut sedang terputus/offline, sebutkan waktu terakhir ia aktif, dan sarankan untuk memeriksa catu daya/koneksi Wi-Fi node tersebut.
 - Jika pengguna menanyakan kondisi jam tertentu (misal: "jam 12 tadi siang gimana?"), gunakan parameter `hour_wib=12` pada tool `get_history`.
-- Field `waktu_lokal_wib` pada tool langsung menunjukkan jam WIB.
 """
 
         model = genai.GenerativeModel(

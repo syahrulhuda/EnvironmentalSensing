@@ -19,6 +19,8 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., example="Bagaimana kualitas udara bengkel saat ini?")
     history: Optional[List[ChatMessage]] = Field(default=None, description="Riwayat obrolan bertingkat")
+    active_node_id: Optional[str] = Field(default=None, description="ID node IoT yang sedang dipantau di layar pengguna", example="NODE-MRS01")
+
 
 class ChatResponse(BaseModel):
     reply: str
@@ -106,7 +108,7 @@ async def chat_endpoint(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Pesan tidak boleh kosong.")
     
-    result = ask_esi(request.message, request.history)
+    result = ask_esi(request.message, request.history, active_node_id=request.active_node_id)
     return ChatResponse(
         reply=result["reply"],
         status=result["status"],

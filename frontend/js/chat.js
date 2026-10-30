@@ -121,6 +121,9 @@ function handleUserSubmit(e) {
 async function processChatQuery(query) {
   showTypingIndicator();
   const baseBackend = (typeof CONFIG !== 'undefined' && CONFIG.BACKEND_API_URL) ? CONFIG.BACKEND_API_URL.replace(/\/+$/, "") : "";
+  const activeNodeId = (typeof currentSensorState !== 'undefined' && currentSensorState.nodeId)
+    ? currentSensorState.nodeId
+    : (localStorage.getItem('ess_cfg_node_id') || (typeof CONFIG !== 'undefined' ? CONFIG.DEFAULT_NODE_ID : 'NODE-MRS01') || 'NODE-MRS01');
 
   if (baseBackend) {
     try {
@@ -135,7 +138,8 @@ async function processChatQuery(query) {
         },
         body: JSON.stringify({
           message: query,
-          history: chatHistory
+          history: chatHistory,
+          active_node_id: activeNodeId
         }),
         signal: controller.signal
       });
@@ -161,7 +165,7 @@ async function processChatQuery(query) {
     removeTypingIndicator();
     const q = query.toLowerCase();
     let answer = "";
-    const state = typeof currentSensorState !== 'undefined' ? currentSensorState : { temp: 25, hum: 50, mq7_ppm: 5, mq2_ppm: 20, status: "NORMAL", nodeId: "NODE-MRS01" };
+    const state = typeof currentSensorState !== 'undefined' ? currentSensorState : { temp: 25, hum: 50, mq7_ppm: 5, mq2_ppm: 20, status: "NORMAL", nodeId: activeNodeId };
 
     if (q.includes('sehat') || q.includes('kualitas') || q.includes('udara')) {
       answer = `Kadar Karbon Monoksida (CO) terpantau <strong>${state.mq7_ppm} PPM</strong> (di bawah batas ambang 50 PPM). Sirkulasi udara ruangan aman dan bersih untuk kegiatan praktikum.`;
@@ -172,7 +176,7 @@ async function processChatQuery(query) {
     } else if (q.includes('tips') || q.includes('hemat') || q.includes('jaga') || q.includes('k3')) {
       answer = "<strong>Tips K3 Laboratorium:</strong><br>1. Matikan solder dan alat pemanas listrik setelah selesai praktikum.<br>2. Pastikan ventilasi udara terbuka saat pengerjaan PCB.<br>3. Hubungi teknisi bengkel bila alarm sensor menyala.";
     } else {
-      answer = `Data telemetri node <code>${state.nodeId}</code> terkini: Suhu: <strong>${state.temp.toFixed(1)}°C</strong>, Kelembapan: <strong>${state.hum.toFixed(1)}% RH</strong>, CO: <strong>${state.mq7_ppm} PPM</strong>, Asap: <strong>${state.mq2_ppm} PPM</strong>. Status: <strong>${state.status}</strong>.`;
+      answer = `Data telemetri node <code>${state.nodeId || activeNodeId}</code> terkini: Suhu: <strong>${state.temp.toFixed(1)}°C</strong>, Kelembapan: <strong>${state.hum.toFixed(1)}% RH</strong>, CO: <strong>${state.mq7_ppm} PPM</strong>, Asap: <strong>${state.mq2_ppm} PPM</strong>. Status: <strong>${state.status}</strong>.`;
     }
 
     appendBotMessage(answer);

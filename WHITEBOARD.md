@@ -444,6 +444,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[DEVOPS-03]** Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking OTA mobile (`AppVersionResponse`, konfigurasi env settings, cleanup PEP 8 top-level imports, & unit test suite CI).
 - [ ] **[DEVOPS-04]** Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).
 - [ ] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
+- [x] **[AI-06]** ESI Multi-Node Context-Aware & Offline Watchdog Upgrade: Injeksi `active_node_id` otomatis dari frontend dropdown ke `/api/chat`, Heartbeat Watchdog offline awareness (`is_online`, `age_seconds`) pada `get_telemetry`, tool `get_fleet_summary` (overview kesehatan seluruh armada sensor dalam 1 kali panggil), dan tool `get_devices` (metadata resmi armada dari Supabase).
+
 
 
 

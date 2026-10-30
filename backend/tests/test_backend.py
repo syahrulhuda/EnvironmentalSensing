@@ -32,9 +32,10 @@ def test_pydantic_chat_models():
     assert msg.role == "user"
     assert "gas" in msg.content
 
-    # Valid Chat Request with history
-    req = ChatRequest(message="Apakah kondisi aman?", history=[msg])
+    # Valid Chat Request with history and active_node_id
+    req = ChatRequest(message="Apakah kondisi aman?", history=[msg], active_node_id="NODE-02")
     assert req.message == "Apakah kondisi aman?"
+    assert req.active_node_id == "NODE-02"
     assert len(req.history) == 1
 
     # Invalid payload (missing required field)
@@ -142,4 +143,31 @@ def test_fastapi_app_version_endpoint():
     except (ImportError, RuntimeError):
         if pytest:
             pytest.skip("TestClient requires httpx (installed in CI runner)")
+
+def test_tools_schema_and_watchdog():
+    """Memverifikasi function calling tools ESI (watchdog offline, fleet summary, & devices)."""
+    import json
+    from app.tools import get_telemetry, get_fleet_summary, get_devices, get_history, get_sop
+
+    # Test get_devices returns valid JSON
+    devices_raw = get_devices()
+    devices_json = json.loads(devices_raw)
+    assert "status" in devices_json
+
+    # Test get_fleet_summary returns valid JSON
+    fleet_raw = get_fleet_summary()
+    fleet_json = json.loads(fleet_raw)
+    assert "status" in fleet_json
+
+    # Test get_telemetry returns valid JSON with watchdog keys
+    telemetry_raw = get_telemetry("NODE-MRS01")
+    telemetry_json = json.loads(telemetry_raw)
+    assert "status" in telemetry_json
+    assert "is_online" in telemetry_json
+
+    # Test get_sop returns valid text
+    sop_raw = get_sop("carbon_monoxide")
+    assert isinstance(sop_raw, str)
+    assert len(sop_raw) > 0
+
 
