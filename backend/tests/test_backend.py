@@ -15,7 +15,7 @@ os.environ["CI"] = "true"
 os.environ["ESS_TEST_MODE"] = "true"
 
 from app.core.config import settings
-from app.api.routes import ChatMessage, ChatRequest, HealthResponse
+from app.api.routes import ChatMessage, ChatRequest, HealthResponse, AppVersionResponse
 from app.core.rate_limiter import InMemoryRateLimiter
 
 def test_settings_initialization():
@@ -55,6 +55,28 @@ def test_health_response_schema():
     )
     assert res.status == "healthy"
     assert res.version == "2.0.0"
+
+def test_app_version_schema():
+    """Memverifikasi schema respons endpoint versi aplikasi mobile (DEVOPS-03)."""
+    ver = AppVersionResponse(
+        latest_version="1.2.0",
+        min_required_version="1.0.0",
+        download_url="https://example.com/app.apk",
+        release_notes="Catatan rilis",
+        force_update=False,
+        timestamp="2026-10-30T00:00:00Z"
+    )
+    assert ver.latest_version == "1.2.0"
+    assert ver.min_required_version == "1.0.0"
+    assert ver.force_update is False
+
+    # Invalid payload (missing required fields)
+    has_error = False
+    try:
+        AppVersionResponse(latest_version="1.2.0")
+    except ValidationError:
+        has_error = True
+    assert has_error, "AppVersionResponse without required fields must raise ValidationError"
 
 def test_in_memory_rate_limiter():
     """Memverifikasi rate limiter sliding-window memblokir request saat melebihi batas."""
@@ -100,3 +122,24 @@ def test_fastapi_health_endpoint():
         # Jika httpx belum terpasang di environment lokal, lewati testclient
         if pytest:
             pytest.skip("TestClient requires httpx (installed in CI runner)")
+
+def test_fastapi_app_version_endpoint():
+    """Memverifikasi bahwa rute /api/app/version mengembalikan status 200 dan payload valid (DEVOPS-03)."""
+    try:
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+        response = client.get("/api/app/version")
+        assert response.status_code == 200
+        data = response.json()
+        assert "latest_version" in data
+        assert "min_required_version" in data
+        assert "download_url" in data
+        assert "release_notes" in data
+        assert "force_update" in data
+        assert data["latest_version"] == settings.APP_LATEST_VERSION
+    except (ImportError, RuntimeError):
+        if pytest:
+            pytest.skip("TestClient requires httpx (installed in CI runner)")
+

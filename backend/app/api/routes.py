@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Header, Depends, status
 from pydantic import BaseModel, Field
@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.core.rate_limiter import chat_rate_limiter
 from app.services.ai_service import ask_esi
 from app.services.etl_service import run_etl
+from app.tools.telemetry_tool import get_telemetry
+from app.core.database import query_logs, query_devices
 
 router = APIRouter()
 
@@ -29,6 +31,14 @@ class HealthResponse(BaseModel):
     version: str
     timestamp: str
 
+class AppVersionResponse(BaseModel):
+    latest_version: str = Field(..., description="Versi rilis APK terbaru", example="1.2.0")
+    min_required_version: str = Field(..., description="Versi minimum yang wajib digunakan", example="1.0.0")
+    download_url: str = Field(..., description="URL unduhan langsung file APK", example="https://github.com/syahrulhuda/EnvironmentalSensing/releases/latest/download/app-release.apk")
+    release_notes: str = Field(..., description="Catatan rilis / changelog pembaruan", example="Pembaruan ESS v1.2.0: Kalibrasi empiris sensor MQ-7/MQ-2, layout responsif, dan optimasi performa.")
+    force_update: bool = Field(default=False, description="Apakah pengguna diwajibkan update sebelum memakai aplikasi")
+    timestamp: str
+
 @router.get("/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
     return HealthResponse(
@@ -38,10 +48,21 @@ async def health_check():
         timestamp=datetime.now(timezone.utc).isoformat()
     )
 
+@router.get("/api/app/version", response_model=AppVersionResponse, tags=["System"])
+async def get_app_version():
+    """Mengembalikan informasi versi aplikasi Flutter terbaru untuk mekanisme OTA Update (DEVOPS-03)."""
+    return AppVersionResponse(
+        latest_version=settings.APP_LATEST_VERSION,
+        min_required_version=settings.APP_MIN_REQUIRED_VERSION,
+        download_url=settings.APP_DOWNLOAD_URL,
+        release_notes=settings.APP_RELEASE_NOTES,
+        force_update=settings.APP_FORCE_UPDATE,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+
 @router.get("/api/telemetry/latest", tags=["Telemetry"])
 async def get_latest_telemetry(device_id: str = settings.DEFAULT_NODE_ID):
     """Mengambil data telemetri terkini dari Hot Buffer Firebase RTDB untuk gauge real-time Flutter."""
-    from app.tools.telemetry_tool import get_telemetry
     res_str = get_telemetry(device_id=device_id)
     return json.loads(res_str)
 
@@ -52,9 +73,6 @@ async def get_historical_logs(
     hour_wib: Optional[int] = None
 ):
     """Mengambil data agregasi menit lampau dari Warm Storage Supabase PostgreSQL untuk grafik analitik Flutter."""
-    from datetime import timedelta
-    from app.core.database import query_logs
-
     tz_wib = timezone(timedelta(hours=settings.TIMEZONE_OFFSET_HOURS))
     now_wib = datetime.now(tz_wib)
     utc_start, utc_end = None, None
@@ -109,7 +127,6 @@ async def trigger_etl(x_ess_admin_key: Optional[str] = Header(None, alias="X-ESS
 @router.get("/api/devices", tags=["Devices"])
 async def get_registered_devices():
     """Mengambil daftar perangkat/node IoT yang terdaftar di Supabase PostgreSQL (ess_devices)."""
-    from app.core.database import query_devices
     devices = query_devices()
     return {
         "status": "success",

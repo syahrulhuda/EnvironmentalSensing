@@ -62,6 +62,19 @@ class Settings:
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "ess-secret-admin-key-2026")
     CHAT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "15"))
 
+    # Mobile In-App OTA Update Engine (DEVOPS-03 / DEVOPS-04)
+    APP_LATEST_VERSION: str = os.getenv("APP_LATEST_VERSION", "1.2.0")
+    APP_MIN_REQUIRED_VERSION: str = os.getenv("APP_MIN_REQUIRED_VERSION", "1.0.0")
+    APP_DOWNLOAD_URL: str = os.getenv(
+        "APP_DOWNLOAD_URL",
+        "https://github.com/syahrulhuda/EnvironmentalSensing/releases/latest/download/app-release.apk"
+    )
+    APP_RELEASE_NOTES: str = os.getenv(
+        "APP_RELEASE_NOTES",
+        "Pembaruan ESS v1.2.0: Kalibrasi empiris sensor MQ-7/MQ-2, layout responsif, dan optimasi performa."
+    )
+    APP_FORCE_UPDATE: bool = os.getenv("APP_FORCE_UPDATE", "false").lower() in ("true", "1", "yes")
+
     def get_rtdb_url(self) -> str:
         """
         Mengembalikan URL Firebase RTDB yang aman (SEC-02).
