@@ -66,7 +66,7 @@ sudo systemctl enable ess-backend.service
 
 # 5. Konfigurasi izin sudoers tanpa password untuk CI/CD Zero-Manual-Ops
 echo "🔐 Mengonfigurasi izin sudoers untuk CI/CD Zero-Manual-Ops..."
-echo "$CURRENT_USER ALL=(ALL) NOPASSWD: /bin/systemctl restart ess-backend.service, /bin/systemctl status ess-backend.service, /bin/systemctl is-active ess-backend.service" | sudo tee /etc/sudoers.d/ess-backend > /dev/null
+echo "$CURRENT_USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart ess-backend*, /bin/systemctl restart ess-backend*, /usr/bin/systemctl is-active *, /bin/systemctl is-active *, /usr/bin/systemctl status *, /bin/systemctl status *" | sudo tee /etc/sudoers.d/ess-backend > /dev/null
 sudo chmod 0440 /etc/sudoers.d/ess-backend
 
 echo "=========================================================="

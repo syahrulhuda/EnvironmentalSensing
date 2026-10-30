@@ -106,8 +106,8 @@ jobs:
           sudo systemctl restart ess-backend.service
           sleep 3
 
-          # 5. Verifikasi bahwa service aktif
-          sudo systemctl is-active --quiet ess-backend.service || (sudo systemctl status ess-backend.service && exit 1)
+          # 5. Verifikasi bahwa service aktif (read-only inspection, tidak butuh sudo)
+          systemctl is-active --quiet ess-backend.service || (systemctl status ess-backend.service && exit 1)
 
       - name: Automated Healthcheck Verification
         run: |
