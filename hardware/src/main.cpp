@@ -233,7 +233,6 @@ void loop() {
     readSensors();
     evaluateK3Status();
     logTelemetrySerial();
-    updateOledDisplay();
 
     // Salin data ke snapshot thread-safe dan kirim ke FreeRTOS Cloud Task
     if (wifiConnected && firebaseQueue != NULL && strlen(SECRET_FIREBASE_URL) > 0) {
@@ -255,7 +254,7 @@ void loop() {
     }
   }
 
-  // 3. Tugas Rutin B: Rotasi Tampilan Layar OLED (tiap 3.5 detik)
+  // 3. Tugas Rutin B: Render & Rotasi Tampilan Layar OLED (Jadwal Terisolasi tiap 3.5 detik)
   if (currentMillis - lastDisplayPage >= INTERVAL_DISPLAY) {
     lastDisplayPage = currentMillis;
     if (strcmp(telemetry.status, "DANGER") != 0) {
@@ -326,11 +325,15 @@ void initHardware() {
   // 4. Inisialisasi I2C Bus dengan Proteksi Timeout Anti-Freeze
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
   Wire.setTimeOut(50);   // Timeout 50ms mencegah lockup strapping pin GPIO 9
-  Wire.setClock(400000); // 400 kHz Fast-Mode I2C
+  Wire.setClock(100000); // 100 kHz Standard Mode (Stabil & imun derau di breadboard)
 
   // 5. Inisialisasi OLED Display SSD1306 (0x3C)
   if (display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR, false, false)) {
     oledReady = true;
+    // Proteksi pemulihan register: matikan scrolling dan kunci start line di 0
+    display.ssd1306_command(SSD1306_DEACTIVATE_SCROLL);
+    display.ssd1306_command(SSD1306_SETSTARTLINE | 0x00);
+    display.setRotation(0);
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
