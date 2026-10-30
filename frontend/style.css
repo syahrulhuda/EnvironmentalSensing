@@ -103,6 +103,37 @@ body {
   transition: all 0.4s ease-out;
 }
 
+/* Smart Compact Header Transition (Opsi A) */
+#mainHeader.header-compact {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  background-color: rgba(10, 18, 38, 0.95);
+  border-bottom-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+#mainHeader.header-compact #headerMainTitle {
+  display: none;
+}
+
+#mainHeader.header-compact #nodeLocationSubtitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-top: 0;
+  letter-spacing: 0.015em;
+}
+
+#mainHeader.header-compact #headerK3Indicator {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+}
+
+#mainHeader.header-compact #headerK3Icon {
+  font-size: 1.125rem;
+}
+
 /* 2. SCROLLED STATE (When scrolled down) */
 #workspaceSection.scrolled-layout #chatColumn {
   margin-top: 1.5rem;
@@ -129,8 +160,11 @@ body {
     min-width: 0;
     position: -webkit-sticky;
     position: sticky;
-    top: 5rem;
+    top: 3.75rem;
     margin-top: 0;
+  }
+  #workspaceSection.scrolled-layout #esiChatCard {
+    height: clamp(380px, calc(100dvh - 5.5rem), 540px);
   }
 }
 

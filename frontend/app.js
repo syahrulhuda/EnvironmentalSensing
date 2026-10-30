@@ -10,6 +10,7 @@
 // --- 1. SCROLL MORPHING CONTROLLER (Hero State <-> Scrolled Split-View) ---
 function initScrollMorphing() {
   const section = document.getElementById('workspaceSection');
+  const header = document.getElementById('mainHeader');
   const fab = document.getElementById('esiFabContainer');
   if (!section) return;
 
@@ -20,6 +21,7 @@ function initScrollMorphing() {
       if (!section.classList.contains('scrolled-layout')) {
         section.classList.remove('hero-layout');
         section.classList.add('scrolled-layout');
+        if (header) header.classList.add('header-compact');
         // Redraw canvas sparklines saat drawer kolom melebar
         setTimeout(() => {
           if (typeof renderAllSparklines === 'function') renderAllSparklines();
@@ -30,6 +32,7 @@ function initScrollMorphing() {
       if (!section.classList.contains('hero-layout')) {
         section.classList.remove('scrolled-layout');
         section.classList.add('hero-layout');
+        if (header) header.classList.remove('header-compact');
       }
       if (fab) fab.classList.remove('fab-hidden');
     }

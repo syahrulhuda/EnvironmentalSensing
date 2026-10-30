@@ -33,15 +33,15 @@
 </div>
 
 <!-- 2. TOP HEADER -->
-<header class="sticky top-0 z-40 bg-[#0f1b38]/90 backdrop-blur-md border-b border-sky-400/20 py-3.5 shadow-lg shadow-black/30">
-  <div class="max-w-[1000px] w-full mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3.5">
+<header id="mainHeader" class="sticky top-0 z-40 bg-[#0f1b38]/90 backdrop-blur-md border-b border-sky-400/20 py-3.5 shadow-lg shadow-black/30 transition-all duration-300">
+  <div class="max-w-[1000px] w-full mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 transition-all duration-300">
+    <div class="flex items-center gap-3.5" id="headerTitleBlock">
       <!-- Dynamic K3 Status Indicator Icon (Hijau / Kuning / Merah Real-Time) -->
       <div id="headerK3Indicator" class="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-xl shadow-sm text-emerald-400 flex-shrink-0 transition-all duration-300" title="Status K3: AMAN - Kondisi Lingkungan Laboratorium Optimal">
-        <span class="material-symbols-outlined text-xl">sensors</span>
+        <span class="material-symbols-outlined text-xl" id="headerK3Icon">sensors</span>
       </div>
-      <div>
-        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white leading-tight">
+      <div id="headerTextWrapper" class="transition-all duration-300">
+        <h1 id="headerMainTitle" class="font-extrabold text-base sm:text-lg tracking-tight text-white leading-tight transition-all duration-300">
           Environmental Sensing System (ESS)
         </h1>
         <p id="nodeLocationSubtitle" class="text-xs text-slate-400 font-medium mt-0.5 transition-all duration-300">
@@ -288,7 +288,7 @@
 
       <!-- Kolom Chat ESI (Compact, Pinned Sticky di Scrolled State) -->
       <aside id="chatColumn" class="w-full transition-all duration-500">
-        <div class="card-theme rounded-2xl p-4 flex flex-col h-[525px] shadow-2xl relative">
+        <div id="esiChatCard" class="card-theme rounded-2xl p-4 flex flex-col h-[525px] shadow-2xl relative transition-all duration-300">
           <!-- ESI Chat Header -->
           <div class="flex items-center justify-between pb-3 border-b border-sky-400/20">
             <div class="flex items-center gap-2.5">
@@ -339,6 +339,45 @@
   </section>
 
 </main>
+
+<!-- 3. FOOTER RESMI POLTEKOM (KOMPAK & MODERN BERBASIS ACTION BUTTONS) -->
+<footer class="relative z-10 bg-[#070d1e]/90 border-t border-sky-400/20 py-7 px-4 sm:px-6 backdrop-blur-md mt-6">
+  <div class="max-w-[1000px] w-full mx-auto flex flex-col items-center text-center space-y-3.5">
+    
+    <!-- Baris 1: Tiga Tombol Interaktif (Email Us, Contact Us, Visit Us) -->
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <!-- 1. Email Us -->
+      <a href="mailto:info@poltekom.ac.id" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-base text-sky-400 group-hover:scale-110 transition-transform">mail</span>
+        <span>Email Us</span>
+      </a>
+
+      <!-- 2. Contact Us (WhatsApp Resmi POLTEKOM) -->
+      <a href="https://wa.me/6282245523929" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-emerald-500/20 hover:border-emerald-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-base text-emerald-400 group-hover:scale-110 transition-transform">call</span>
+        <span>Contact Us</span>
+      </a>
+
+      <!-- 3. Visit Us (Website Resmi Kampus) -->
+      <a href="https://poltekom.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-base text-sky-400 group-hover:scale-110 transition-transform">language</span>
+        <span>Visit Us</span>
+      </a>
+    </div>
+
+    <!-- Baris 2: Alamat Kampus POLTEKOM -->
+    <p class="text-xs text-slate-400 max-w-xl leading-relaxed flex items-center justify-center gap-1.5 flex-wrap">
+      <span class="material-symbols-outlined text-sm text-sky-400">location_on</span>
+      <span>Jl. Raya Tlogowaru No.3, Tlogowaru, Kec. Kedungkandang, Kota Malang, Jawa Timur 65133</span>
+    </p>
+
+    <!-- Baris 3: Divider Tipis & Copyright -->
+    <div class="w-full max-w-md h-px bg-gradient-to-r from-transparent via-sky-400/20 to-transparent"></div>
+    <p class="text-[11px] text-slate-400 font-mono tracking-wide">
+      &copy; 2026 Politeknik Kota Malang • Smart Environmental Sensing System (ESS). All rights reserved.
+    </p>
+  </div>
+</footer>
 
 <!-- 3. FLOATING ACTION BUTTON (FAB): ESI AI ASSISTANT -->
 <div id="esiFabContainer" class="fixed bottom-6 right-6 z-50 transition-all duration-500 ease-out">
