@@ -7,7 +7,7 @@
  * ==============================================================================
  */
 
-// --- 1. SCROLL MORPHING CONTROLLER (Hero State <-> Scrolled Split-View) ---
+// --- 1. SCROLL MORPHING & SMART HEADER CONTROLLER ---
 function initScrollMorphing() {
   const section = document.getElementById('workspaceSection');
   const header = document.getElementById('mainHeader');
@@ -15,27 +15,48 @@ function initScrollMorphing() {
   if (!section) return;
 
   let isTicking = false;
+  let lastScrollY = window.scrollY || window.pageYOffset;
+
   const onScroll = () => {
     const scrollY = window.scrollY || window.pageYOffset;
-    if (scrollY > 70) {
+
+    // 1. Layout Morphing (Hero State <-> Scrolled Split-View)
+    if (scrollY > 60) {
       if (!section.classList.contains('scrolled-layout')) {
         section.classList.remove('hero-layout');
         section.classList.add('scrolled-layout');
-        if (header) header.classList.add('header-compact');
         // Redraw canvas sparklines saat drawer kolom melebar
         setTimeout(() => {
           if (typeof renderAllSparklines === 'function') renderAllSparklines();
         }, 200);
       }
       if (fab) fab.classList.add('fab-hidden');
-    } else if (scrollY < 30) {
+    } else if (scrollY < 25) {
       if (!section.classList.contains('hero-layout')) {
         section.classList.remove('scrolled-layout');
         section.classList.add('hero-layout');
-        if (header) header.classList.remove('header-compact');
       }
       if (fab) fab.classList.remove('fab-hidden');
     }
+
+    // 2. Smart Header Auto-Hide on Scroll Down, Reveal Compact on Scroll Up
+    if (header) {
+      if (scrollY <= 40) {
+        // Paling atas: Tampilkan header penuh normal
+        header.classList.remove('header-hidden');
+        header.classList.remove('header-compact');
+      } else if (scrollY > lastScrollY && scrollY > 80) {
+        // Scroll KE BAWAH: Sembunyikan header total ke atas agar layar luas & bebas halangan
+        header.classList.add('header-hidden');
+        header.classList.remove('header-compact');
+      } else if (scrollY < lastScrollY) {
+        // Scroll KE ATAS: Munculkan slim compact bar dengan lokasi & selector node
+        header.classList.remove('header-hidden');
+        header.classList.add('header-compact');
+      }
+    }
+
+    lastScrollY = Math.max(0, scrollY);
     isTicking = false;
   };
 

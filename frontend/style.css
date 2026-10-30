@@ -103,8 +103,20 @@ body {
   transition: all 0.4s ease-out;
 }
 
-/* Smart Compact Header Transition (Opsi A) */
+/* Smart Header Transitions (Auto-Hide on Scroll Down, Reveal Compact on Scroll Up) */
+#mainHeader {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.3s ease;
+  will-change: transform;
+}
+
+#mainHeader.header-hidden {
+  transform: translateY(-100%);
+}
+
 #mainHeader.header-compact {
+  transform: translateY(0);
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   background-color: rgba(10, 18, 38, 0.95);
@@ -160,11 +172,14 @@ body {
     min-width: 0;
     position: -webkit-sticky;
     position: sticky;
-    top: 3.75rem;
+    top: 1rem;
     margin-top: 0;
+    transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  /* Pendekin Chat Card ESI agar seluruh card dan footer pas di layar */
   #workspaceSection.scrolled-layout #esiChatCard {
-    height: clamp(380px, calc(100dvh - 5.5rem), 540px);
+    height: 410px;
+    max-height: calc(100dvh - 2.5rem);
   }
 }
 

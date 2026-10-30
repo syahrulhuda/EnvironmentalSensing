@@ -288,15 +288,15 @@
 
       <!-- Kolom Chat ESI (Compact, Pinned Sticky di Scrolled State) -->
       <aside id="chatColumn" class="w-full transition-all duration-500">
-        <div id="esiChatCard" class="card-theme rounded-2xl p-4 flex flex-col h-[525px] shadow-2xl relative transition-all duration-300">
+        <div id="esiChatCard" class="card-theme rounded-2xl p-3.5 sm:p-4 flex flex-col shadow-2xl relative transition-all duration-300">
           <!-- ESI Chat Header -->
-          <div class="flex items-center justify-between pb-3 border-b border-sky-400/20">
+          <div class="flex items-center justify-between pb-2.5 border-b border-sky-400/20">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
-                <span class="material-symbols-outlined text-lg">smart_toy</span>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 flex-shrink-0">
+                <span class="material-symbols-outlined text-base sm:text-lg">smart_toy</span>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">ESI Assistant <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">AI</span></h3>
+                <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">ESI Assistant <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">AI</span></h3>
                 <div class="text-[10px] text-slate-400">Environmental Sensing Intelligence</div>
               </div>
             </div>
@@ -304,31 +304,31 @@
           </div>
 
           <!-- Chat Feed -->
-          <div class="flex-1 overflow-y-auto my-3 space-y-2.5 pr-1.5 text-xs" id="chatFeed">
+          <div class="flex-1 overflow-y-auto my-2.5 space-y-2 pr-1.5 text-xs" id="chatFeed">
             <div class="flex gap-2 items-start">
-              <div class="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-400/30 flex-shrink-0 flex items-center justify-center text-sky-400">
-                <span class="material-symbols-outlined text-base">smart_toy</span>
+              <div class="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/30 flex-shrink-0 flex items-center justify-center text-sky-400">
+                <span class="material-symbols-outlined text-xs">smart_toy</span>
               </div>
-              <div class="bg-[#070d1e]/70 rounded-xl rounded-tl-none p-3 border border-sky-400/15 text-slate-100 leading-relaxed">
+              <div class="bg-[#070d1e]/70 rounded-xl rounded-tl-none p-2.5 border border-sky-400/15 text-slate-100 leading-relaxed text-xs">
                 Halo! Saya <strong>ESI</strong>. Laboratorium &amp; Bengkel Mekatronika POLTEKOM aman dan udaranya bersih. Ada pertanyaan terkait kualitas udara, suhu, atau SOP bengkel?
               </div>
             </div>
           </div>
 
           <!-- Quick Question Chips -->
-          <div class="py-2 border-t border-sky-400/20">
-            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah udara lab sehat?')">Kualitas udara lab?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Bagaimana suhu ruangan lab?')">Suhu &amp; kelembapan?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah ada asap atau gas?')">Asap &amp; gas bocor?</button>
-              <button class="px-2.5 py-1.5 rounded-xl bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Tips keselamatan lab')">Tips keselamatan K3</button>
+          <div class="py-1.5 border-t border-sky-400/20">
+            <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+              <button class="px-2 py-1 rounded-lg bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah udara lab sehat?')">Kualitas udara lab?</button>
+              <button class="px-2 py-1 rounded-lg bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Bagaimana suhu ruangan lab?')">Suhu &amp; kelembapan?</button>
+              <button class="px-2 py-1 rounded-lg bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Apakah ada asap atau gas?')">Asap &amp; gas bocor?</button>
+              <button class="px-2 py-1 rounded-lg bg-[#070d1e]/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-sky-400/20 text-left truncate transition" onclick="askPrompt('Tips keselamatan lab')">Tips keselamatan K3</button>
             </div>
           </div>
 
           <!-- Chat Input Form -->
           <form class="flex items-center gap-2 pt-2 border-t border-sky-400/20" onsubmit="handleUserSubmit(event)">
-            <input class="flex-1 bg-[#070d1e]/70 border border-sky-400/25 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 transition shadow-inner" id="inputMessage" placeholder="Tanyakan kondisi lab ke ESI..." type="text">
-            <button class="px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold transition flex-shrink-0 shadow-md shadow-sky-500/20 active:scale-95" type="submit">
+            <input class="flex-1 bg-[#070d1e]/70 border border-sky-400/25 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 transition shadow-inner" id="inputMessage" placeholder="Tanyakan kondisi lab ke ESI..." type="text">
+            <button class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold transition flex-shrink-0 shadow-md shadow-sky-500/20 active:scale-95" type="submit">
               <span class="material-symbols-outlined text-sm block">send</span>
             </button>
           </form>
@@ -341,39 +341,39 @@
 </main>
 
 <!-- 3. FOOTER RESMI POLTEKOM (KOMPAK & MODERN BERBASIS ACTION BUTTONS) -->
-<footer class="relative z-10 bg-[#070d1e]/90 border-t border-sky-400/20 py-7 px-4 sm:px-6 backdrop-blur-md mt-6">
-  <div class="max-w-[1000px] w-full mx-auto flex flex-col items-center text-center space-y-3.5">
+<footer class="relative z-10 bg-[#070d1e]/90 border-t border-sky-400/20 py-5 px-4 sm:px-6 backdrop-blur-md mt-6">
+  <div class="max-w-[1000px] w-full mx-auto flex flex-col items-center text-center space-y-2.5">
     
     <!-- Baris 1: Tiga Tombol Interaktif (Email Us, Contact Us, Visit Us) -->
-    <div class="flex flex-wrap items-center justify-center gap-3">
+    <div class="flex flex-wrap items-center justify-center gap-2.5">
       <!-- 1. Email Us -->
-      <a href="mailto:info@poltekom.ac.id" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
-        <span class="material-symbols-outlined text-base text-sky-400 group-hover:scale-110 transition-transform">mail</span>
+      <a href="mailto:info@poltekom.ac.id" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-sm text-sky-400 group-hover:scale-110 transition-transform">mail</span>
         <span>Email Us</span>
       </a>
 
       <!-- 2. Contact Us (WhatsApp Resmi POLTEKOM) -->
-      <a href="https://wa.me/6282245523929" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-emerald-500/20 hover:border-emerald-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
-        <span class="material-symbols-outlined text-base text-emerald-400 group-hover:scale-110 transition-transform">call</span>
+      <a href="https://wa.me/6282245523929" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-emerald-500/20 hover:border-emerald-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-sm text-emerald-400 group-hover:scale-110 transition-transform">call</span>
         <span>Contact Us</span>
       </a>
 
       <!-- 3. Visit Us (Website Resmi Kampus) -->
-      <a href="https://poltekom.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
-        <span class="material-symbols-outlined text-base text-sky-400 group-hover:scale-110 transition-transform">language</span>
+      <a href="https://poltekom.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+        <span class="material-symbols-outlined text-sm text-sky-400 group-hover:scale-110 transition-transform">language</span>
         <span>Visit Us</span>
       </a>
     </div>
 
     <!-- Baris 2: Alamat Kampus POLTEKOM -->
-    <p class="text-xs text-slate-400 max-w-xl leading-relaxed flex items-center justify-center gap-1.5 flex-wrap">
-      <span class="material-symbols-outlined text-sm text-sky-400">location_on</span>
+    <p class="text-[11px] text-slate-400 max-w-xl leading-relaxed flex items-center justify-center gap-1.5 flex-wrap">
+      <span class="material-symbols-outlined text-xs text-sky-400">location_on</span>
       <span>Jl. Raya Tlogowaru No.3, Tlogowaru, Kec. Kedungkandang, Kota Malang, Jawa Timur 65133</span>
     </p>
 
     <!-- Baris 3: Divider Tipis & Copyright -->
-    <div class="w-full max-w-md h-px bg-gradient-to-r from-transparent via-sky-400/20 to-transparent"></div>
-    <p class="text-[11px] text-slate-400 font-mono tracking-wide">
+    <div class="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-sky-400/20 to-transparent"></div>
+    <p class="text-[10px] text-slate-400 font-mono tracking-wide">
       &copy; 2026 Politeknik Kota Malang • Smart Environmental Sensing System (ESS). All rights reserved.
     </p>
   </div>
