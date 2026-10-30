@@ -440,7 +440,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 **5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
 - [x] **[DEVOPS-01]** Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`) via Google ADC Service Account & multi-site `poltekom-ess`. *(Selesai - Commit 0190916)*
-- [x] **[DEVOPS-02]** Setup 2-Stage CI/CD Backend (`.github/workflows/deploy-backend.yml`): Stage 1 Cloud CI (Pytest & Flake8) + Stage 2 Edge CD (Self-Hosted Runner di Raspberry Pi 3B dengan auto git pull, pip sync, restart systemd ess-backend, dan healthcheck). *(Workflow & Tests Selesai - Siap Registrasi Runner)*
+- [x] **[DEVOPS-02]** Setup 2-Stage CI/CD Backend (Cloud CI + Edge CD): GitHub Self-Hosted Runner resmi terpasang sebagai daemon systemd 24/7 di Raspberry Pi 3B (`actions.runner.*.service`) dengan label `pikos`, Stage 1 Cloud CI (Pytest & Flake8) + Stage 2 Edge CD (auto git pull, pip sync, passwordless systemctl restart ess-backend, dan automated healthcheck). *(Selesai & Operasional 100%)*
 - [ ] **[DEVOPS-03]** Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking.
 - [ ] **[DEVOPS-04]** Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent).
 - [ ] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
