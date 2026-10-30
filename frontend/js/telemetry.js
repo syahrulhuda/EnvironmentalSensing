@@ -110,30 +110,61 @@ function applyDisplay(state) {
   }
 }
 
-async function fetchLatestTelemetry() {
-  if (typeof CONFIG === 'undefined' || !CONFIG.FIREBASE_DATABASE_URL) return;
-
+function updateSystemStatus(isOnline) {
   const statusPill = document.getElementById('systemStatusPill');
   const statusText = document.getElementById('systemStatusText');
+  const statusDot = statusPill ? statusPill.querySelector('span:first-child') : null;
+
+  const scrolledPill = document.getElementById('scrolledStatusPill');
+  const scrolledText = document.getElementById('scrolledStatusText');
+  const scrolledDot = document.getElementById('scrolledStatusDot');
+
+  if (isOnline) {
+    if (statusText) statusText.innerText = "ONLINE";
+    if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+    if (statusPill) {
+      statusPill.classList.remove('status-offline');
+      statusPill.classList.add('status-online');
+      statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 text-xs font-mono font-semibold status-online transition-all";
+    }
+
+    if (scrolledText) scrolledText.innerText = "ONLINE";
+    if (scrolledDot) scrolledDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse";
+    if (scrolledPill) scrolledPill.className = "flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-semibold";
+  } else {
+    if (statusText) statusText.innerText = "OFFLINE";
+    if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-rose-400";
+    if (statusPill) {
+      statusPill.classList.remove('status-online');
+      statusPill.classList.add('status-offline');
+      statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-rose-500/35 bg-rose-500/15 text-rose-400 text-xs font-mono font-semibold status-offline transition-all";
+    }
+
+    if (scrolledText) scrolledText.innerText = "OFFLINE";
+    if (scrolledDot) scrolledDot.className = "w-1.5 h-1.5 rounded-full bg-rose-400";
+    if (scrolledPill) scrolledPill.className = "flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[10px] font-mono font-semibold";
+  }
+}
+
+async function fetchLatestTelemetry() {
+  if (typeof CONFIG === 'undefined' || !CONFIG.FIREBASE_DATABASE_URL) return;
 
   try {
     const res = await fetch(CONFIG.FIREBASE_DATABASE_URL);
     if (!res.ok) {
-      if (statusText) statusText.innerText = "OFFLINE";
-      if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
+      updateSystemStatus(false);
       return;
     }
 
     const data = await res.json();
     if (!data) {
-      if (statusText) statusText.innerText = "OFFLINE";
-      if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
+      updateSystemStatus(false);
       return;
     }
 
     const keys = Object.keys(data);
     if (keys.length === 0) {
-      if (statusText) statusText.innerText = "OFFLINE";
+      updateSystemStatus(false);
       return;
     }
 
@@ -155,27 +186,50 @@ async function fetchLatestTelemetry() {
     if (!record) {
       record = data[keys[keys.length - 1]];
     }
-    if (!record) return;
+    if (!record) {
+      updateSystemStatus(false);
+      return;
+    }
 
     // Update state sensor
     currentSensorState.temp = parseFloat(record.temp || record.temperature || 25.0);
     currentSensorState.hum = parseFloat(record.hum || record.humidity || 50.0);
     currentSensorState.mq7_ppm = parseInt(record.mq7_ppm || record.mq7 || 0, 10);
     currentSensorState.mq2_ppm = parseInt(record.mq2_ppm || record.mq2 || 0, 10);
-    currentSensorState.nodeId = record.node_id || record.device_id || "NODE-MRS01";
+    currentSensorState.nodeId = record.node_id || record.device_id || targetNode;
     currentSensorState.status = record.status || "NORMAL";
     currentSensorState.lastUpdated = new Date();
 
-    if (statusText) statusText.innerText = "ONLINE";
-    if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/15 bg-white/5 text-white text-xs font-mono";
+    // Heartbeat Watchdog: Validasi apakah timestamp record masih aktif (fresh)
+    let recordTimeMs = null;
+    if (typeof record.created_at === 'number') {
+      recordTimeMs = record.created_at;
+    } else if (typeof record.created_at === 'string') {
+      const parsed = Date.parse(record.created_at);
+      if (!isNaN(parsed)) {
+        recordTimeMs = parsed;
+      } else {
+        const num = Number(record.created_at);
+        if (!isNaN(num)) recordTimeMs = num;
+      }
+    } else if (record.timestamp) {
+      const parsed = Date.parse(record.timestamp);
+      if (!isNaN(parsed)) recordTimeMs = parsed;
+    }
+
+    // ESP32 mengirim data tiap 3 detik. Toleransi heartbeat: 15 detik (5 siklus)
+    const HEARTBEAT_TIMEOUT_MS = 15000;
+    const nowMs = Date.now();
+    const isOnline = (recordTimeMs !== null) && (Math.abs(nowMs - recordTimeMs) <= HEARTBEAT_TIMEOUT_MS);
+
+    updateSystemStatus(isOnline);
 
     // Terapkan ke tampilan UI
     applyDisplay(currentSensorState);
 
   } catch (err) {
     console.warn("[Firebase RTDB] Fetch stream error:", err);
-    if (statusText) statusText.innerText = "OFFLINE";
-    if (statusPill) statusPill.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-white/50 text-xs font-mono";
+    updateSystemStatus(false);
   }
 }
 

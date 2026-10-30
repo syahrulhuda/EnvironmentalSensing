@@ -217,6 +217,12 @@ body {
     border-radius: 1rem !important;
   }
 
+  #mainHeader.header-hidden #systemStatusPill.status-offline {
+    border-color: rgba(244, 63, 94, 0.45) !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.65), 0 0 16px -2px rgba(244, 63, 94, 0.25) !important;
+    color: #fda4af !important;
+  }
+
   /* Sembunyikan Scrolled Zone Bar di layar lebar karena sudah ada floating HUD */
   #workspaceSection.scrolled-layout #scrolledZoneBar {
     display: none !important;
