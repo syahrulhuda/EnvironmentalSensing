@@ -1,0 +1,116 @@
+name: Backend CI/CD Pipeline (Cloud CI & Edge Raspi CD)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: backend-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================================
+  # STAGE 1: CLOUD CI (Test & Linting di GitHub Runner - Hemat RAM Raspberry Pi)
+  # ============================================================================
+  test-and-lint:
+    name: Stage 1 - Cloud CI (Test & Lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Syntax & Lint Error Check (Flake8)
+        run: |
+          # Periksa syntax error, undefined variables, dan broken imports
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Execute Pytest Suite (Sandbox Mode)
+        env:
+          CI: "true"
+          ESS_TEST_MODE: "true"
+        run: |
+          pytest -v tests/
+
+  # ============================================================================
+  # STAGE 2: EDGE CD (Deployment Otomatis ke Raspberry Pi 3B via Self-Hosted)
+  # ============================================================================
+  deploy-to-pi:
+    name: Stage 2 - Edge CD (Deploy to Raspberry Pi 3B)
+    needs: test-and-lint
+    runs-on: [self-hosted, linux]
+
+    steps:
+      - name: Diagnostic Environment Runner
+        run: |
+          echo "🍓 Runner Hostname : $(hostname)"
+          echo "👤 Active User     : $(whoami)"
+          echo "📂 Runner Workspace: $(pwd)"
+
+      - name: Sync Production Repository & Deploy
+        run: |
+          # 1. Dapatkan direktori kerja resmi langsung dari konfigurasi systemd ess-backend
+          PROD_BACKEND=$(systemctl show -p WorkingDirectory --value ess-backend.service 2>/dev/null || echo "")
+          
+          if [ -z "$PROD_BACKEND" ] || [ ! -d "$PROD_BACKEND" ]; then
+            if [ -d "$HOME/EnvironmentalSensing/backend" ]; then
+              PROD_BACKEND="$HOME/EnvironmentalSensing/backend"
+            elif [ -d "$HOME/environmentalsensing/backend" ]; then
+              PROD_BACKEND="$HOME/environmentalsensing/backend"
+            else
+              echo "::error::Direktori proyek backend tidak ditemukan di host Raspberry Pi!"
+              exit 1
+            fi
+          fi
+
+          echo "🚀 Direktori Target Deployment: $PROD_BACKEND"
+          cd "$PROD_BACKEND"
+
+          # 2. Tarik commit terbaru dari GitHub
+          echo "📥 Menarik pembaruan kode dari branch main..."
+          git fetch origin main
+          git reset --hard origin/main
+
+          # 3. Sinkronisasi dependensi virtual environment
+          echo "📦 Memeriksa pembaruan dependensi requirements.txt..."
+          if [ -d "venv" ]; then
+            ./venv/bin/pip install -r requirements.txt
+          else
+            echo "⚠️ venv tidak ditemukan, menjalankan bootstrap script..."
+            bash deploy/setup_raspi.sh
+          fi
+
+          # 4. Restart service systemd secara graceful
+          echo "🔄 Me-restart service ess-backend.service..."
+          sudo systemctl restart ess-backend.service
+          sleep 3
+
+          # 5. Verifikasi bahwa service aktif
+          sudo systemctl is-active --quiet ess-backend.service || (sudo systemctl status ess-backend.service && exit 1)
+
+      - name: Automated Healthcheck Verification
+        run: |
+          echo "🩺 Menjalankan automated healthcheck pada port 8000..."
+          curl --fail --retry 5 --retry-delay 2 --retry-connrefused http://127.0.0.1:8000/health || exit 1
+          echo "✅ Backend ESS berhasil diperbarui dan berjalan sehat di Raspberry Pi 3B!"
