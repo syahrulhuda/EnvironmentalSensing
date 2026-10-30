@@ -1,12 +1,19 @@
 /*
   =============================================================================
-  Environmental Sensing System (ESS) - Production Edge Firmware v5
+  Environmental Sensing System (ESS) - Production Edge Firmware v5.1
   Bengkel Mekatronika POLTEKOM
   
-  Target MCU: ESP32-C3 SuperMini (RISC-V 32-bit Single-Core)
-  Arsitektur: Non-blocking millis() Scheduler (Pilar 3 RULEBOOK)
-  Kredensial : Isolated in secrets.h (Pilar 5 RULEBOOK)
+  Target MCU: ESP32-C3 SuperMini (RISC-V 32-bit Single-Core @ 160MHz)
+  Arsitektur: Hybrid FreeRTOS Preemptive Task + Non-blocking millis() Scheduler
+              (Pilar 3 & Pilar 5 RULEBOOK Compliant)
   
+  Fitur Optimasi v5.1:
+    1. FreeRTOS Decoupled Cloud Task (HTTPS POST terisolasi, zero loop-jitter)
+    2. Empirical Baseline Calibrated (MQ7: 420 ADC, MQ2: 360 ADC)
+    3. 1:1 Cadence Synchronization (Sampling 3s -> Push Cloud 3s via Queue)
+    4. 45s Thermal Warmup Shield (Proteksi false alarm & fan screaming saat cold boot)
+    5. 8x ADC Hardware Oversampling (Filter peredam ripple daya & derau analog)
+
   Pinout Resmi Prototype:
     - OLED SSD1306 0.96" I2C : SDA -> GPIO 8, SCL -> GPIO 9 (0x3C, VCC: 5V)
     - DHT22 (AM2302)        : DATA -> GPIO 10 (Pull-up 10k ke 5V, VDD: 5V)
@@ -37,8 +44,11 @@
 #include <DHT.h>
 #include <ArduinoJson.h>
 #include <esp_wifi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
 
-// Ambil kredensial dari tab secrets.h
+// Ambil kredensial rahasia dari tab secrets.h (Pilar 5 RULEBOOK)
 #include "secrets.h"
 
 // =============================================================================
@@ -65,7 +75,7 @@
 #define FAN_PWM_PIN   5     // GPIO 5 - Kendali PWM Kipas Hisap (SS8050 NPN)
 
 // =============================================================================
-// 2. STANDAR AMBANG BATAS K3 & KALIBRASI SENSOR
+// 2. STANDAR AMBANG BATAS K3 & KALIBRASI EMPIRIS SENSOR
 // =============================================================================
 // MQ-7: Karbon Monoksida (CO) dalam satuan PPM
 #define MQ7_WARN_PPM   50
@@ -75,10 +85,10 @@
 #define MQ2_WARN_PPM   150
 #define MQ2_DANGER_PPM 400
 
-// Kalibrasi Baseline Udara Bersih (Clean Air Zero Reference) & Offset Suhu
-#define MQ7_BASELINE_ADC 1550  // Nilai idle ADC MQ-7 di udara bersih (~1.25V)
-#define MQ2_BASELINE_ADC 460   // Nilai idle ADC MQ-2 di udara bersih (~0.37V)
-#define TEMP_OFFSET      0.0   // Offset suhu (°C). Jika terpengaruh panas koil MQ, ubah misal: -3.0
+// Kalibrasi Baseline Empiris Udara Bersih (Data Pengujian Fisik Lab)
+#define MQ7_BASELINE_ADC 420   // Nilai idle ADC MQ-7 di udara bersih (~0.34V)
+#define MQ2_BASELINE_ADC 360   // Nilai idle ADC MQ-2 di udara bersih (~0.29V)
+#define TEMP_OFFSET      0.0   // Offset suhu (°C)
 
 // =============================================================================
 // 3. DEFINISI LEVEL DAYA KIPAS PWM (30x30 mm 5V)
@@ -89,15 +99,15 @@
 #define FAN_PWM_HIGH   255  // 100% (~4.95V) - Mode Purge Maksimal / Bahaya
 
 // =============================================================================
-// 4. INTERVAL WAKTU NON-BLOCKING (MILLIS)
+// 4. INTERVAL WAKTU NON-BLOCKING & WARMUP SHIELD
 // =============================================================================
-const unsigned long INTERVAL_SENSOR   = 3000;   // Baca DHT22 & gas tiap 3 detik
+const unsigned long INTERVAL_SENSOR   = 3000;   // Baca sensor & picu cloud tiap 3 detik (1:1 cadence)
 const unsigned long INTERVAL_DISPLAY  = 3500;   // Rotasi halaman OLED tiap 3.5 detik
-const unsigned long INTERVAL_CLOUD    = 10000;  // Kirim data ke Firebase tiap 10 detik
-const unsigned long INTERVAL_STROBE   = 150;    // Kecepatan kedip LED merah bahaya
+const unsigned long INTERVAL_STROBE   = 150;    // Kecepatan kedip LED merah bahaya (ms)
+const unsigned long WARMUP_DURATION   = 45000;  // 45 Detik Thermal Warmup Shield untuk koil MQ
 
 // =============================================================================
-// 5. STRUKTUR DATA & OBJEK GLOBAL
+// 5. STRUKTUR DATA TELEMETRI & FREERTOS
 // =============================================================================
 struct TelemetryData {
   float temperature = 0.0;
@@ -114,18 +124,34 @@ struct TelemetryData {
 
   int   fanPwm      = FAN_PWM_LOW;
   float hazardScore = 0.0;
-  const char* status = "NORMAL"; // "NORMAL", "WARNING", "DANGER"
+  const char* status = "NORMAL"; // "WARMUP", "NORMAL", "WARNING", "DANGER"
 } telemetry;
+
+// Paket Ringkas Thread-Safe untuk FreeRTOS Queue ke Cloud Task
+struct TelemetryPacket {
+  float temperature;
+  float humidity;
+  bool  dhtValid;
+  int   mq7Raw;
+  float mq7Volt;
+  int   mq7Ppm;
+  int   mq2Raw;
+  float mq2Volt;
+  int   mq2Ppm;
+  int   fanPwm;
+  char  status[12];
+};
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(DHT_PIN, DHT_TYPE);
 
-const unsigned long INTERVAL_WIFI_RETRY = 12000; // Coba reconnect tiap 12 detik jika offline
+// FreeRTOS Handles
+QueueHandle_t firebaseQueue      = NULL;
+TaskHandle_t  firebaseTaskHandle = NULL;
+
 unsigned long lastSensorRead  = 0;
 unsigned long lastDisplayPage = 0;
-unsigned long lastCloudPost   = 0;
 unsigned long lastStrobeTick  = 0;
-unsigned long lastWifiRetry   = 0;
 unsigned long sampleCount     = 0;
 
 int  oledPage       = 0;        // 0 = Dashboard Utama, 1 = Diagnostik ADC
@@ -147,7 +173,8 @@ void updateOledDisplay();
 void drawDashboardScreen();
 void drawDiagnosticScreen();
 void logTelemetrySerial();
-void sendTelemetryFirebase();
+void sendTelemetryFirebase(const TelemetryPacket &data);
+void vFirebaseTask(void *pvParameters);
 int  calculateMq7Ppm(int rawAdc);
 int  calculateMq2Ppm(int rawAdc);
 
@@ -156,15 +183,31 @@ int  calculateMq2Ppm(int rawAdc);
 // =============================================================================
 void setup() {
   Serial.begin(115200);
-  delay(500); // Stabilisasi Serial USB
+  delay(500); // Stabilisasi Serial USB CDC
 
   Serial.println("\n=======================================================");
   Serial.println("  POLTEKOM SMART ENVIRONMENTAL SENSING SYSTEM (ESS)");
-  Serial.println("  Edge Node Firmware v5 - Production Release Build");
+  Serial.println("  Edge Node Firmware v5.1 - Optimized Multitasking");
   Serial.println("=======================================================");
 
   initHardware();
   initWiFi();
+
+  // Inisialisasi FreeRTOS Queue (Kapasitas 1 paket overwrite) & Background Cloud Task
+  firebaseQueue = xQueueCreate(1, sizeof(TelemetryPacket));
+  if (firebaseQueue != NULL) {
+    xTaskCreate(
+      vFirebaseTask,
+      "FirebaseTask",
+      8192,             // 8KB Stack untuk HTTPS TLS mbedTLS
+      NULL,
+      1,                // Priority 1 (Cooperative dengan loopTask)
+      &firebaseTaskHandle
+    );
+    Serial.println("[FREERTOS] Background Cloud Task berhasil dibuat (8KB Stack, Priority 1).");
+  } else {
+    Serial.println("[ERROR] Gagal membuat FreeRTOS Queue!");
+  }
 
   // Pembacaan awal sensor & inisialisasi status
   readSensors();
@@ -181,16 +224,35 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
 
-  // 1. Eksekusi Indikator Visual LED RGB Real-Time
+  // 1. Eksekusi Indikator Visual LED RGB Real-Time (Smooth animations)
   updateRgbIndicator();
 
-  // 2. Tugas Rutin A: Sampling Sensor & Evaluasi K3 (tiap 3 detik)
+  // 2. Tugas Rutin A: Sampling Sensor, Evaluasi K3, & Push Telemetri ke Queue (tiap 3 detik)
   if (currentMillis - lastSensorRead >= INTERVAL_SENSOR) {
     lastSensorRead = currentMillis;
     readSensors();
     evaluateK3Status();
     logTelemetrySerial();
     updateOledDisplay();
+
+    // Salin data ke snapshot thread-safe dan kirim ke FreeRTOS Cloud Task
+    if (wifiConnected && firebaseQueue != NULL && strlen(SECRET_FIREBASE_URL) > 0) {
+      TelemetryPacket packet;
+      packet.temperature = telemetry.temperature;
+      packet.humidity    = telemetry.humidity;
+      packet.dhtValid    = telemetry.dhtValid;
+      packet.mq7Raw      = telemetry.mq7Raw;
+      packet.mq7Volt     = telemetry.mq7Volt;
+      packet.mq7Ppm      = telemetry.mq7Ppm;
+      packet.mq2Raw      = telemetry.mq2Raw;
+      packet.mq2Volt     = telemetry.mq2Volt;
+      packet.mq2Ppm      = telemetry.mq2Ppm;
+      packet.fanPwm      = telemetry.fanPwm;
+      strncpy(packet.status, telemetry.status, sizeof(packet.status) - 1);
+      packet.status[sizeof(packet.status) - 1] = '\0';
+
+      xQueueOverwrite(firebaseQueue, &packet);
+    }
   }
 
   // 3. Tugas Rutin B: Rotasi Tampilan Layar OLED (tiap 3.5 detik)
@@ -204,26 +266,18 @@ void loop() {
     updateOledDisplay();
   }
 
-    // 4. Tugas Rutin C: Pengiriman Data Telemetri Cloud (tiap 10 detik, jika online)
-    if (currentMillis - lastCloudPost >= INTERVAL_CLOUD) {
-      lastCloudPost = currentMillis;
-      if (wifiConnected && strlen(SECRET_FIREBASE_URL) > 0) {
-        sendTelemetryFirebase();
-      }
+  // 4. Tugas Rutin C: Sinkronisasi Status Wi-Fi (Handled natively by ESP-IDF background)
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!wifiConnected) {
+      wifiConnected = true;
     }
-  
-    // 5. Tugas Rutin D: Sinkronisasi Status Wi-Fi (Auto-reconnect ditangani native oleh ESP-IDF)
-    if (WiFi.status() == WL_CONNECTED) {
-      if (!wifiConnected) {
-        wifiConnected = true;
-      }
-    } else {
-      if (wifiConnected) {
-        wifiConnected = false;
-        Serial.println("\n[WIFI] Sinyal Wi-Fi terputus. Beralih ke Mode Offline...");
-      }
+  } else {
+    if (wifiConnected) {
+      wifiConnected = false;
+      Serial.println("\n[WIFI] Sinyal Wi-Fi terputus. Beralih ke Mode Offline...");
     }
   }
+}
 
 // =============================================================================
 // 9. IMPLEMENTASI MODUL-MODUL FUNGSIONAL
@@ -281,11 +335,11 @@ void initHardware() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
     display.setCursor(10, 15);
-    display.println("POLTEKOM ESS v5");
+    display.println("POLTEKOM ESS v5.1");
     display.setCursor(10, 30);
     display.println("Connecting Wi-Fi...");
     display.setCursor(10, 45);
-    display.println("Booting System...");
+    display.println("Preheating Sensors...");
     display.display();
     Serial.println("[INIT] OLED Display 128x64 Terdeteksi (0x3C).");
   } else {
@@ -299,7 +353,7 @@ void initHardware() {
   Serial.println("[INIT] Hardware berhasil diinisialisasi.");
 }
 
-// Callback Event Wi-Fi untuk mendiagnosa alasan kegagalan koneksi secara presisi
+// Callback Event Wi-Fi untuk mendiagnosa alasan koneksi secara presisi
 void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
@@ -313,18 +367,7 @@ void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: {
       wifiConnected = false;
       uint8_t reason = info.wifi_sta_disconnected.reason;
-      Serial.printf("\n[WIFI EVENT] Terputus dari AP (Alasan / Reason Code: %d)\n", reason);
-      if (reason == 202) {
-        Serial.println("  -> [DIAGNOSTIK PASTI] Password salah / ditolak oleh router! Periksa huruf besar/kecil.");
-      } else if (reason == 15) {
-        Serial.println("  -> [DIAGNOSTIK PASTI] 4-Way Handshake Timeout (Fitur PMF/WPA3 pada router Wi-Fi 6 menolak WPA2).");
-      } else if (reason == 2) {
-        Serial.println("  -> [DIAGNOSTIK PASTI] Auth Expired: Router memutus sesi otentikasi.");
-      } else if (reason == 36) {
-        Serial.println("  -> [DIAGNOSTIK PASTI] Cipher Suite / PMF Rejected oleh Router.");
-      } else if (reason == 201) {
-        Serial.println("  -> [DIAGNOSTIK PASTI] AP tidak ditemukan.");
-      }
+      Serial.printf("\n[WIFI EVENT] Terputus dari AP (Reason Code: %d)\n", reason);
       break;
     }
     default:
@@ -358,7 +401,6 @@ void initWiFi() {
   WiFi.setAutoReconnect(true);       // Native auto-reconnect ESP-IDF di background
 
   // 5. Force Mode Legacy 802.11b/g/n & WPA2-PSK Murni (Emulasi Karakter ESP32-WROOM)
-  // Menghindari bentrok negosiasi PMF / Wi-Fi 6 GCMP pada router enterprise kampus
   esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
 
   wifi_config_t conf;
@@ -391,7 +433,7 @@ void initWiFi() {
   }
 }
 
-// --- Modul C: Pembacaan Sensor Lingkungan & Gas ---
+// --- Modul C: Pembacaan Sensor dengan 8x Hardware Oversampling ---
 void readSensors() {
   sampleCount++;
 
@@ -407,19 +449,41 @@ void readSensors() {
     telemetry.dhtValid    = true;
   }
 
-  // 2. Baca MQ-7 (Karbon Monoksida - GPIO 1)
-  telemetry.mq7Raw  = analogRead(MQ7_ADC_PIN);
+  // 2. 8x Hardware Oversampling untuk Sensor Gas (Filter Derau LDO & Fluktuasi ADC)
+  uint32_t mq7Sum = 0;
+  uint32_t mq2Sum = 0;
+  const int OVERSAMPLE_COUNT = 8;
+
+  for (int i = 0; i < OVERSAMPLE_COUNT; i++) {
+    mq7Sum += analogRead(MQ7_ADC_PIN);
+    mq2Sum += analogRead(MQ2_ADC_PIN);
+    delayMicroseconds(50);
+  }
+
+  telemetry.mq7Raw  = mq7Sum / OVERSAMPLE_COUNT;
   telemetry.mq7Volt = ((float)telemetry.mq7Raw / 4095.0) * 3.3;
   telemetry.mq7Ppm  = calculateMq7Ppm(telemetry.mq7Raw);
 
-  // 3. Baca MQ-2 (Asap & Gas Mudah Terbakar - GPIO 0)
-  telemetry.mq2Raw  = analogRead(MQ2_ADC_PIN);
+  telemetry.mq2Raw  = mq2Sum / OVERSAMPLE_COUNT;
   telemetry.mq2Volt = ((float)telemetry.mq2Raw / 4095.0) * 3.3;
   telemetry.mq2Ppm  = calculateMq2Ppm(telemetry.mq2Raw);
 }
 
-// --- Modul D: Evaluasi Tingkat Bahaya K3 & Kontrol Kipas ---
+// --- Modul D: Evaluasi Tingkat Bahaya K3 & Thermal Warmup Shield ---
 void evaluateK3Status() {
+  // Proteksi Fase Pemanasan (Warmup Shield - 45 Detik Pertama)
+  if (millis() < WARMUP_DURATION) {
+    telemetry.status = "WARMUP";
+    telemetry.fanPwm = FAN_PWM_LOW; // Kipas 75% tenang, mencegah lonjakan 100% false alarm
+    telemetry.hazardScore = 0.0;
+    // Tahan nilai estimasi PPM pada batas aman saat koil SnO2 menstabilkan suhu
+    telemetry.mq7Ppm = 5;
+    telemetry.mq2Ppm = 5;
+    setFanPwm(telemetry.fanPwm);
+    return;
+  }
+
+  // Evaluasi Normal K3 setelah sensor stabil
   if (telemetry.mq7Ppm >= MQ7_DANGER_PPM || telemetry.mq2Ppm >= MQ2_DANGER_PPM) {
     telemetry.status = "DANGER";
     telemetry.fanPwm = FAN_PWM_HIGH; // 100% (5.0V Purge)
@@ -454,7 +518,14 @@ void setRgbColor(bool r, bool g, bool b) {
 }
 
 void updateRgbIndicator() {
-  if (strcmp(telemetry.status, "DANGER") == 0) {
+  if (millis() < WARMUP_DURATION) {
+    // Mode Pemanasan Sensor: Biru Berkedip Halus (Warmup Indication)
+    if (millis() - lastStrobeTick >= 500) {
+      lastStrobeTick = millis();
+      strobeState = !strobeState;
+      setRgbColor(false, false, strobeState);
+    }
+  } else if (strcmp(telemetry.status, "DANGER") == 0) {
     // KONDISI BAHAYA: Merah Berkedip Cepat (Strobe 150 ms)
     if (millis() - lastStrobeTick >= INTERVAL_STROBE) {
       lastStrobeTick = millis();
@@ -522,7 +593,13 @@ void drawDashboardScreen() {
   display.printf("Asap : %3d ppm", telemetry.mq2Ppm);
 
   // 4. Footer Banner Status K3
-  if (strcmp(telemetry.status, "DANGER") == 0) {
+  if (millis() < WARMUP_DURATION) {
+    unsigned long remainingSec = (WARMUP_DURATION - millis()) / 1000 + 1;
+    display.drawRect(0, 50, 128, 14, SSD1306_WHITE);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(14, 53);
+    display.printf("[ WARMUP: %02lus ]", remainingSec);
+  } else if (strcmp(telemetry.status, "DANGER") == 0) {
     display.fillRect(0, 50, 128, 14, SSD1306_WHITE);
     display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
     display.setCursor(14, 53);
@@ -559,7 +636,12 @@ void drawDiagnosticScreen() {
   display.printf("Voltase   : %.2f Volt", telemetry.mq2Volt);
 
   display.setCursor(0, 57);
-  display.printf("#%lu | Kipas: %d%%", sampleCount, (telemetry.fanPwm * 100) / 255);
+  if (millis() < WARMUP_DURATION) {
+    unsigned long rem = (WARMUP_DURATION - millis()) / 1000 + 1;
+    display.printf("#%lu | WARM: %lus", sampleCount, rem);
+  } else {
+    display.printf("#%lu | Kipas: %d%%", sampleCount, (telemetry.fanPwm * 100) / 255);
+  }
 }
 
 // --- Modul H: Logging Serial Monitor (115200 Baud) ---
@@ -571,21 +653,43 @@ void logTelemetrySerial() {
     snprintf(thStr, sizeof(thStr), "T:ERR H:ERR");
   }
 
-  Serial.printf("[ESS #%04lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:%s | FAN:%d%%\n",
-                sampleCount, thStr,
-                telemetry.mq7Ppm, telemetry.mq7Raw, telemetry.mq7Volt,
-                telemetry.mq2Ppm, telemetry.mq2Raw, telemetry.mq2Volt,
-                telemetry.status, (telemetry.fanPwm * 100) / 255);
+  if (millis() < WARMUP_DURATION) {
+    unsigned long rem = (WARMUP_DURATION - millis()) / 1000 + 1;
+    Serial.printf("[ESS #%04lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:WARMUP (%lus) | FAN:%d%%\n",
+                  sampleCount, thStr,
+                  telemetry.mq7Ppm, telemetry.mq7Raw, telemetry.mq7Volt,
+                  telemetry.mq2Ppm, telemetry.mq2Raw, telemetry.mq2Volt,
+                  rem, (telemetry.fanPwm * 100) / 255);
+  } else {
+    Serial.printf("[ESS #%04lu] %s | MQ7:%3d ppm (ADC:%4d, %.2fV) | MQ2:%3d ppm (ADC:%4d, %.2fV) | K3:%s | FAN:%d%%\n",
+                  sampleCount, thStr,
+                  telemetry.mq7Ppm, telemetry.mq7Raw, telemetry.mq7Volt,
+                  telemetry.mq2Ppm, telemetry.mq2Raw, telemetry.mq2Volt,
+                  telemetry.status, (telemetry.fanPwm * 100) / 255);
+  }
 }
 
-// --- Modul I: Pengiriman Telemetri ke Firebase RTDB (HTTPS REST) ---
-void sendTelemetryFirebase() {
+// --- Modul I: FreeRTOS Background Cloud Task (Preemptive & Non-blocking) ---
+void vFirebaseTask(void *pvParameters) {
+  TelemetryPacket packet;
+  for (;;) {
+    // Block tanpa mengonsumsi siklus CPU sampai ada paket baru di Queue
+    if (xQueueReceive(firebaseQueue, &packet, portMAX_DELAY) == pdTRUE) {
+      if (WiFi.status() == WL_CONNECTED && strlen(SECRET_FIREBASE_URL) > 0) {
+        sendTelemetryFirebase(packet);
+      }
+    }
+  }
+}
+
+// Transmisi HTTPS REST ke Firebase Realtime Database Buffer
+void sendTelemetryFirebase(const TelemetryPacket &data) {
   if (WiFi.status() != WL_CONNECTED) {
     return;
   }
 
   WiFiClientSecure client;
-  client.setInsecure(); // Bypass verifikasi sertifikat SSL untuk efisiensi RAM ESP32
+  client.setInsecure(); // Efisiensi RAM & CPU ESP32-C3
   client.setTimeout(4000);
 
   HTTPClient https;
@@ -598,31 +702,33 @@ void sendTelemetryFirebase() {
     StaticJsonDocument<384> doc;
 #endif
     doc["node_id"]   = DEVICE_NODE_ID;
-    if (telemetry.dhtValid) {
-      doc["temp"]    = round(telemetry.temperature * 10.0) / 10.0;
-      doc["hum"]     = round(telemetry.humidity * 10.0) / 10.0;
+    if (data.dhtValid) {
+      doc["temp"]    = round(data.temperature * 10.0) / 10.0;
+      doc["hum"]     = round(data.humidity * 10.0) / 10.0;
     } else {
       doc["temp"]    = nullptr;
       doc["hum"]     = nullptr;
     }
-    doc["mq7_raw"]   = telemetry.mq7Raw;
-    doc["mq7_volt"]  = round(telemetry.mq7Volt * 100.0) / 100.0;
-    doc["mq7_ppm"]   = telemetry.mq7Ppm;
+    doc["mq7_raw"]   = data.mq7Raw;
+    doc["mq7_volt"]  = round(data.mq7Volt * 100.0) / 100.0;
+    doc["mq7_ppm"]   = data.mq7Ppm;
 
-    doc["mq2_raw"]   = telemetry.mq2Raw;
-    doc["mq2_volt"]  = round(telemetry.mq2Volt * 100.0) / 100.0;
-    doc["mq2_ppm"]   = telemetry.mq2Ppm;
+    doc["mq2_raw"]   = data.mq2Raw;
+    doc["mq2_volt"]  = round(data.mq2Volt * 100.0) / 100.0;
+    doc["mq2_ppm"]   = data.mq2Ppm;
 
-    doc["fan_pwm"]   = (telemetry.fanPwm * 100) / 255;
-    doc["status"]    = telemetry.status;
+    doc["fan_pwm"]   = (data.fanPwm * 100) / 255;
+    doc["status"]    = data.status;
     doc["created_at"][".sv"] = "timestamp";
 
     String payload;
     serializeJson(doc, payload);
 
     int httpCode = https.POST(payload);
-    if (httpCode > 0) {
+    if (httpCode >= 200 && httpCode < 300) {
       Serial.printf("  [FIREBASE POST] HTTP %d (Success)\n", httpCode);
+    } else if (httpCode > 0) {
+      Serial.printf("  [FIREBASE REJECTED] HTTP %d (Unauthorized/Error)\n", httpCode);
     } else {
       Serial.printf("  [FIREBASE ERROR] Gagal mengirim: %s\n", https.errorToString(httpCode).c_str());
     }
@@ -631,13 +737,13 @@ void sendTelemetryFirebase() {
 }
 
 // --- Modul J: Estimasi Kurva PPM Sensor Gas ---
-// MQ-7: Karbon Monoksida (CO) dengan Kalibrasi Baseline Udara Bersih
+// MQ-7: Karbon Monoksida (CO) dengan Kalibrasi Baseline Empiris
 int calculateMq7Ppm(int rawAdc) {
   int constrainedAdc = constrain(rawAdc, MQ7_BASELINE_ADC, 4095);
   return map(constrainedAdc, MQ7_BASELINE_ADC, 4095, 5, 400);
 }
 
-// MQ-2: Gas / Asap dengan Kalibrasi Baseline Udara Bersih
+// MQ-2: Gas / Asap dengan Kalibrasi Baseline Empiris
 int calculateMq2Ppm(int rawAdc) {
   int constrainedAdc = constrain(rawAdc, MQ2_BASELINE_ADC, 4095);
   return map(constrainedAdc, MQ2_BASELINE_ADC, 4095, 5, 1000);

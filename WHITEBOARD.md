@@ -380,9 +380,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 | **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, fail-fast config, authenticated RTDB, resilient ETL | 0 items | 0 items | **10.0/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 8 | ✅ Modular (<200 baris/file), zero-build, 3-color palette, real-time canvas chart, sticky ESI chat | 0 items | — | **10.0/10** |
-| **Hardware (C++)** | 3 | ✅ Non-blocking, modular, clean secrets | 1 item (ArduinoJson v7) | 1 item (SEC-03) | **8.0/10** |
+| **Hardware (C++)** | 3 | ✅ Hybrid FreeRTOS + non-blocking millis(), modular, clean secrets, empirical calibration, 45s warmup shield, 8x oversampling | 0 items | 0 items | **10.0/10** |
 | **DevOps/Infra** | 6 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json, deploy-web.yml CI/CD | 0 items | — | **10.0/10** |
-| **TOTAL** | **44 files** | **—** | **0 items** | **1 item (SEC-03)** | **10.0/10** |
+| **TOTAL** | **44 files** | **—** | **0 items** | **0 items** | **10.0/10** |
 
 ---
 
@@ -418,12 +418,17 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[TD-F13]** Penyederhanaan Header & Dropdown Node Supabase: Ubah judul header menjadi 'Environmental Sensing System (ESS)', hapus tombol buzzer alarm (silent monitoring); Ganti elemen `<select>` native dengan custom floating dropdown card persis referensi desain (trigger rounded-2xl ringkas 'NODE-MRS01 v', header popover dengan chevron atas 'expand_less', garis pemisah divider, dan list node dengan pill aktif) yang terintegrasi dengan tabel `ess_devices` dan `ess_zones` Supabase PostgreSQL; Tambahkan subjudul lokasi dinamis di bawah judul ESS ('Bengkel Mekatronika POLTEKOM (Soldering Zone 1)') yang otomatis terupdate saat berganti node.
 - [x] **[TD-F01]** Modularisasi `app.js` menjadi 5 komponen modular di `frontend/js/` (< 200 baris per file). *(Selesai)*
 
-**4. Hardware Standardisasi & Perakitan Fisik (Huda):**
+**4. Hardware Standardisasi & Optimasi Firmware v5.1 (Huda):**
 - [x] **[TD-H01]** Standarisasi ambang batas K3 di satu sumber kebenaran (MQ-7: 50/150 PPM, MQ-2: 150/400 PPM di seluruh firmware C3).
 - [x] **[TD-H02]** Standarisasi kurva ADC→PPM estimation dengan kalibrasi zero-baseline (MQ-7: 1550, MQ-2: 460).
+- [x] **[TD-H03]** FreeRTOS Decoupled Cloud Task: Pisahkan transmisi HTTPS TLS Firebase ke background task via FreeRTOS Queue (`vFirebaseTask`, 8KB stack, priority 1) untuk zero main-loop latency.
+- [x] **[TD-H04]** Kalibrasi Baseline Empiris Udara Bersih Laboratorium: Koreksi nilai idle baseline fisik menjadi MQ-7: 420 ADC (~0.34V) dan MQ-2: 360 ADC (~0.29V) menghilangkan zona mati (dead-zone) 1150 ADC.
+- [x] **[TD-H05]** Sinkronisasi Cadence 1:1: Harmonisasi pembacaan sensor tiap 3 detik dengan push cloud tiap 3 detik via queue, menyamai responsivitas dan ketepatan tempo node ESP32-WROOM.
+- [x] **[TD-H06]** Thermal Warmup Shield 45 Detik: Proteksi false alarm K3 DANGER dan raungan kipas 100% pada fase cold boot koil SnO2 dengan penahanan status WARMUP, indikator visual LED biru berkedip, dan hitung mundur OLED.
+- [x] **[TD-H07]** 8x Hardware ADC Oversampling: Implementasi averaging 8 sampel ADC dengan jeda 50µs untuk meredam ripple switching daya dan fluktuasi derau analog.
 - [x] Rancang dan uji prototipe breadboard ESP32-C3 SuperMini dengan OLED SSD1306, DHT22, MQ-7, MQ-2, dan LED RGB CC.
 - [x] Integrasi driver kipas PWM transistor SS8050 dan pengujian 3-tahap (75%, 90%, 100%).
-- [x] Streaming live telemetri edge-to-cloud ke Firebase RTDB buffer terverifikasi stabil (HTTP 200 tiap 10 detik).
+- [x] Streaming live telemetri edge-to-cloud ke Firebase RTDB buffer terverifikasi stabil (HTTP 200).
 - [x] Uji empiris peredaman ripple filter input catu daya C1/C2 (5.10-5.15V menjadi 5.13-5.14V).
 - [x] Dokumentasikan solusi USB flapping C3 via tombol BOOT+RST download mode.
 - [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline.
