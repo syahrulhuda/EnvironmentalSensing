@@ -234,9 +234,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### 🔴 [SEVERITY: HIGH] Backend Tech Debt
 
-1. **`[TD-B01]` CORS Wildcard Terbuka Lebar** — `main.py:31` → `allow_origins=["*"]`
-   - **Risiko:** Seluruh domain di internet bisa melakukan request ke API backend, termasuk site malicious.
-   - **Solusi:** Ganti dengan whitelist eksplisit: `["https://entrap-glamour-spectrum.ngrok-free.dev", "http://localhost:3000"]`.
+1. **`[TD-B01 / SEC-04]` Konfigurasi CORS & Keamanan Origin — `[SELESAI via SEC-04 - Commit 8e67f60]`**
+   - **Implementasi:** `allow_credentials` telah disetel ke `False` untuk mematuhi spesifikasi W3C dan menutup celah credential theft, serta metode dibatasi eksplisit ke `["GET", "POST", "OPTIONS"]`.
+   - **Rasional Desain:** `allow_origins=["*"]` dipertahankan secara aman karena API bersifat *stateless* (tanpa cookie/session), agar dapat diakses lintas origin oleh Web Hosting (`https://poltekom-ess.web.app`), Flutter Web, dan pengembang lokal tanpa lemparan *CORS block*. Endpoint administratif sensitif (`POST /api/etl/trigger`) dilindungi terpisah oleh header `X-ESS-Admin-Key` (`SEC-05`).
 
 2. **`[TD-B02/SEC-02]` Firebase RTDB Autentikasi & Security Rules — `[SELESAI & DILINDUNGI]`**
    - Berkas aturan keamanan `database.rules.json` telah dibuat mengunci akses root (`.read: false`, `.write: false`) dan hanya mengizinkan akses terotentikasi pada buffer (`.read: "auth != null"`, `.write: "auth != null"`) dengan index pada `created_at` dan `node_id`.
