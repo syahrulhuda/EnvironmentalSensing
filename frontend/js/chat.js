@@ -50,18 +50,52 @@ function removeTypingIndicator() {
   if (ind) ind.remove();
 }
 
+function renderMarkdown(raw) {
+  if (!raw) return "";
+  if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+    return marked.parse(raw);
+  }
+  // High-fidelity fallback parser
+  let html = raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*([^\*\n]+)\*/g, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  const lines = html.split('\n');
+  let inList = false;
+  let out = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^[\*\-]\s+(.+)/.test(trimmed)) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${trimmed.replace(/^[\*\-]\s+/, '')}</li>`);
+    } else {
+      if (inList) { out.push('</ul>'); inList = false; }
+      if (trimmed.length > 0) out.push(`<p>${trimmed}</p>`);
+    }
+  }
+  if (inList) out.push('</ul>');
+  return out.join('');
+}
+
 function appendBotMessage(text) {
   removeTypingIndicator();
   const feed = document.getElementById('chatFeed');
   if (!feed) return;
   const div = document.createElement('div');
   div.className = "flex gap-2 items-start animate-fadeIn";
+  const formattedHtml = renderMarkdown(text);
   div.innerHTML = `
-    <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-white">
+    <div class="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-400/30 flex-shrink-0 flex items-center justify-center text-sky-400">
       <span class="material-symbols-outlined text-base">smart_toy</span>
     </div>
-    <div class="bg-slate-950/60 rounded-xl rounded-tl-none p-3 border border-white/10 text-white max-w-[88%] leading-relaxed shadow-sm">
-      ${text}
+    <div class="chat-bot-content bg-[#070d1e]/80 rounded-xl rounded-tl-none p-3 border border-sky-400/20 text-slate-100 max-w-[88%] text-xs leading-relaxed shadow-sm">
+      ${formattedHtml}
     </div>
   `;
   feed.appendChild(div);
