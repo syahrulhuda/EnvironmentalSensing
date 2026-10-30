@@ -23,7 +23,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5.3">
 </head>
 <body class="min-h-screen flex flex-col relative selection:bg-sky-500/30 selection:text-white">
 
@@ -189,6 +189,22 @@
       
       <!-- Kolom Sensor (Horizontal di Hero, Menumpuk di Kiri saat Scrolled) -->
       <div id="cardsColumn" class="w-full transition-all duration-500">
+        <!-- Compact Scrolled Zone Bar: Tampil saat Top Header ter-hide pada mode scroll -->
+        <div id="scrolledZoneBar" class="hidden items-center justify-between px-3.5 py-2 rounded-2xl bg-[#0f1b38]/90 border border-sky-400/25 backdrop-blur-md shadow-lg text-xs mb-3">
+          <div class="flex items-center gap-2 text-slate-200">
+            <span class="material-symbols-outlined text-sm text-sky-400">location_on</span>
+            <span class="font-bold text-white">Bengkel Mekatronika</span>
+            <span class="text-slate-400 hidden sm:inline">(Soldering Zone 1)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-sky-300 text-[11px] px-2 py-0.5 rounded-lg bg-[#070d1e]/80 border border-sky-400/20">NODE-MRS01</span>
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>ONLINE</span>
+            </span>
+          </div>
+        </div>
+
         <div id="cardsGrid" class="transition-all duration-500">
           
           <!-- Card 1: Suhu Ruangan & Kelembapan (2-Baris Elegan) -->
@@ -341,25 +357,25 @@
 </main>
 
 <!-- 3. FOOTER RESMI POLTEKOM (KOMPAK & MODERN BERBASIS ACTION BUTTONS) -->
-<footer class="relative z-10 bg-[#070d1e]/90 border-t border-sky-400/20 py-5 px-4 sm:px-6 backdrop-blur-md mt-6">
-  <div class="max-w-[1000px] w-full mx-auto flex flex-col items-center text-center space-y-2.5">
+<footer class="relative z-10 bg-[#070d1e]/90 border-t border-sky-400/20 py-4 px-4 sm:px-6 backdrop-blur-md mt-4">
+  <div class="max-w-[1000px] w-full mx-auto flex flex-col items-center text-center space-y-2">
     
     <!-- Baris 1: Tiga Tombol Interaktif (Email Us, Contact Us, Visit Us) -->
-    <div class="flex flex-wrap items-center justify-center gap-2.5">
+    <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
       <!-- 1. Email Us -->
-      <a href="mailto:info@poltekom.ac.id" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+      <a href="mailto:info@poltekom.ac.id" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
         <span class="material-symbols-outlined text-sm text-sky-400 group-hover:scale-110 transition-transform">mail</span>
         <span>Email Us</span>
       </a>
 
       <!-- 2. Contact Us (WhatsApp Resmi POLTEKOM) -->
-      <a href="https://wa.me/6282245523929" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-emerald-500/20 hover:border-emerald-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+      <a href="https://wa.me/6282245523929" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-emerald-500/20 hover:border-emerald-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
         <span class="material-symbols-outlined text-sm text-emerald-400 group-hover:scale-110 transition-transform">call</span>
         <span>Contact Us</span>
       </a>
 
       <!-- 3. Visit Us (Website Resmi Kampus) -->
-      <a href="https://poltekom.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
+      <a href="https://poltekom.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-400/25 bg-[#0f1b38]/80 hover:bg-sky-500/20 hover:border-sky-400 text-slate-100 hover:text-white text-xs font-semibold transition-all duration-200 shadow-md active:scale-95 group">
         <span class="material-symbols-outlined text-sm text-sky-400 group-hover:scale-110 transition-transform">language</span>
         <span>Visit Us</span>
       </a>
@@ -398,13 +414,13 @@
 </div>
 
 <!-- SCRIPTS ENGINE (Modular Architecture TD-F01) -->
-<script src="config.js"></script>
-<script src="js/carousel.js"></script>
-<script src="js/node_selector.js"></script>
-<script src="js/sparkline.js"></script>
-<script src="js/telemetry.js"></script>
-<script src="js/chat.js"></script>
-<script src="app.js"></script>
+<script src="config.js?v=5.3"></script>
+<script src="js/carousel.js?v=5.3"></script>
+<script src="js/node_selector.js?v=5.3"></script>
+<script src="js/sparkline.js?v=5.3"></script>
+<script src="js/telemetry.js?v=5.3"></script>
+<script src="js/chat.js?v=5.3"></script>
+<script src="app.js?v=5.3"></script>
 
 </body>
 </html>

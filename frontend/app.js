@@ -15,7 +15,6 @@ function initScrollMorphing() {
   if (!section) return;
 
   let isTicking = false;
-  let lastScrollY = window.scrollY || window.pageYOffset;
 
   const onScroll = () => {
     const scrollY = window.scrollY || window.pageYOffset;
@@ -39,24 +38,18 @@ function initScrollMorphing() {
       if (fab) fab.classList.remove('fab-hidden');
     }
 
-    // 2. Smart Header Auto-Hide on Scroll Down, Reveal Compact on Scroll Up
+    // 2. Deterministic Header Auto-Hide on Scroll Down
     if (header) {
-      if (scrollY <= 40) {
-        // Paling atas: Tampilkan header penuh normal
-        header.classList.remove('header-hidden');
-        header.classList.remove('header-compact');
-      } else if (scrollY > lastScrollY && scrollY > 80) {
-        // Scroll KE BAWAH: Sembunyikan header total ke atas agar layar luas & bebas halangan
+      if (scrollY > 50) {
         header.classList.add('header-hidden');
-        header.classList.remove('header-compact');
-      } else if (scrollY < lastScrollY) {
-        // Scroll KE ATAS: Munculkan slim compact bar dengan lokasi & selector node
+      } else {
         header.classList.remove('header-hidden');
-        header.classList.add('header-compact');
       }
     }
 
-    lastScrollY = Math.max(0, scrollY);
+    // 3. Dynamic ESI Chat Card Height Resizing (Clamped Above Footer)
+    updateDynamicChatCardHeight();
+
     isTicking = false;
   };
 
@@ -70,7 +63,48 @@ function initScrollMorphing() {
   onScroll();
 }
 
-// --- 2. FLOATING ACTION BUTTON (FAB) ESI HANDLER ---
+// --- 2. DYNAMIC RESPONSIVE ESI CHAT CARD HEIGHT CONTROLLER ---
+function updateDynamicChatCardHeight() {
+  const section = document.getElementById('workspaceSection');
+  const chatCard = document.getElementById('esiChatCard');
+  const footer = document.querySelector('footer');
+  const cardsCol = document.getElementById('cardsColumn');
+
+  if (!section || !chatCard) return;
+
+  // Hanya terapkan dynamic resize pada layar desktop (>= 992px) saat scrolled-layout aktif
+  if (window.innerWidth >= 992 && section.classList.contains('scrolled-layout')) {
+    const topOffset = 16; // 1rem sticky top
+    const bottomGap = 16; // 1rem gap di atas footer
+    const viewportHeight = window.innerHeight;
+
+    let bottomLimit = viewportHeight - bottomGap;
+
+    // Jika footer masuk ke viewport, sesuaikan batas bawah agar card berhenti pas di atas footer
+    if (footer) {
+      const footerRect = footer.getBoundingClientRect();
+      if (footerRect.top < viewportHeight) {
+        bottomLimit = footerRect.top - bottomGap;
+      }
+    }
+
+    // Ruang vertikal maksimal yang tersedia di viewport
+    const maxAvailableH = bottomLimit - topOffset;
+
+    // Tinggi ideal: sejajar dengan cardsColumn di kiri atau memenuhi viewport
+    const cardsHeight = cardsCol ? cardsCol.offsetHeight : 580;
+    const idealHeight = Math.min(cardsHeight, viewportHeight - topOffset - bottomGap);
+
+    // Dynamic height = minimum idealHeight dan maxAvailableH, clamped minimal 320px
+    const targetH = Math.max(320, Math.min(idealHeight, maxAvailableH));
+
+    chatCard.style.height = `${targetH}px`;
+  } else {
+    chatCard.style.height = '';
+  }
+}
+
+// --- 3. FLOATING ACTION BUTTON (FAB) ESI HANDLER ---
 function openEsiFromFab() {
   const chatSection = document.getElementById('chatColumn') || document.getElementById('workspaceSection');
   if (chatSection) {
@@ -81,16 +115,17 @@ function openEsiFromFab() {
   }
   // Otomatis fokus ke input chat agar user langsung bisa mengetik
   setTimeout(() => {
-    const input = document.getElementById('chatInput');
+    const input = document.getElementById('inputMessage');
     if (input) input.focus();
   }, 450);
 }
 
-// --- 2. RESIZE LISTENER ---
+// --- 4. RESIZE LISTENER ---
 window.addEventListener('resize', () => {
   if (typeof renderAllSparklines === 'function') {
     renderAllSparklines();
   }
+  updateDynamicChatCardHeight();
 });
 
 // --- 3. INITIALIZATION ON DOM READY ---
