@@ -577,12 +577,10 @@ void drawDashboardScreen() {
     display.print("Suhu : ERR     RH: ERR");
   }
 
-  // 3. Baris Konsentrasi Gas, Kipas, & Counter Paket
+  // 3. Baris Konsentrasi Gas (CO & Asap) & Counter Paket
   display.setCursor(0, 26);
   display.printf("CO   : %3d ppm", telemetry.mq7Ppm);
-  display.setCursor(76, 26);
-  display.printf("Fan:%2d%%", (telemetry.fanPwm * 100) / 255);
-  
+
   display.setCursor(0, 37);
   display.printf("Asap : %3d ppm", telemetry.mq2Ppm);
   display.setCursor(76, 37);
