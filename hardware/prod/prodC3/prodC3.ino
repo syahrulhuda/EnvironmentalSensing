@@ -327,8 +327,11 @@ void initHardware() {
   Wire.setTimeOut(50);   // Timeout 50ms mencegah lockup strapping pin GPIO 9
   Wire.setClock(100000); // 100 kHz Standard Mode (Stabil & imun derau di breadboard)
 
-  // 5. Inisialisasi OLED Display SSD1306 (0x3C)
-  if (display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR, false, false)) {
+  // 5. Inisialisasi OLED Display SSD1306 (0x3C) dengan I2C Hardware Ping Sejati
+  Wire.beginTransmission(OLED_I2C_ADDR);
+  byte i2cErr = Wire.endTransmission();
+
+  if (i2cErr == 0 && display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR, false, false)) {
     oledReady = true;
     // Proteksi pemulihan register: matikan scrolling dan kunci start line di 0
     display.ssd1306_command(SSD1306_DEACTIVATE_SCROLL);
@@ -346,7 +349,8 @@ void initHardware() {
     display.display();
     Serial.println("[INIT] OLED Display 128x64 Terdeteksi (0x3C).");
   } else {
-    Serial.println("[ERROR] OLED Display gagal terdeteksi! Periksa jalur SDA(8)/SCL(9).");
+    oledReady = false;
+    Serial.printf("[WARN] OLED Display TIDAK terdeteksi di jalur I2C (Kode Error: %d)! Berjalan dalam Mode Headless.\n", i2cErr);
   }
 
   // 6. Inisialisasi Sensor DHT22 & ADC 12-bit
