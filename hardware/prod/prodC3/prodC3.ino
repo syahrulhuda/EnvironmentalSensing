@@ -102,7 +102,7 @@
 // 4. INTERVAL WAKTU NON-BLOCKING & WARMUP SHIELD
 // =============================================================================
 const unsigned long INTERVAL_SENSOR   = 3000;   // Baca sensor & picu cloud tiap 3 detik (1:1 cadence)
-const unsigned long INTERVAL_DISPLAY  = 3500;   // Rotasi halaman OLED tiap 3.5 detik
+const unsigned long INTERVAL_DISPLAY  = 1000;   // Refresh tampilan OLED tiap 1 detik (Tanpa switching)
 const unsigned long INTERVAL_STROBE   = 150;    // Kecepatan kedip LED merah bahaya (ms)
 const unsigned long WARMUP_DURATION   = 45000;  // 45 Detik Thermal Warmup Shield untuk koil MQ
 
@@ -154,7 +154,6 @@ unsigned long lastDisplayPage = 0;
 unsigned long lastStrobeTick  = 0;
 unsigned long sampleCount     = 0;
 
-int  oledPage       = 0;        // 0 = Dashboard Utama, 1 = Diagnostik ADC
 bool oledReady      = false;
 bool wifiConnected  = false;
 bool strobeState    = false;
@@ -171,7 +170,6 @@ void updateRgbIndicator();
 void setRgbColor(bool r, bool g, bool b);
 void updateOledDisplay();
 void drawDashboardScreen();
-void drawDiagnosticScreen();
 void logTelemetrySerial();
 void sendTelemetryFirebase(const TelemetryPacket &data);
 void vFirebaseTask(void *pvParameters);
@@ -254,14 +252,9 @@ void loop() {
     }
   }
 
-  // 3. Tugas Rutin B: Render & Rotasi Tampilan Layar OLED (Jadwal Terisolasi tiap 3.5 detik)
+  // 3. Tugas Rutin B: Render Tampilan Layar OLED (Refresh tiap 1 detik tanpa rotasi)
   if (currentMillis - lastDisplayPage >= INTERVAL_DISPLAY) {
     lastDisplayPage = currentMillis;
-    if (strcmp(telemetry.status, "DANGER") != 0) {
-      oledPage = (oledPage == 0) ? 1 : 0;
-    } else {
-      oledPage = 0; // Kunci pada Dashboard Utama jika kondisi BAHAYA
-    }
     updateOledDisplay();
   }
 
@@ -548,22 +541,16 @@ void updateRgbIndicator() {
   }
 }
 
-// --- Modul G: Pembaruan Tampilan Layar OLED 128x64 ---
+// --- Modul G: Pembaruan Tampilan Layar OLED 128x64 (Single Clean Dashboard) ---
 void updateOledDisplay() {
   if (!oledReady) return;
 
   display.clearDisplay();
-
-  if (oledPage == 0) {
-    drawDashboardScreen();
-  } else {
-    drawDiagnosticScreen();
-  }
-
+  drawDashboardScreen();
   display.display();
 }
 
-// Layar 1: Dashboard Utama Pemantauan
+// Layar: Dashboard Utama Pemantauan Lingkungan & K3
 void drawDashboardScreen() {
   // 1. Top Header Bar
   display.setTextSize(1);
@@ -590,7 +577,7 @@ void drawDashboardScreen() {
     display.print("Suhu : ERR     RH: ERR");
   }
 
-  // 3. Baris Konsentrasi Gas & Kipas
+  // 3. Baris Konsentrasi Gas, Kipas, & Counter Paket
   display.setCursor(0, 26);
   display.printf("CO   : %3d ppm", telemetry.mq7Ppm);
   display.setCursor(76, 26);
@@ -598,6 +585,8 @@ void drawDashboardScreen() {
   
   display.setCursor(0, 37);
   display.printf("Asap : %3d ppm", telemetry.mq2Ppm);
+  display.setCursor(76, 37);
+  display.printf("#%lu", sampleCount);
 
   // 4. Footer Banner Status K3
   if (millis() < WARMUP_DURATION) {
@@ -621,33 +610,6 @@ void drawDashboardScreen() {
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(22, 53);
     display.print("[ STATUS AMAN ]");
-  }
-}
-
-// Layar 2: Diagnostik Teknis & ADC Raw
-void drawDiagnosticScreen() {
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.print("DIAGNOSTIK RAW ADC");
-  display.drawFastHLine(0, 10, 128, SSD1306_WHITE);
-
-  display.setCursor(0, 14);
-  display.printf("MQ7 (CO)  : %4d ADC", telemetry.mq7Raw);
-  display.setCursor(0, 25);
-  display.printf("Voltase   : %.2f Volt", telemetry.mq7Volt);
-
-  display.setCursor(0, 37);
-  display.printf("MQ2 (Asap): %4d ADC", telemetry.mq2Raw);
-  display.setCursor(0, 48);
-  display.printf("Voltase   : %.2f Volt", telemetry.mq2Volt);
-
-  display.setCursor(0, 57);
-  if (millis() < WARMUP_DURATION) {
-    unsigned long rem = (WARMUP_DURATION - millis()) / 1000 + 1;
-    display.printf("#%lu | WARM: %lus", sampleCount, rem);
-  } else {
-    display.printf("#%lu | Kipas: %d%%", sampleCount, (telemetry.fanPwm * 100) / 255);
   }
 }
 

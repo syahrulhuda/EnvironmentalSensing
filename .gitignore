@@ -47,7 +47,5 @@ frontend/android/local.properties
 
 # --- OS / Editor Artifacts ---
 .DS_Store
-Thumbs.db
-*.swp
-*.bak
-*~
+# --- Scratch & Temp Scripts ---
+scratch/

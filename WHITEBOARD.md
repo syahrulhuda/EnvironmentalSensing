@@ -435,8 +435,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Streaming live telemetri edge-to-cloud ke Firebase RTDB buffer terverifikasi stabil (HTTP 200).
 - [x] Uji empiris peredaman ripple filter input catu daya C1/C2 (5.10-5.15V menjadi 5.13-5.14V).
 - [x] Dokumentasikan solusi USB flapping C3 via tombol BOOT+RST download mode.
-- [ ] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline.
-- [ ] Fabrikasi papan PCB single-layer 70x40 mm (`PCB_ESS_5`).
+- [x] Validasi respon fisik sensor gas (uji korek gas butana / asap) untuk membuktikan kenaikan ADC/PPM di atas baseline (Teruji fisik: MQ-7 188 ppm, MQ-2 504 ppm memicu K3:DANGER & Fan 100%).
+- [x] Fabrikasi, perakitan, dan penyolderan papan PCB single-layer 70x40 mm (`PCB_ESS_5`) tuntas dan teruji fungsional 100%.
+- [x] **[TD-H08]** Optimasi Tampilan OLED Statis Tunggal: Eliminasi rotasi halaman diagnostik RAW ADC; standardisasi tampilan menjadi 1 Dashboard Utama permanen (Suhu, RH, CO, Asap, Kipas PWM, Counter Paket `#sample`, dan Banner Status K3) dengan refresh rate non-blocking 1.000 ms.
 
 **5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
 - [x] **[DEVOPS-01]** Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`) via Google ADC Service Account & multi-site `poltekom-ess`. *(Selesai - Commit 0190916)*
