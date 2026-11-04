@@ -11,6 +11,8 @@ import '../widgets/telemetry_chart_widget.dart';
 import '../widgets/esi_chat_bottom_sheet.dart';
 import '../widgets/esi_chat_panel.dart';
 import 'settings_dialog.dart';
+import '../services/ota_update_service.dart';
+import '../widgets/update_dialog.dart';
 
 /// Halaman Dashboard Utama ESS (Web & Mobile Responsive)
 class DashboardScreen extends StatefulWidget {
@@ -39,22 +41,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     });
     _telemetryService.startPolling();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOtaUpdate());
   }
 
-  TelemetryModel _getDangerMock() {
-    return TelemetryModel(
-      temperature: 42.0,
-      humidity: 35.0,
-      mq7CoPpm: 85,
-      mq2SmokePpm: 520,
-      mq7Volt: 1.45,
-      mq7Raw: 1420,
-      nodeId: _current.nodeId,
-      status: 'DANGER',
-      timestamp: DateTime.now(),
-      isOnline: _current.isOnline,
-    );
+  Future<void> _checkOtaUpdate() async {
+    final v = await OtaUpdateService.checkForUpdate();
+    if (v != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: !v.forceUpdate,
+        builder: (_) => UpdateAvailableDialog(versionInfo: v),
+      );
+    }
   }
+
+  TelemetryModel _getDangerMock() => TelemetryModel(
+    temperature: 42.0, humidity: 35.0, mq7CoPpm: 85, mq2SmokePpm: 520,
+    mq7Volt: 1.45, mq7Raw: 1420, nodeId: _current.nodeId, status: 'DANGER',
+    timestamp: DateTime.now(), isOnline: _current.isOnline,
+  );
 
   @override
   void dispose() {
