@@ -1,149 +1,157 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="320mm" height="240mm" viewBox="0 0 320 240">
-  <title>Desain 2D Akrilik 3mm - Tunnel Sensor (Khusus MQ-2 &amp; MQ-7 + Fan 4x4)</title>
-  <desc>Sistem Tab and Slot Murni + Inlet Lingkaran Jaring Kawat</desc>
+  <title>Desain 2D Akrilik 3mm - Tunnel Sensor Gas (Pelat 12 cm, MQ 4-Hole Mount, Fan 3010)</title>
   <style>
-    .cut { fill: none; stroke: #ff0000; stroke-width: 0.2; }
+    .cut { fill: none; stroke: #ff0000; stroke-width: 0.25; }
     .slot { fill: none; stroke: #ff0000; stroke-width: 0.2; }
     .hole { fill: none; stroke: #ff0000; stroke-width: 0.2; }
-    .engrave { fill: none; stroke: #0000ff; stroke-width: 0.15; font-family: Arial, sans-serif; font-size: 2.8px; }
-    .text-label { fill: #222222; font-family: Arial, sans-serif; font-size: 3.5px; font-weight: bold; }
-    .dim-label { fill: #555555; font-family: Arial, sans-serif; font-size: 2.3px; }
+    .text-label { fill: #222222; font-family: Arial, sans-serif; font-size: 3.2px; font-weight: bold; }
+    .dim-label { fill: #555555; font-family: Arial, sans-serif; font-size: 1.8px; }
   </style>
 
   <!-- INFO HEADER -->
-  <text x="10" y="8" class="text-label" font-size="4.8px">DESAIN 1: TUNNEL SENSOR GAS MQ-2 &amp; MQ-7 (FAN 4x4 CM) - AKRILIK 3 MM</text>
-  <text x="10" y="13" class="dim-label">Panjang: 120 mm | Lebar/Tinggi: 50 mm | Inlet: Lubang Lingkaran Jaring Dia 22 mm | DHT22 Dipindah ke Case PCB</text>
+  <text x="10" y="8" font-family="Arial, sans-serif" font-size="3.8px" font-weight="bold" fill="#222">DESAIN 1: TUNNEL SENSOR GAS (120 x 50 MM) - MOUNTING 4 BAUT MQ-2 &amp; MQ-7 + FAN 3010 (3x3 CM)</text>
+  <text x="10" y="13" font-family="Arial, sans-serif" font-size="2.0px" fill="#555">Pelat: 120x50 mm | Fan 3010: Pitch 24x24 mm, Bore 24 mm | MQ Mount: Pitch 15x26.5 mm M3 | Spacer PCB: 25 mm</text>
 
-  <!-- 1. PELAT ATAS (TOP PLATE) - MOUNTING SENSOR MQ-2 & MQ-7 (120 x 50 mm) -->
-  <g transform="translate(10, 18)">
-    <text x="0" y="-2" class="text-label">1. Pelat Atas (Dudukan Sensor MQ-2 &amp; MQ-7) - 120 x 50 mm</text>
+  <!-- 1. PELAT ATAS (TOP PLATE) - 120 x 50 mm -->
+  <g transform="translate(10, 20)">
+    <text x="0" y="-3" font-family="Arial, sans-serif" font-size="2.8px" font-weight="bold" fill="#222">1. Pelat Atas Tunnel (120 x 50 mm - 4 Baut MQ-7 &amp; MQ-2 Bebas Tabrakan + Fan Cable Slot)</text>
     <rect x="0" y="0" width="120" height="50" rx="3.5" class="cut" />
-    <!-- 4 Lubang Baut Spacer Sudut M3 (Dia 3.2mm) -->
-    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="114.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="5.5" cy="44.5" r="1.6" class="hole" />
-    <circle cx="114.5" cy="44.5" r="1.6" class="hole" />
-    <!-- Slot Dinding Samping Kiri & Kanan (Celah 3.1mm) -->
-    <rect x="25" y="2" width="25" height="3.1" class="slot" />
-    <rect x="70" y="2" width="25" height="3.1" class="slot" />
-    <rect x="25" y="44.9" width="25" height="3.1" class="slot" />
-    <rect x="70" y="44.9" width="25" height="3.1" class="slot" />
-    <!-- SLOT DEPAN (Untuk Tab Atas Inlet Depan) di x=12 mm -->
-    <rect x="12" y="15" width="3.1" height="20" class="slot" />
-    <text x="7" y="26" class="dim-label" font-size="1.8px" transform="rotate(-90 7,26)">SLOT INLET</text>
-    <!-- SLOT BELAKANG (Untuk Tab Atas Outlet Belakang) di x=105 mm -->
-    <rect x="105" y="15" width="3.1" height="20" class="slot" />
-    <text x="109" y="27" class="dim-label" font-size="1.8px" transform="rotate(90 109,27)">SLOT OUTLET</text>
-    <!-- Lubang Sensor MQ-2 (Dia 20mm) di x=40, y=25 -->
-    <circle cx="40" cy="25" r="10" class="hole" />
-    <text x="35" y="26" class="dim-label" font-size="2px">MQ-2</text>
-    <!-- Lubang Sensor MQ-7 (Dia 20mm) di x=80, y=25 -->
-    <circle cx="80" cy="25" r="10" class="hole" />
-    <text x="75" y="26" class="dim-label" font-size="2px">MQ-7</text>
+    
+    <!-- 4 Corner Tie-Down Holes Tunnel (3.5, 4.5 &amp; 116.5, 45.5) -->
+    <circle cx="3.5" cy="4.5" r="1.6" class="hole" />
+    <circle cx="116.5" cy="4.5" r="1.6" class="hole" />
+    <circle cx="3.5" cy="45.5" r="1.6" class="hole" />
+    <circle cx="116.5" cy="45.5" r="1.6" class="hole" />
+    
+    <!-- Slot Dinding Samping Tunnel (X: 20-40 &amp; 80-100, Y: 1.9 &amp; 45.0, panjang 20 mm, tebal 3.1 mm) -->
+    <rect x="20.0" y="1.9" width="20.0" height="3.1" class="slot" />
+    <rect x="80.0" y="1.9" width="20.0" height="3.1" class="slot" />
+    <rect x="20.0" y="45.0" width="20.0" height="3.1" class="slot" />
+    <rect x="80.0" y="45.0" width="20.0" height="3.1" class="slot" />
+
+    <!-- Slot Dinding Samping Case PCB (Tengah: X: 50-70, panjang 20 mm, tebal 3.1 mm) -->
+    <rect x="50.0" y="1.9" width="20.0" height="3.1" stroke="#0000ff" stroke-width="0.2" fill="none" />
+    <rect x="50.0" y="45.0" width="20.0" height="3.1" stroke="#0000ff" stroke-width="0.2" fill="none" />
+    <text x="51.0" y="1.2" font-family="Arial, sans-serif" font-size="1.4px" fill="#0000aa">SLOT DINDING CASE (20 MM)</text>
+    
+    <!-- Slot Inlet Depan &amp; Outlet Belakang Tunnel (Panjang 20 mm: Y: 15-35) -->
+    <rect x="6.9" y="15.0" width="3.1" height="20.0" class="slot" />
+    <rect x="110.0" y="15.0" width="3.1" height="20.0" class="slot" />
+
+    <!-- Slot Dinding Depan &amp; Belakang Case PCB (X: 12.0-15.1 &amp; 104.9-108.0, Y: 15-35) -->
+    <rect x="12.0" y="15.0" width="3.1" height="20.0" stroke="#0000ff" stroke-width="0.2" fill="none" />
+    <rect x="104.9" y="15.0" width="3.1" height="20.0" stroke="#0000ff" stroke-width="0.2" fill="none" />
+
+    <!-- 4 Lubang Spacer Internal Case PCB (M3) - Bebas Halangan Dinding & Bebas PCB -->
+    <circle cx="20.0" cy="9.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="100.5" cy="9.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="20.0" cy="40.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="100.5" cy="40.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <text x="14.0" y="8.0" font-family="Arial, sans-serif" font-size="1.4px" fill="#008800">SPACER CASE</text>
+    <text x="94.0" y="8.0" font-family="Arial, sans-serif" font-size="1.4px" fill="#008800">SPACER CASE</text>
+
+    <!-- 4 Lubang Baut PCB (M3) - Pitch 64.4 x 34.4 mm (Spacer 25 mm) -->
+    <circle cx="27.8" cy="7.8" r="1.6" stroke="#aa00aa" stroke-width="0.25" fill="none" />
+    <circle cx="92.2" cy="7.8" r="1.6" stroke="#aa00aa" stroke-width="0.25" fill="none" />
+    <circle cx="27.8" cy="42.2" r="1.6" stroke="#aa00aa" stroke-width="0.25" fill="none" />
+    <circle cx="92.2" cy="42.2" r="1.6" stroke="#aa00aa" stroke-width="0.25" fill="none" />
+
+    <!-- SENSOR MQ-7: Center (40.0, 25.0), Canister Dia 18.4 mm -->
+    <circle cx="40.0" cy="25.0" r="9.2" class="cut" />
+    <!-- 4 Baut Pengunci MQ-7 (Pitch 15.0 x 26.5 mm) - Dinding solid 4.4 mm! -->
+    <circle cx="32.5" cy="11.75" r="1.6" class="hole" />
+    <circle cx="47.5" cy="11.75" r="1.6" class="hole" />
+    <circle cx="32.5" cy="38.25" r="1.6" class="hole" />
+    <circle cx="47.5" cy="38.25" r="1.6" class="hole" />
+    <text x="34.0" y="25.5" font-family="Arial, sans-serif" font-size="2.0px" fill="#d00">MQ-7 (CO)</text>
+
+    <!-- SENSOR MQ-2: Center (66.0, 25.0), Canister Dia 20.5 mm -->
+    <circle cx="66.0" cy="25.0" r="10.25" class="cut" />
+    <!-- 4 Baut Pengunci MQ-2 (Pitch 15.0 x 26.5 mm) - Dinding solid 3.4 mm! -->
+    <circle cx="58.5" cy="11.75" r="1.6" class="hole" />
+    <circle cx="73.5" cy="11.75" r="1.6" class="hole" />
+    <circle cx="58.5" cy="38.25" r="1.6" class="hole" />
+    <circle cx="73.5" cy="38.25" r="1.6" class="hole" />
+    <text x="59.5" y="25.5" font-family="Arial, sans-serif" font-size="2.0px" fill="#d00">MQ-2 (LPG)</text>
+
+    <!-- INTERNAL FAN CABLE PASS-THROUGH HOLE -->
+    <rect x="94.0" y="31.75" width="8.0" height="4.5" rx="1.2" stroke="#ff6600" stroke-width="0.25" fill="none" />
+    <text x="93.0" y="30.5" font-family="Arial, sans-serif" font-size="1.5px" fill="#ff6600">KABEL FAN</text>
   </g>
 
-  <!-- 2. PELAT BAWAH (BOTTOM PLATE) (120 x 50 mm) -->
-  <g transform="translate(145, 18)">
-    <text x="0" y="-2" class="text-label">2. Pelat Bawah (Lantai Tunnel) - 120 x 50 mm</text>
-    <rect x="0" y="0" width="120" height="50" rx="3.5" class="cut" />
-    <!-- 4 Lubang Baut Spacer Sudut M3 -->
-    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="114.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="5.5" cy="44.5" r="1.6" class="hole" />
-    <circle cx="114.5" cy="44.5" r="1.6" class="hole" />
-    <!-- Slot Dinding Samping Kiri & Kanan -->
-    <rect x="25" y="2" width="25" height="3.1" class="slot" />
-    <rect x="70" y="2" width="25" height="3.1" class="slot" />
-    <rect x="25" y="44.9" width="25" height="3.1" class="slot" />
-    <rect x="70" y="44.9" width="25" height="3.1" class="slot" />
-    <!-- Slot Pengunci Depan & Belakang -->
-    <rect x="12" y="15" width="3.1" height="20" class="slot" />
-    <rect x="105" y="15" width="3.1" height="20" class="slot" />
-    <!-- 2 Lubang Baut Dudukan Base (Dia 3.2 mm di x=45 dan x=85) -->
-    <circle cx="45" cy="25" r="1.6" class="hole" />
-    <circle cx="85" cy="25" r="1.6" class="hole" />
-    <text x="53" y="26" class="dim-label" font-size="2px">MOUNTING BASE</text>
-  </g>
-
-  <!-- 3. PELAT DINDING SAMPING KIRI (120 x 44 mm) -->
+  <!-- 2. PELAT BAWAH (BOTTOM PLATE) - 120 x 50 mm -->
   <g transform="translate(10, 80)">
-    <text x="0" y="-2" class="text-label">3. Dinding Samping Kiri (120 x 44 mm)</text>
-    <path d="M 0,3 
-             L 25,3 L 25,0 L 50,0 L 50,3 
-             L 70,3 L 70,0 L 95,0 L 95,3 
-             L 120,3 L 120,41 
-             L 95,41 L 95,44 L 70,44 L 70,41 
-             L 50,41 L 50,44 L 25,44 L 25,41 
-             L 0,41 Z" class="cut" />
+    <text x="0" y="-3" font-family="Arial, sans-serif" font-size="2.8px" font-weight="bold" fill="#222">2. Pelat Bawah Tunnel (120 x 50 mm - Solid Base)</text>
+    <rect x="0" y="0" width="120" height="50" rx="3.5" class="cut" />
+    <circle cx="3.5" cy="4.5" r="1.6" class="hole" />
+    <circle cx="116.5" cy="4.5" r="1.6" class="hole" />
+    <circle cx="3.5" cy="45.5" r="1.6" class="hole" />
+    <circle cx="116.5" cy="45.5" r="1.6" class="hole" />
+    <rect x="20.0" y="1.9" width="20.0" height="3.1" class="slot" />
+    <rect x="80.0" y="1.9" width="20.0" height="3.1" class="slot" />
+    <rect x="20.0" y="45.0" width="20.0" height="3.1" class="slot" />
+    <rect x="80.0" y="45.0" width="20.0" height="3.1" class="slot" />
+    <rect x="6.9" y="15.0" width="3.1" height="20.0" class="slot" />
+    <rect x="110.0" y="15.0" width="3.1" height="20.0" class="slot" />
   </g>
 
-  <!-- 4. PELAT DINDING SAMPING KANAN (120 x 44 mm) -->
-  <g transform="translate(145, 80)">
-    <text x="0" y="-2" class="text-label">4. Dinding Samping Kanan (120 x 44 mm)</text>
-    <path d="M 0,3 
-             L 25,3 L 25,0 L 50,0 L 50,3 
-             L 70,3 L 70,0 L 95,0 L 95,3 
-             L 120,3 L 120,41 
-             L 95,41 L 95,44 L 70,44 L 70,41 
-             L 50,41 L 50,44 L 25,44 L 25,41 
-             L 0,41 Z" class="cut" />
+  <!-- 3. DINDING SAMPLING TUNNEL (2 PCS) - 100 x 40 mm -->
+  <g transform="translate(140, 20)">
+    <text x="0" y="-3" font-family="Arial, sans-serif" font-size="2.8px" font-weight="bold" fill="#222">3. Dinding Samping Tunnel (100 x 40 mm bodi, 2 pcs)</text>
+    <path d="M 0,3 L 10,3 L 10,0 L 30,0 L 30,3 L 70,3 L 70,0 L 90,0 L 90,3 L 100,3 L 100,43 L 90,43 L 90,46 L 70,46 L 70,43 L 30,43 L 30,46 L 10,46 L 10,43 L 0,43 Z" class="cut" />
+    <text x="20" y="24" font-family="Arial, sans-serif" font-size="2.2px" fill="#555">Dinding Samping Tunnel (Bodi 100 x 40 mm)</text>
   </g>
 
-  <!-- 5. PELAT INLET DEPAN (DENGAN LUBANG BULAT DIA 22 MM UNTUK JARING KAWAT) -->
-  <g transform="translate(10, 145)">
-    <text x="0" y="-2" class="text-label">5. Inlet Depan (Lubang Bulat Dia 22 mm + Tab)</text>
-    <!-- Kontur Inlet dengan Tab Atas & Bawah -->
-    <path d="M 0,3 
-             L 12,3 L 12,0 L 32,0 L 32,3 L 44,3 
-             L 44,41 
-             L 32,41 L 32,44 L 12,44 L 12,41 L 0,41 Z" class="cut" />
-    <!-- 1 LUBANG BULAT TUNGGAL (Dia 22 mm) DI TENGAH UNTUK TEMPAT JARING KAWAT -->
-    <circle cx="22" cy="22" r="11" class="hole" />
-    <text x="13" y="23" class="dim-label" font-size="2px">JARING DIA 22MM</text>
-  </g>
-
-  <!-- 6. PELAT OUTLET BELAKANG (DUDUKAN KIPAS 4x4 CM + TAB) -->
-  <g transform="translate(75, 145)">
-    <text x="0" y="-2" class="text-label">6. Outlet Belakang (Mounting Kipas 4x4 + Tab)</text>
-    <path d="M 0,3 
-             L 12,3 L 12,0 L 32,0 L 32,3 L 44,3 
-             L 44,41 
-             L 32,41 L 32,44 L 12,44 L 12,41 L 0,41 Z" class="cut" />
-    <!-- Lubang Tengah Hembusan Udara Kipas (Dia 36 mm) di Center (22, 22) -->
-    <circle cx="22" cy="22" r="18" class="hole" />
-    <!-- 4 Lubang Baut Kipas 4x4 cm (Pitch 32 x 32 mm simetris: x=6 dan x=38, y=6 dan y=38) -->
-    <circle cx="6" cy="6" r="1.6" class="hole" />
-    <circle cx="38" cy="6" r="1.6" class="hole" />
-    <circle cx="6" cy="38" r="1.6" class="hole" />
-    <circle cx="38" cy="38" r="1.6" class="hole" />
-    <text x="11" y="23" class="dim-label" font-size="2px">KIPAS 40x40</text>
-  </g>
-
-  <!-- 7. PELAT KAKI DUDUKAN / BRACKET BAWAH TUNNEL (OPSIONAL) -->
-  <g transform="translate(145, 145)">
-    <text x="0" y="-2" class="text-label">7. Kaki Dudukan / Bracket Bawah (2 pcs)</text>
-    <rect x="0" y="0" width="50" height="18" rx="2" class="cut" />
-    <circle cx="8" cy="9" r="1.6" class="hole" />
-    <circle cx="25" cy="9" r="1.6" class="hole" />
-    <circle cx="42" cy="9" r="1.6" class="hole" />
-    <text x="12" y="10" class="dim-label" font-size="1.9px">KAKI DEPAN</text>
-
-    <rect x="0" y="23" width="50" height="18" rx="2" class="cut" />
-    <circle cx="8" cy="32" r="1.6" class="hole" />
-    <circle cx="25" cy="32" r="1.6" class="hole" />
-    <circle cx="42" cy="32" r="1.6" class="hole" />
-    <text x="10" y="33" class="dim-label" font-size="1.9px">KAKI BELAKANG</text>
-  </g>
-
-  <!-- PENJELASAN FUNGSI KAKI BRACKET -->
-  <g transform="translate(210, 145)">
-    <text x="0" y="-2" class="text-label">Fungsi Kaki Dudukan (No. 7):</text>
-    <rect x="0" y="0" width="100" height="42" fill="#fafafa" stroke="#dddddd" stroke-width="0.3" rx="2" />
-    <text x="4" y="8" class="dim-label">Kaki ini adalah penopang bawah opsional.</text>
-    <text x="4" y="15" class="dim-label">Jika tunnel ingin ditaruh/dibaut di atas meja</text>
-    <text x="4" y="22" class="dim-label">atau dibaut menempel di atas case PCB,</text>
-    <text x="4" y="29" class="dim-label">kaki ini berfungsi sebagai dudukan penahan.</text>
-    <text x="4" y="36" class="dim-label">Jika tidak ingin dipakai, boleh diabaikan.</text>
+  <!-- 4. INLET & OUTLET FAN 3010 (3x3 CM) -->
+  <g transform="translate(140, 80)">
+    <text x="0" y="-3" font-family="Arial, sans-serif" font-size="2.8px" font-weight="bold" fill="#222">4. Inlet Depan &amp; Outlet Kipas 3010 (30 x 30 mm, Pitch 24 x 24 mm)</text>
+    <!-- Inlet Depan (Kisi-kisi Honeycomb 31 Lubang Dia 2.3 mm, Pitch 3.7 mm) -->
+    <path d="M 0,3 L 10,3 L 10,0 L 30,0 L 30,3 L 40,3 L 40,43 L 30,43 L 30,46 L 10,46 L 10,43 L 0,43 Z" class="cut" />
+    <circle cx="20" cy="23" r="12" stroke="#888888" stroke-width="0.15" stroke-dasharray="1,1" fill="none" />
+    <circle cx="18.15" cy="13.39" r="1.15" class="hole" />
+    <circle cx="21.85" cy="13.39" r="1.15" class="hole" />
+    <circle cx="12.60" cy="16.59" r="1.15" class="hole" />
+    <circle cx="16.30" cy="16.59" r="1.15" class="hole" />
+    <circle cx="20.00" cy="16.59" r="1.15" class="hole" />
+    <circle cx="23.70" cy="16.59" r="1.15" class="hole" />
+    <circle cx="27.40" cy="16.59" r="1.15" class="hole" />
+    <circle cx="10.75" cy="19.80" r="1.15" class="hole" />
+    <circle cx="14.45" cy="19.80" r="1.15" class="hole" />
+    <circle cx="18.15" cy="19.80" r="1.15" class="hole" />
+    <circle cx="21.85" cy="19.80" r="1.15" class="hole" />
+    <circle cx="25.55" cy="19.80" r="1.15" class="hole" />
+    <circle cx="29.25" cy="19.80" r="1.15" class="hole" />
+    <circle cx="12.60" cy="23.00" r="1.15" class="hole" />
+    <circle cx="16.30" cy="23.00" r="1.15" class="hole" />
+    <circle cx="20.00" cy="23.00" r="1.15" class="hole" />
+    <circle cx="23.70" cy="23.00" r="1.15" class="hole" />
+    <circle cx="27.40" cy="23.00" r="1.15" class="hole" />
+    <circle cx="10.75" cy="26.20" r="1.15" class="hole" />
+    <circle cx="14.45" cy="26.20" r="1.15" class="hole" />
+    <circle cx="18.15" cy="26.20" r="1.15" class="hole" />
+    <circle cx="21.85" cy="26.20" r="1.15" class="hole" />
+    <circle cx="25.55" cy="26.20" r="1.15" class="hole" />
+    <circle cx="29.25" cy="26.20" r="1.15" class="hole" />
+    <circle cx="12.60" cy="29.41" r="1.15" class="hole" />
+    <circle cx="16.30" cy="29.41" r="1.15" class="hole" />
+    <circle cx="20.00" cy="29.41" r="1.15" class="hole" />
+    <circle cx="23.70" cy="29.41" r="1.15" class="hole" />
+    <circle cx="27.40" cy="29.41" r="1.15" class="hole" />
+    <circle cx="18.15" cy="32.61" r="1.15" class="hole" />
+    <circle cx="21.85" cy="32.61" r="1.15" class="hole" />
+    <text x="8" y="39" font-family="Arial, sans-serif" font-size="1.8px" fill="#555">INLET KISI (31 LUBANG)</text>
+    <!-- Outlet Fan 3010 -->
+    <g transform="translate(50, 0)">
+      <path d="M 0,3 L 10,3 L 10,0 L 30,0 L 30,3 L 40,3 L 40,43 L 30,43 L 30,46 L 10,46 L 10,43 L 0,43 Z" class="cut" />
+      <!-- Bore 24 mm (Radius 12 mm) -->
+      <circle cx="20" cy="23" r="12" class="cut" />
+      <!-- 4 Screw holes M3 Pitch 24x24 mm -->
+      <circle cx="8" cy="11" r="1.6" class="hole" />
+      <circle cx="32" cy="11" r="1.6" class="hole" />
+      <circle cx="8" cy="35" r="1.6" class="hole" />
+      <circle cx="32" cy="35" r="1.6" class="hole" />
+      <text x="10" y="23.5" font-family="Arial, sans-serif" font-size="1.8px" fill="#555">FAN 3010</text>
+    </g>
   </g>
 </svg>

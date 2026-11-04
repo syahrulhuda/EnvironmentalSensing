@@ -1,206 +1,116 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="320mm" height="230mm" viewBox="0 0 320 230">
-  <title>Desain 2D Akrilik 3mm - Case PCB ESS 70x40 mm (Space 1 cm Kiri &amp; Kanan)</title>
-  <desc>Sesuai Permintaan Huda: Space 1 cm Kiri-Kanan, Dinding Kiri Lubang Type-C, Dinding Kanan Lubang Terminal KF301 &amp; Soket Kipas CN1</desc>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 195" width="220mm" height="195mm">
+  <title>Desain 2D Akrilik 3mm - Case PCB Alat (2 Lubang Baut DHT22 &amp; Kisi Ventilasi Lengkap)</title>
   <style>
     .cut { fill: none; stroke: #ff0000; stroke-width: 0.2; }
-    .slot { fill: none; stroke: #ff0000; stroke-width: 0.2; }
     .hole { fill: none; stroke: #ff0000; stroke-width: 0.2; }
-    .engrave { fill: none; stroke: #0000ff; stroke-width: 0.15; font-family: Arial, sans-serif; font-size: 2.8px; }
-    .text-label { fill: #222222; font-family: Arial, sans-serif; font-size: 3.5px; font-weight: bold; }
-    .dim-label { fill: #555555; font-family: Arial, sans-serif; font-size: 2.2px; }
+    .slot { fill: none; stroke: #ff0000; stroke-width: 0.2; }
+    .engrave { fill: none; stroke: #0000ff; stroke-width: 0.15; stroke-dasharray: 1,1; }
+    .label { font-family: Arial, sans-serif; font-size: 2.2px; font-weight: bold; fill: #222; }
+    .sublabel { font-family: Arial, sans-serif; font-size: 1.8px; fill: #555; }
   </style>
-
-  <!-- HEADER INFORMASI -->
-  <text x="10" y="8" class="text-label" font-size="4.8px">DESAIN 2: CASE PCB ESS 70x40 MM (CLEARANCE 1 CM KIRI-KANAN) - AKRILIK 3 MM</text>
-  <text x="10" y="13" class="dim-label">Dimensi Luar Case: 96 x 66 x 45 mm | Ruang Dalam: 90 x 60 mm (Space Pas 1.0 cm Mengelilingi PCB 70x40 mm)</text>
-
-  <!-- 1. PELAT ATAS (TOP COVER) - 96 x 66 mm -->
+  
+  <text x="10" y="8" font-family="Arial, sans-serif" font-size="3.6px" font-weight="bold" fill="#111">POLA LASER CUTTING CASE PCB ALAT (2 BAUT DHT22 ATAS-BAWAH &amp; DC JACK)</text>
+  <text x="10" y="12" font-family="Arial, sans-serif" font-size="2.0px" fill="#666">*Catatan: DHT22 memiliki 2 baut (kuping atas &amp; PCB bawah pitch 35mm), dinding kiri tanpa lubang USB-C, dan dinding kanan soket DC-022.</text>
+  
+    <!-- ======================================================== -->
+  <!-- 1. PELAT TUTUP ATAS CASE (96 x 50 mm - RATA DINDING SAMPING & STANDOFF INTERNAL) -->
+  <!-- ======================================================== -->
   <g transform="translate(10, 18)">
-    <text x="0" y="-2" class="text-label">1. Pelat Atas (Dudukan DHT22, Lubang LED RGB &amp; Ventilasi) - 96 x 66 mm</text>
-    <rect x="0" y="0" width="96" height="66" rx="3.5" class="cut" />
+    <text x="0" y="-3" class="label">1. Pelat Tutup Atas Case (96 x 50 mm - Rata Dinding Samping, Sudut Bulat R3.5, 4 Standoff Internal)</text>
+    <rect x="0" y="0" width="96" height="50" rx="3.5" class="cut" />
     
-    <!-- 4 Lubang Tiang Spacer Sudut M3 (Dia 3.2 mm) -->
-    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="90.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="5.5" cy="60.5" r="1.6" class="hole" />
-    <circle cx="90.5" cy="60.5" r="1.6" class="hole" />
+    <!-- 4 Lubang Spacer Internal Case (M3 Dia 3.2mm - Selaras Vertikal 1:1 ke Tunnel) -->
+    <circle cx="8.0" cy="9.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="88.5" cy="9.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="8.0" cy="40.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <circle cx="88.5" cy="40.5" r="1.6" stroke="#00aa00" stroke-width="0.25" fill="none" />
+    <text x="3.0" y="8.0" font-family="Arial, sans-serif" font-size="1.4px" fill="#008800">SPACER</text>
+    <text x="84.0" y="8.0" font-family="Arial, sans-serif" font-size="1.4px" fill="#008800">SPACER</text>
     
-    <!-- Slot Pengunci Dinding Belakang & Depan (Tebal akrilik 3.1mm) -->
-    <rect x="20" y="2" width="20" height="3.1" class="slot" />
-    <rect x="56" y="2" width="20" height="3.1" class="slot" />
-    <rect x="20" y="60.9" width="20" height="3.1" class="slot" />
-    <rect x="56" y="60.9" width="20" height="3.1" class="slot" />
+    <!-- Slot/Purus Pengunci 4 Dinding Case (Tebal 3.1mm) -->
+    <!-- Dinding Depan & Belakang -->
+    <rect x="38.0" y="1.9" width="20.0" height="3.1" class="slot" />
+    <rect x="38.0" y="45.0" width="20.0" height="3.1" class="slot" />
+    <!-- Dinding Samping Kiri & Kanan (Notch Flush Sisi) -->
+    <rect x="0.0" y="15.0" width="3.1" height="20.0" class="slot" />
+    <rect x="92.9" y="15.0" width="3.1" height="20.0" class="slot" />
     
-    <!-- Slot Pengunci Dinding Kiri & Kanan -->
-    <rect x="2" y="15" width="3.1" height="15" class="slot" />
-    <rect x="2" y="36" width="3.1" height="15" class="slot" />
-    <rect x="90.9" y="15" width="3.1" height="15" class="slot" />
-    <rect x="90.9" y="36" width="3.1" height="15" class="slot" />
+    <!-- Jendela Display OLED 0.96 Inci (Center X=26.5 mm, Y=25.0 mm) -->
+    <rect x="14.5" y="18.5" width="24.0" height="13.0" rx="1.5" class="slot" />
+    <!-- 4 Lubang Baut OLED 0.96 (M2 Dia 2.5 mm - Pitch 23.3 x 23.3 mm) -->
+    <circle cx="14.85" cy="13.35" r="1.25" class="hole" />
+    <circle cx="38.15" cy="13.35" r="1.25" class="hole" />
+    <circle cx="14.85" cy="36.65" r="1.25" class="hole" />
+    <circle cx="38.15" cy="36.65" r="1.25" class="hole" />
+    <text x="18.5" y="25.5" font-family="Arial, sans-serif" font-size="1.8px" fill="#0066cc">OLED 0.96"</text>
     
-    <!-- DUDUKAN SENSOR DHT22 (Selaras vertikal dengan Header H4 di X=48, Y=48) -->
-    <!-- Celah Kepala Probe DHT22: 16 x 22 mm di X=40 s/d 56, Y=33 s/d 55 -->
-    <rect x="40" y="33" width="16" height="22" rx="1.5" class="hole" />
-    <!-- Lubang Baut Pengunci Kuping DHT22 M3 di X=48, Y=26 -->
-    <circle cx="48" cy="26" r="1.6" class="hole" />
-    <text x="37" y="22" class="dim-label" font-size="2.1px">DUDUKAN SENSOR DHT22</text>
+    <!-- Lubang Indikator LED RGB 5mm (D1) di Center X=53.64, Y=14.39 mm (Dia 5.5 mm) -->
+    <circle cx="53.64" cy="14.39" r="2.75" class="hole" />
+    <text x="47.0" y="11.5" font-family="Arial, sans-serif" font-size="1.8px" fill="#cc0066">LED RGB</text>
     
-    <!-- LUBANG INTIP INDIKATOR LED RGB D1 (Dia 6.0 mm) di X=53.6, Y=22.4 -->
-    <circle cx="53.6" cy="22.4" r="3.0" class="hole" />
-    <text x="50" y="16" class="dim-label" font-size="1.9px">LED RGB</text>
+    <!-- Kisi-Kisi Ventilasi Pasif Atas (4 Lubang Oval 12 x 2.0 mm) -->
+    <rect x="44.0" y="22.0" width="12.0" height="2.0" rx="1.0" class="slot" />
+    <rect x="44.0" y="26.0" width="12.0" height="2.0" rx="1.0" class="slot" />
+    <rect x="44.0" y="30.0" width="12.0" height="2.0" rx="1.0" class="slot" />
+    <rect x="44.0" y="34.0" width="12.0" height="2.0" rx="1.0" class="slot" />
     
-    <!-- KISI VENTILASI PASIF PELAT ATAS -->
-    <rect x="18" y="22" width="14" height="2" rx="1" class="slot" />
-    <rect x="18" y="27" width="14" height="2" rx="1" class="slot" />
-    <rect x="18" y="32" width="14" height="2" rx="1" class="slot" />
-    <rect x="18" y="37" width="14" height="2" rx="1" class="slot" />
-    
-    <rect x="68" y="22" width="14" height="2" rx="1" class="slot" />
-    <rect x="68" y="27" width="14" height="2" rx="1" class="slot" />
-    <rect x="68" y="32" width="14" height="2" rx="1" class="slot" />
-    <rect x="68" y="37" width="14" height="2" rx="1" class="slot" />
+    <!-- JENDELA SENSOR SUHU & KELEMBABAN DHT22 (AM2302) -->
+    <rect x="67.0" y="12.25" width="15.5" height="25.5" rx="1.2" class="slot" />
+    <!-- 2 Lubang Baut M3 Mounting DHT22 (Pitch 35 mm) -->
+    <circle cx="74.75" cy="7.50" r="1.6" class="hole" />
+    <circle cx="74.75" cy="42.50" r="1.6" class="hole" />
+    <text x="67.5" y="25.5" font-family="Arial, sans-serif" font-size="1.8px" fill="#0066cc">DHT22 BODI PUTIH</text>
   </g>
 
-  <!-- 2. PELAT BAWAH (BOTTOM BASE) - 96 x 66 mm -->
-  <g transform="translate(116, 18)">
-    <text x="0" y="-2" class="text-label">2. Pelat Bawah (Dudukan PCB 70x40 mm Presisi) - 96 x 66 mm</text>
-    <rect x="0" y="0" width="96" height="66" rx="3.5" class="cut" />
-    
-    <!-- 4 Lubang Tiang Spacer Sudut M3 -->
-    <circle cx="5.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="90.5" cy="5.5" r="1.6" class="hole" />
-    <circle cx="5.5" cy="60.5" r="1.6" class="hole" />
-    <circle cx="90.5" cy="60.5" r="1.6" class="hole" />
-    
-    <!-- Slot Pengunci Dinding -->
-    <rect x="20" y="2" width="20" height="3.1" class="slot" />
-    <rect x="56" y="2" width="20" height="3.1" class="slot" />
-    <rect x="20" y="60.9" width="20" height="3.1" class="slot" />
-    <rect x="56" y="60.9" width="20" height="3.1" class="slot" />
-    <rect x="2" y="15" width="3.1" height="15" class="slot" />
-    <rect x="2" y="36" width="3.1" height="15" class="slot" />
-    <rect x="90.9" y="15" width="3.1" height="15" class="slot" />
-    <rect x="90.9" y="36" width="3.1" height="15" class="slot" />
-    
-    <!-- GARIS BANTU GRAFIR KONTUR PCB 70 x 40 MM (Tepat di tengah: x=13 s/d 83, y=13 s/d 53 mm) -->
-    <rect x="13" y="13" width="70" height="40" rx="1.5" class="engrave" stroke-dasharray="1,1" />
-    <text x="31" y="33" class="dim-label" font-size="2.4px">AREA PCB 70 x 40 MM</text>
-    
-    <!-- 4 LUBANG BAUT PCB PRESISE EASYEDA (Pitch 64.4 x 34.4 mm):
-         Hole 1 (Top-Left):     (15.8, 15.8)
-         Hole 2 (Top-Right):    (80.2, 15.8)
-         Hole 3 (Bottom-Left):  (15.8, 50.2)
-         Hole 4 (Bottom-Right): (80.2, 50.2)
-         Dibuat slot oval 3.5 x 4.5 mm dengan radius 1.75 mm untuk toleransi perakitan -->
-    <rect x="14.05" y="14.05" width="3.5" height="3.5" rx="1.75" class="hole" />
-    <rect x="78.45" y="14.05" width="3.5" height="3.5" rx="1.75" class="hole" />
-    <rect x="14.05" y="48.45" width="3.5" height="3.5" rx="1.75" class="hole" />
-    <rect x="78.45" y="48.45" width="3.5" height="3.5" rx="1.75" class="hole" />
-    <text x="26" y="27" class="dim-label" font-size="2.0px">PITCH BAUT: 64.4 x 34.4 MM</text>
+  <!-- ======================================================== -->
+  <!-- 2. DINDING SISI KIRI (KISI VENTILASI - TANPA USB-C) (40 x 46 mm) -->
+  <!-- ======================================================== -->
+  <g transform="translate(10, 80)">
+    <text x="0" y="-3" class="label">2. Dinding Sisi Kiri (40 x 46 mm - Kisi Ventilasi)</text>
+    <path d="M 0,3 L 10,3 L 10,0 L 30,0 L 30,3 L 40,3 L 40,43 L 30,43 L 30,46 L 10,46 L 10,43 L 0,43 Z" class="cut" />
+    <!-- 3 Baris Kisi Ventilasi Samping (Tanpa Lubang USB-C) -->
+    <rect x="11.0" y="16.0" width="18.0" height="2.2" rx="1.0" class="slot" />
+    <rect x="11.0" y="23.0" width="18.0" height="2.2" rx="1.0" class="slot" />
+    <rect x="11.0" y="30.0" width="18.0" height="2.2" rx="1.0" class="slot" />
+    <text x="11.5" y="37.0" class="sublabel">VENTILASI</text>
   </g>
 
-  <!-- 3. PELAT DINDING KIRI (PANEL USB-C ESP32-C3) - 66 x 39 mm -->
-  <g transform="translate(10, 95)">
-    <text x="0" y="-2" class="text-label">3. Panel Sisi Kiri (Port USB Type-C ESP32-C3) - 66 x 39 mm</text>
-    <path d="M 0,3 
-             L 15,3 L 15,0 L 30,0 L 30,3 
-             L 36,3 L 36,0 L 51,0 L 51,3 
-             L 66,3 L 66,36 
-             L 51,36 L 51,39 L 36,39 L 36,36 
-             L 30,36 L 30,39 L 15,39 L 15,36 
-             L 0,36 Z" class="cut" />
-    <!-- PORT USB TYPE-C ESP32-C3: Tepat di Center Sumbu PCB (x=33.0 mm pada panel 66 mm) -->
-    <!-- Ukuran bukaan 16 x 9 mm dengan radius 3 mm agar kepala kabel USB-C leluasa mencolok 1 cm -->
-    <rect x="25" y="15" width="16" height="9" rx="3" class="slot" />
-    <text x="20" y="11" class="dim-label" font-size="2.1px">USB-C ESP32-C3</text>
-    
-    <!-- Ventilasi Sisi Kiri -->
-    <rect x="8" y="16" width="12" height="2" rx="1" class="slot" />
-    <rect x="8" y="21" width="12" height="2" rx="1" class="slot" />
-    <rect x="46" y="16" width="12" height="2" rx="1" class="slot" />
-    <rect x="46" y="21" width="12" height="2" rx="1" class="slot" />
+  <!-- ======================================================== -->
+  <!-- 3. DINDING SISI KANAN (POWER DC BARREL JACK DC-022) (40 x 46 mm) -->
+  <!-- ======================================================== -->
+  <g transform="translate(60, 80)">
+    <text x="0" y="-3" class="label">3. Dinding Sisi Kanan (40 x 46 mm - DC Jack)</text>
+    <path d="M 0,3 L 10,3 L 10,0 L 30,0 L 30,3 L 40,3 L 40,43 L 30,43 L 30,46 L 10,46 L 10,43 L 0,43 Z" class="cut" />
+    <!-- Lubang Ulir M12 DC Barrel Jack DC-022 (Dia 12.0 mm) -->
+    <circle cx="20.0" cy="23.0" r="6.0" class="hole" />
+    <text x="10.5" y="23.5" font-family="Arial, sans-serif" font-size="1.7px" fill="#0066cc" font-weight="bold">DC-022 (12mm)</text>
+    <!-- 2 Kisi Ventilasi Samping -->
+    <rect x="11.0" y="10.0" width="18.0" height="2.0" rx="1.0" class="slot" />
+    <rect x="11.0" y="36.0" width="18.0" height="2.0" rx="1.0" class="slot" />
   </g>
 
-  <!-- 4. PELAT DINDING KANAN (2 LUBANG: TERMINAL SCREW KF301 & SOKET KIPAS CN1) - 66 x 39 mm -->
-  <g transform="translate(116, 95)">
-    <text x="0" y="-2" class="text-label">4. Panel Sisi Kanan (Screw Terminal &amp; Soket Kipas CN1) - 66 x 39 mm</text>
-    <path d="M 0,3 
-             L 15,3 L 15,0 L 30,0 L 30,3 
-             L 36,3 L 36,0 L 51,0 L 51,3 
-             L 66,3 L 66,36 
-             L 51,36 L 51,39 L 36,39 L 36,36 
-             L 30,36 L 30,39 L 15,39 L 15,36 
-             L 0,36 Z" class="cut" />
-    
-    <!-- LUBANG 1: SCREW TERMINAL KF301 (Input Power 5V) di Center X=25.0 mm -->
-    <!-- Celah ukuran 13 x 9.5 mm untuk kabel power dan obeng baut terminal -->
-    <rect x="18.5" y="14" width="13" height="9.5" rx="2" class="slot" />
-    <text x="14" y="10" class="dim-label" font-size="2.0px">SCREW TERMINAL (5V)</text>
-    
-    <!-- LUBANG 2: SOKET KIPAS CN1 (JST-XH 2.54 Siku) di Center X=42.0 mm -->
-    <!-- Celah ukuran 12 x 9 mm untuk colokan kabel kipas 4010 menuju tunnel -->
-    <rect x="36" y="14.5" width="12" height="9" rx="2" class="slot" />
-    <text x="36" y="10" class="dim-label" font-size="2.0px">SOKET KIPAS (CN1)</text>
-    
-    <!-- Ventilasi Tambahan di Dinding Kanan -->
-    <rect x="8" y="27" width="22" height="2" rx="1" class="slot" />
-    <rect x="36" y="27" width="22" height="2" rx="1" class="slot" />
+  <!-- ======================================================== -->
+  <!-- 4. DINDING SISI DEPAN (96 x 46 mm) -->
+  <!-- ======================================================== -->
+  <g transform="translate(110, 80)">
+    <text x="0" y="-3" class="label">4. Dinding Sisi Depan (96 x 46 mm)</text>
+    <path d="M 0,3 L 38,3 L 38,0 L 58,0 L 58,3 L 96,3 L 96,43 L 58,43 L 58,46 L 38,46 L 38,43 L 0,43 Z" class="cut" />
+    <!-- 3 Baris Kisi Estetis Depan -->
+    <rect x="20.0" y="16.0" width="56.0" height="2.5" rx="1.2" class="slot" />
+    <rect x="25.0" y="21.0" width="46.0" height="2.5" rx="1.2" class="slot" />
+    <rect x="30.0" y="26.0" width="36.0" height="2.5" rx="1.2" class="slot" />
   </g>
 
-  <!-- 5. PELAT DINDING BELAKANG (KELUARAN KABEL SENSOR MQ-2 & MQ-7 MENUJU TUNNEL) - 96 x 39 mm -->
-  <g transform="translate(10, 150)">
-    <text x="0" y="-2" class="text-label">5. Panel Belakang (Keluaran Kabel ke Tunnel Sensor Gas) - 96 x 39 mm</text>
-    <path d="M 0,3 
-             L 20,3 L 20,0 L 40,0 L 40,3 
-             L 56,3 L 56,0 L 76,0 L 76,3 
-             L 96,3 L 96,36 
-             L 76,36 L 76,39 L 56,39 L 56,36 
-             L 40,36 L 40,39 L 20,39 L 20,36 
-             L 0,36 Z" class="cut" />
-    <!-- Celah Kabel Lurus Tepat di Depan Header MQ-7 & MQ-2 (X=20 s/d 48 mm) -->
-    <rect x="20" y="15" width="28" height="10" rx="3" class="slot" />
-    <text x="18" y="11" class="dim-label" font-size="2.0px">KABEL KE TUNNEL (MQ-2 &amp; MQ-7)</text>
-    <!-- 2 Lubang Tali Zip-Tie Pengikat Kabel -->
-    <circle cx="16" cy="20" r="1.5" class="hole" />
-    <circle cx="51" cy="20" r="1.5" class="hole" />
-    <!-- Ventilasi Sisi Kanan Panel Belakang -->
-    <rect x="62" y="16" width="24" height="2" rx="1" class="slot" />
-    <rect x="62" y="21" width="24" height="2" rx="1" class="slot" />
-  </g>
-
-  <!-- 6. PELAT DINDING DEPAN (PANEL DEPAN DENGAN VENTILASI) - 96 x 39 mm -->
-  <g transform="translate(116, 150)">
-    <text x="0" y="-2" class="text-label">6. Panel Depan (Ventilasi Sirkulasi Box) - 96 x 39 mm</text>
-    <path d="M 0,3 
-             L 20,3 L 20,0 L 40,0 L 40,3 
-             L 56,3 L 56,0 L 76,0 L 76,3 
-             L 96,3 L 96,36 
-             L 76,36 L 76,39 L 56,39 L 56,36 
-             L 40,36 L 40,39 L 20,39 L 20,36 
-             L 0,36 Z" class="cut" />
-    <!-- Kisi-kisi Ventilasi Pasif Bertingkat Elegan -->
-    <rect x="20" y="14" width="56" height="2.5" rx="1.2" class="slot" />
-    <rect x="25" y="19" width="46" height="2.5" rx="1.2" class="slot" />
-    <rect x="30" y="24" width="36" height="2.5" rx="1.2" class="slot" />
-    <text x="37" y="10" class="dim-label" font-size="2.0px">PANEL SISI DEPAN</text>
-  </g>
-
-  <!-- CATATAN BOM & HARDWARE -->
-  <g transform="translate(218, 95)">
-    <text x="0" y="-2" class="text-label">BOM Perakitan Case PCB:</text>
-    <rect x="0" y="0" width="98" height="97" fill="#fafafa" stroke="#dddddd" stroke-width="0.3" rx="2" />
-    <text x="4" y="8" class="dim-label" font-weight="bold">Data Fisik PCB (EasyEDA):</text>
-    <text x="4" y="15" class="dim-label">• Ukuran: 70.0 x 40.0 mm</text>
-    <text x="4" y="22" class="dim-label">• Jarak Baut: 64.4 x 34.4 mm</text>
-    <text x="4" y="29" class="dim-label">• Space Kiri-Kanan: 1.0 cm (10 mm)</text>
-    <text x="4" y="36" class="dim-label">• Panel Kiri: Port USB Type-C</text>
-    <text x="4" y="43" class="dim-label">• Panel Kanan: Screw Terminal &amp; Fan</text>
-    <text x="4" y="50" class="dim-label">• Panel Belakang: Kabel ke Tunnel</text>
-    <text x="4" y="57" class="dim-label">• Pelat Atas: Dudukan DHT22 &amp; LED</text>
-    <text x="4" y="66" class="dim-label" font-weight="bold">Hardware Diperlukan:</text>
-    <text x="4" y="73" class="dim-label">1. Standoff Sudut M3 x 40 mm (4 pcs)</text>
-    <text x="4" y="80" class="dim-label">2. Spacer Dudukan PCB M3 x 6 mm (4 pcs)</text>
-    <text x="4" y="87" class="dim-label">3. Baut M3 x 6 mm (12 pcs)</text>
-    <text x="4" y="94" class="dim-label">4. Bahan Akrilik Bening 3.0 mm</text>
+  <!-- ======================================================== -->
+  <!-- 5. DINDING SISI BELAKANG (VENTILASI KISI PENUH) (96 x 46 mm) -->
+  <!-- ======================================================== -->
+  <g transform="translate(110, 138)">
+    <text x="0" y="-3" class="label">5. Dinding Sisi Belakang (96 x 46 mm - Kisi Penuh)</text>
+    <path d="M 0,3 L 38,3 L 38,0 L 58,0 L 58,3 L 96,3 L 96,43 L 58,43 L 58,46 L 38,46 L 38,43 L 0,43 Z" class="cut" />
+    <!-- 3 Baris Kisi Estetis Belakang -->
+    <rect x="20.0" y="16.0" width="56.0" height="2.5" rx="1.2" class="slot" />
+    <rect x="25.0" y="21.0" width="46.0" height="2.5" rx="1.2" class="slot" />
+    <rect x="30.0" y="26.0" width="36.0" height="2.5" rx="1.2" class="slot" />
   </g>
 </svg>

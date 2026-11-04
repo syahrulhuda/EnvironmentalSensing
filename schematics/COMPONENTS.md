@@ -16,7 +16,7 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
   * Komponen Pasif & Filter Daya (C1 Elco 100 µF, C2 Keramik 100 nF, Terminal KF301-2P teruji redam ripple 5.10-5.15V -> 5.13-5.14V)
   * Resistor 220Ω x3, 1kΩ x1, 10kΩ x1 tipe 1/2 Watt, Transistor SS8050, Diode 1N4007
 * **Komponen Belum Terpasang / Menunggu Pengiriman:**
-  * Kipas DC 5V 4010 (Exhaust Tunnel) & Adaptor 5V 2A Regulated
+  * Kipas DC 5V 3010 (Exhaust Tunnel) & Adaptor 5V 2A Regulated
   * DC-022 Panel Mount Jack, Spacer M3, Baut & Mur akrilik
 
 ---
@@ -30,7 +30,7 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 | **H1** | **Sensor MQ-7** | Deteksi gas CO (10 - 1000 ppm), modul 4-pin (VCC, GND, DO, AO) | **TERUJI FISIK** | GPIO 1 (ADC1_CH1). Baseline idle stabil di 1.25V (ADC 1550) |
 | **H3** | **Sensor MQ-2** | Deteksi LPG, asap, propana, metana, modul 4-pin (VCC, GND, DO, AO) | **TERUJI FISIK** | GPIO 0 (ADC1_CH0). Baseline idle stabil di 0.37V (ADC 460) |
 | **H2** | **OLED Display 0.96" I2C** | 128x64 piksel, Driver SSD1306, 4-pin (GND, VCC, SCL, SDA), warna Putih/Biru | **TERUJI FISIK** | Alamat 0x3C, SDA: GPIO8, SCL: GPIO9 dengan timeout anti-freeze |
-| **CN1** | **Kipas DC 5V (4010 Fan)** | DC 5V Brushless Fan ukuran 40 x 40 x 10 mm, arus ~0.10 - 0.15 A | **MENUNGGU KIRIMAN** | Menunggu pengiriman untuk uji inrush current & PWM GPIO5 |
+| **CN1** | **Kipas DC 5V (3010 Fan)** | DC 5V Brushless Fan ukuran 30 x 30 x 10 mm (WUMINGDIANZI 5V-DC), pitch 24 x 24 mm | **SUDAH ADA** | Dipasang di exhaust outlet tunnel, kabel konektor colok ke CN1 |
 
 ---
 
@@ -89,7 +89,7 @@ Dokumen ini memuat daftar inventaris seluruh komponen hardware yang digunakan pa
 
 1. **Polaritas Soket Kipas (CN1):**
    * Jalur PCB: **Pin 1 = +5V (Kabel Merah)** dan **Pin 2 = Kolektor Transistor / GND Terkontrol (Kabel Hitam)**.
-   * Periksa kabel kipas 4010 sebelum dicolok. Jika posisi warna terbalik pada soket female bawaan kipas, congkel kait plastik klip JST dengan pinset/jarum lalu tukar posisi pinnya.
+   * Periksa kabel kipas 3010 sebelum dicolok. Jika posisi warna terbalik pada soket female bawaan kipas, congkel kait plastik klip JST dengan pinset/jarum lalu tukar posisi pinnya.
 2. **Orientasi Kaki Transistor Q1 (TO-92):**
    * Footprint PCB menggunakan urutan: **Pin 1 = Emitor (GND), Pin 2 = Basis (R5), Pin 3 = Kolektor (CN1)**.
    * Model yang sesuai adalah **SS8050** atau **2N2222**. Jangan menggunakan seri BC547 tanpa memodifikasi silang kaki karena susunannya terbalik.

@@ -346,3 +346,29 @@ body {
   font-size: 0.72rem;
 }
 
+
+/* =============================================================================
+   Mobile Optimization: Dedicated Viewport Height for ESI Chat Card (< 992px)
+   (Laptop / Desktop >= 992px remains 100% untouched)
+   ============================================================================= */
+@media (max-width: 991px) {
+  #esiChatCard {
+    height: clamp(400px, 62vh, 520px);
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+  }
+  #chatFeed {
+    flex: 1 1 auto;
+    min-height: 180px;
+    overscroll-behavior: contain;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
