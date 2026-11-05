@@ -156,7 +156,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
        - Jika `latest_version > currentVersion`, aplikasi memunculkan dialog pembaruan (`UpdateAvailableDialog`):
          - Menampilkan changelog fitur terbaru.
          - Tombol *"Perbarui Sekarang"* mengunduh APK ke penyimpanan lokal via background downloader dan memicu Android `PackageInstaller` intent untuk instalasi langsung tanpa membuka browser.
-- **Keputusan:** `[29-10-2026]` - **[DITERIMA & TAHAP 1 SELESAI]** Pipeline 2 (Web Dashboard ke Firebase Hosting) telah beroperasi penuh dan terverifikasi via commit `0190916`. Pipeline 1 (Edge Raspi CD) dan Pipeline 3 (Mobile OTA) dalam antrean eksekusi berikutnya.
+- **Keputusan:** `[29-10-2026]` - **[DITERIMA & LENGKAP 100%]** Seluruh 3-Tier Pipeline (Pipeline 1: Edge Raspi CD via Self-Hosted, Pipeline 2: Web Dashboard ke Firebase Hosting, dan Pipeline 3: Mobile OTA & GitHub Release via `.github/workflows/release-mobile.yml`) telah beroperasi penuh dan terverifikasi.
 ### [Status: DITERIMA & SELESAI] Hasil Uji Empiris Rangkaian Filter Daya C1/C2 (Proof of Concept)
 - **Tanggal & Inisiator:** `[09-10-2026]` - Huda
 - **Ide & Pengujian:** Menguji rangkaian low-pass / decoupling filter daya input (C1 Elco 100uF + C2 Keramik 100nF + KF301-2P) menggunakan sumber daya 5V dari pin VIN ESP32 WROOM sebelum pemasangan barrel jack DC permanen.
@@ -455,7 +455,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[DEVOPS-02]** Setup 2-Stage CI/CD Backend (Cloud CI + Edge CD): GitHub Self-Hosted Runner resmi terpasang sebagai daemon systemd 24/7 di Raspberry Pi 3B (`actions.runner.*.service`) dengan label `pikos`, Stage 1 Cloud CI (Pytest & Flake8) + Stage 2 Edge CD (auto git pull, pip sync, passwordless systemctl restart ess-backend, dan automated healthcheck). *(Selesai & Operasional 100%)*
 - [x] **[DEVOPS-03]** Implementasi Endpoint `GET /api/app/version` di FastAPI backend untuk version checking OTA mobile (`AppVersionResponse`, konfigurasi env settings, cleanup PEP 8 top-level imports, & unit test suite CI).
 - [x] **[DEVOPS-04]** Implementasi In-App OTA Update Engine pada Flutter Mobile (`package_info_plus` + background download + Android PackageInstaller intent). *(Selesai - Model, Service, Dialog K3, & Auto-Check Terintegrasi)*
-- [ ] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`).
+- [x] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`). *(Selesai - Cloud Build Ubuntu, Java 17, Flutter SDK Stable, Artifact Upload, & Auto-Publish GitHub Release)*
 - [x] **[AI-06]** ESI Multi-Node Context-Aware & Offline Watchdog Upgrade: Injeksi `active_node_id` otomatis dari frontend dropdown ke `/api/chat`, Heartbeat Watchdog offline awareness (`is_online`, `age_seconds`) pada `get_telemetry`, tool `get_fleet_summary` (overview kesehatan seluruh armada sensor dalam 1 kali panggil), dan tool `get_devices` (metadata resmi armada dari Supabase).
 
 

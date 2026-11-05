@@ -1,0 +1,98 @@
+name: Release Mobile Android APK
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag rilis target (opsional, misal: v2.0.0)'
+        required: false
+        default: ''
+      release_notes:
+        description: 'Catatan rilis manual (opsional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build APK & Publish Release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Flutter & Dart Toolchain
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      - name: Static Analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Verify Built APK Binary
+        run: |
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: frontend/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release (Tag Push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: frontend/build/app/outputs/flutter-apk/app-release.apk
+          name: Release ${{ github.ref_name }}
+          body: ${{ inputs.release_notes || '' }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+      - name: Publish GitHub Release (Manual Dispatch)
+        if: github.event_name == 'workflow_dispatch' && inputs.tag_name != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag_name }}
+          files: frontend/build/app/outputs/flutter-apk/app-release.apk
+          name: Release ${{ inputs.tag_name }}
+          body: ${{ inputs.release_notes || '' }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
