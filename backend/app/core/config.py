@@ -63,7 +63,7 @@ class Settings:
     CHAT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "15"))
 
     # Mobile In-App OTA Update Engine (DEVOPS-03 / DEVOPS-04)
-    APP_LATEST_VERSION: str = os.getenv("APP_LATEST_VERSION", "1.2.0")
+    APP_LATEST_VERSION: str = os.getenv("APP_LATEST_VERSION", "2.1.0")
     APP_MIN_REQUIRED_VERSION: str = os.getenv("APP_MIN_REQUIRED_VERSION", "1.0.0")
     APP_DOWNLOAD_URL: str = os.getenv(
         "APP_DOWNLOAD_URL",
@@ -71,7 +71,7 @@ class Settings:
     )
     APP_RELEASE_NOTES: str = os.getenv(
         "APP_RELEASE_NOTES",
-        "Pembaruan ESS v1.2.0: Kalibrasi empiris sensor MQ-7/MQ-2, layout responsif, dan optimasi performa."
+        "Pembaruan ESS v2.1.0: Tampilan antarmuka Hybrid 100% Web Parity dengan responsive carousel, canvas sparkline, dan glassmorphism."
     )
     APP_FORCE_UPDATE: bool = os.getenv("APP_FORCE_UPDATE", "false").lower() in ("true", "1", "yes")
 
