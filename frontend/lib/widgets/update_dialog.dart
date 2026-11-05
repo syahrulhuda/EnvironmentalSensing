@@ -56,7 +56,7 @@ class _UpdateAvailableDialogState extends State<UpdateAvailableDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.system_update_alt, color: AppColors.primaryLight, size: 22),

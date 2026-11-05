@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
 
-/// Palet 4-Warna Harmonis & Standar Keselamatan K3 ESS (Pilar 1)
-/// Terdiri dari 4 Token Desain Utama + Status Peringatan K3 Bersyarat
+/// Palet Desain Industri Modern Navy & Sky Cyan (Identik dengan Web CSS)
+/// Mengikuti spesifikasi arsitektur 3-warna di frontend/style.css:
+/// 1. Background: #070D1E (Deep Midnight Navy)
+/// 2. Card Surface: #0E172E (Rich Slate Blue Glass)
+/// 3. Card Outline: #38BDF8 (Crisp Sky Blue 22% Opacity)
+/// 4. Typography: #F8FAFC (Crisp White) Across All Cards
+/// 5. K3 Indicators: Hijau (#10B981) / Kuning (#F59E0B) / Merah (#EF4444)
 class AppColors {
-  // 1. Primary: Brand Identity, Active Headers, Buttons & Primary Lines
-  static const Color primary = Color(0xFF0284C7); // Slate Cyan
-  static const Color primaryLight = Color(0xFF38BDF8); // Glow Cyan
+  // 1. Primary Canvas & Surface (Deep Midnight Navy Theme)
+  static const Color background = Color(0xFF070D1E);
+  static const Color surface = Color(0xFF0B142B);
+  static const Color card = Color(0xFF0E172E);
+  static const Color cardOutline = Color(0x3838BDF8);
+  static const Color border = Color(0x2838BDF8);
 
-  // 2. Secondary: Dark Slate Surface & Elevated Containers
-  static const Color background = Color(0xFF080C14);
-  static const Color surface = Color(0xFF0F172A); // Container Surface
-  static const Color card = Color(0xFF1E293B); // Elevated Card Surface
-  static const Color border = Color(0x1FFFFFFF);
+  // 2. Brand Cyan / Sky Accent
+  static const Color primary = Color(0xFF0284C7);
+  static const Color primaryLight = Color(0xFF38BDF8);
+  static const Color skyGlow = Color(0x4038BDF8);
 
-  // 3. Tertiary: Cool Muted Typography & Gridlines
-  static const Color tertiary = Color(0xFF94A3B8); // Muted Slate
-  static const Color textPrimary = Color(0xFFF1F5F9);
+  // 3. Clean Modern Typography
+  static const Color textPrimary = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textMuted = Color(0xFF64748B);
 
-  // 4. Accent: Interactive Spotlight, AI Dialogue & Live Indicator
-  static const Color accent = Color(0xFF10B981); // Neon Mint / Live Green
+  // 4. K3 Safety Indicators
   static const Color safeEmerald = Color(0xFF10B981);
-
-  // Conditional K3 Safety Alerts (Hanya aktif saat kondisi darurat/peringatan K3)
-  static const Color dangerRed = Color(0xFFEF4444);
   static const Color warningAmber = Color(0xFFF59E0B);
+  static const Color dangerRed = Color(0xFFEF4444);
 
-  // Legacy Aliases untuk Kompatibilitas Kode yang Ada
+  // Compatibility Aliases
+  static const Color accent = safeEmerald;
+  static const Color tertiary = textSecondary;
   static const Color tempCyan = primaryLight;
   static const Color smokeAmber = warningAmber;
-  static const Color coPurple = primary;
+  static const Color coPurple = Color(0xFF818CF8);
 }

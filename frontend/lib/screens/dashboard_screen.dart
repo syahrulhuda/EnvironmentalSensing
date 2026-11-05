@@ -14,7 +14,7 @@ import 'settings_dialog.dart';
 import '../services/ota_update_service.dart';
 import '../widgets/update_dialog.dart';
 
-/// Halaman Dashboard Utama ESS (Web & Mobile Responsive)
+/// Halaman Dashboard Utama ESS (Web & Mobile Modern Navy Layout)
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -67,61 +67,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  Widget _buildMetricGrid() {
+  List<Widget> _buildCardsList() {
+    final t = _current.temperature;
+    final co = _current.mq7CoPpm;
+    final smoke = _current.mq2SmokePpm;
+
+    return [
+      SensorMetricCard(
+        title: 'Suhu & Kelembapan',
+        pinLabel: 'DHT22 • GPIO 10',
+        value: '${t.toStringAsFixed(1)}°C',
+        unit: '${_current.humidity.toStringAsFixed(0)}% RH',
+        badgeText: t >= 35 ? 'Overheat' : (t >= 30 ? 'Hangat' : 'Optimal'),
+        thresholdInfo: 'Batas K3: < 35.0°C',
+        isDanger: t >= 35,
+        isWarning: t >= 30 && t < 35,
+        icon: Icons.thermostat_rounded,
+      ),
+      SensorMetricCard(
+        title: 'Karbon Monoksida (CO)',
+        pinLabel: 'MQ-7 • GPIO 1',
+        value: '$co',
+        unit: 'PPM',
+        badgeText: co >= 50 ? 'Bahaya' : (co >= 25 ? 'Waspada' : 'Aman'),
+        thresholdInfo: 'Batas K3: < 50 PPM',
+        isDanger: co >= 50,
+        isWarning: co >= 25 && co < 50,
+        icon: Icons.crisis_alert_rounded,
+      ),
+      SensorMetricCard(
+        title: 'Gas & Asap Las',
+        pinLabel: 'MQ-2 • GPIO 0',
+        value: '$smoke',
+        unit: 'PPM',
+        badgeText: smoke >= 300 ? 'Bahaya' : (smoke >= 150 ? 'Waspada' : 'Aman'),
+        thresholdInfo: 'Batas K3: < 150 PPM',
+        isDanger: smoke >= 300,
+        isWarning: smoke >= 150 && smoke < 300,
+        icon: Icons.cloud_rounded,
+      ),
+    ];
+  }
+
+  Widget _buildMetricLayout() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int crossAxisCount = 1;
-        double childAspectRatio = 2.6;
-        if (constraints.maxWidth > 700) {
-          crossAxisCount = 3;
-          childAspectRatio = 1.25;
-        } else if (constraints.maxWidth > 480) {
-          crossAxisCount = 2;
-          childAspectRatio = 1.35;
+        final cards = _buildCardsList();
+        if (constraints.maxWidth > 750) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: cards.map((c) => Expanded(child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: c,
+            ))).toList(),
+          );
         }
-
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: childAspectRatio,
-          children: [
-            SensorMetricCard(
-              title: 'Suhu & Kelembapan',
-              pinLabel: 'DHT22 • GPIO 10',
-              value: '${_current.temperature.toStringAsFixed(1)}°C',
-              unit: '${_current.humidity.toStringAsFixed(0)}% RH',
-              badgeText: _current.temperature >= 35 ? 'Overheat' : 'Optimal',
-              isDanger: _current.temperature >= 35,
-              accentColor: AppColors.primary,
-              icon: Icons.thermostat,
-              progressPercent: (_current.temperature / 50),
-            ),
-            SensorMetricCard(
-              title: 'Karbon Monoksida (CO)',
-              pinLabel: 'MQ-7 • GPIO 1',
-              value: '${_current.mq7CoPpm}',
-              unit: 'PPM',
-              badgeText: _current.mq7CoPpm >= 50 ? 'TOXIC HAZARD!' : 'Safe (<50 PPM)',
-              isDanger: _current.mq7CoPpm >= 50,
-              accentColor: _current.mq7CoPpm >= 50 ? AppColors.dangerRed : AppColors.primary,
-              icon: Icons.warning_rounded,
-              progressPercent: (_current.mq7CoPpm / 80),
-            ),
-            SensorMetricCard(
-              title: 'Asap & Gas Las',
-              pinLabel: 'MQ-2 • GPIO 0',
-              value: '${_current.mq2SmokePpm}',
-              unit: 'PPM',
-              badgeText: _current.mq2SmokePpm >= 300 ? 'SMOKE DETECTED!' : 'Clean Air',
-              isDanger: _current.mq2SmokePpm >= 300,
-              accentColor: _current.mq2SmokePpm >= 300 ? AppColors.warningAmber : AppColors.primary,
-              icon: Icons.cloud,
-              progressPercent: (_current.mq2SmokePpm / 500),
-            ),
-          ],
+        return Column(
+          children: cards.map((c) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: c,
+          )).toList(),
         );
       },
     );
@@ -133,59 +138,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _current.mq7CoPpm >= ApiConstants.mq7MaxThreshold ||
         _current.mq2SmokePpm >= ApiConstants.mq2MaxThreshold ||
         _current.status == 'DANGER';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktopWeb = screenWidth > 900;
+    final isDesktopWeb = MediaQuery.of(context).size.width > 900;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Column(
+        titleSpacing: 16,
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Smart Environmental Sensing (ESS)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            Text('Bengkel Mekatronika POLTEKOM', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            Row(
+              children: [
+                const Text(
+                  'Environmental Sensing System',
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.2),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.3)),
+                  ),
+                  child: const Text(
+                    'NODE-MRS01',
+                    style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.primaryLight, fontFamily: 'monospace'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            const Text('Bengkel Mekatronika POLTEKOM', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
           ],
         ),
         actions: [
-          StatusPillBadge(
-            isLive: _current.isOnline,
-            label: _current.isOnline ? 'ONLINE' : 'OFFLINE',
-          ),
-          const SizedBox(width: 8),
+          StatusPillBadge(isLive: _current.isOnline, label: _current.isOnline ? 'ONLINE' : 'OFFLINE'),
           IconButton(
-            icon: Icon(
-              Icons.bolt,
-              color: _isDangerSimulated ? AppColors.dangerRed : AppColors.textSecondary,
-            ),
+            icon: Icon(Icons.bolt, size: 20, color: _isDangerSimulated ? AppColors.dangerRed : AppColors.textMuted),
             tooltip: 'Simulasi Bahaya K3',
             onPressed: () => setState(() => _isDangerSimulated = !_isDangerSimulated),
           ),
           IconButton(
-            icon: const Icon(Icons.settings, color: AppColors.textSecondary),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => SettingsDialog(
-                currentFirebaseUrl: _telemetryService.firebaseUrl,
-                currentBackendUrl: _telemetryService.backendUrl,
-                currentNodeId: _telemetryService.nodeId,
-                onSave: (fb, be, node) {
-                  setState(() {
-                    _telemetryService.firebaseUrl = fb;
-                    _telemetryService.backendUrl = be;
-                    _telemetryService.nodeId = node;
-                    _chatService.backendUrl = be;
-                  });
-                },
-              ),
-            ),
+            icon: const Icon(Icons.settings_outlined, size: 20, color: AppColors.textSecondary),
+            onPressed: () => _openSettings(),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: isDesktopWeb
           ? Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Kolom Kiri: Metriks Sensor & Grafik Tren (Bisa Di-scroll)
                 Expanded(
                   flex: 7,
                   child: SingleChildScrollView(
@@ -193,23 +196,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       children: [
                         EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
-                        const SizedBox(height: 16),
-                        _buildMetricGrid(),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
+                        _buildMetricLayout(),
+                        const SizedBox(height: 14),
                         TelemetryChartWidget(history: _history),
                       ],
                     ),
                   ),
                 ),
-                // Kolom Kanan: Pinned ESI AI Chat Panel (Stay in Place, Tidak Ikut Scroll)
                 Expanded(
                   flex: 5,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-                    child: EsiChatPanel(
-                      chatService: _chatService,
-                      showHeaderClose: false,
-                    ),
+                    child: EsiChatPanel(chatService: _chatService, showHeaderClose: false),
                   ),
                 ),
               ],
@@ -219,26 +218,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 children: [
                   EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
-                  const SizedBox(height: 16),
-                  _buildMetricGrid(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
+                  _buildMetricLayout(),
+                  const SizedBox(height: 14),
                   TelemetryChartWidget(history: _history),
+                  const SizedBox(height: 70), // Spasi aman untuk FAB
                 ],
               ),
             ),
-      floatingActionButton: isDesktopWeb
-          ? null
-          : FloatingActionButton.extended(
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.smart_toy, color: Colors.white),
-              label: const Text('Tanya ESI AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => EsiChatBottomSheet(chatService: _chatService),
-              ),
+      floatingActionButton: isDesktopWeb ? null : Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.45),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          elevation: 0,
+          backgroundColor: AppColors.primary,
+          icon: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 20),
+          label: const Text('Tanya ESI AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => EsiChatBottomSheet(chatService: _chatService),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openSettings() {
+    showDialog(
+      context: context,
+      builder: (_) => SettingsDialog(
+        currentFirebaseUrl: _telemetryService.firebaseUrl,
+        currentBackendUrl: _telemetryService.backendUrl,
+        currentNodeId: _telemetryService.nodeId,
+        onSave: (fb, be, node) {
+          setState(() {
+            _telemetryService.firebaseUrl = fb;
+            _telemetryService.backendUrl = be;
+            _telemetryService.nodeId = node;
+            _chatService.backendUrl = be;
+          });
+        },
+      ),
     );
   }
 }

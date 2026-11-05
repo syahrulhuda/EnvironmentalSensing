@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 
-/// Widget Banner Status Keselamatan Darurat K3 ESS
+/// Widget Banner Status Keselamatan K3 Modern Glass (Identik dengan Web Dashboard)
 class EmergencyBannerWidget extends StatelessWidget {
   final bool isDanger;
   final String statusText;
@@ -15,88 +15,115 @@ class EmergencyBannerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOffline = statusText == 'OFFLINE';
-    final bgColor = isOffline
-        ? AppColors.dangerRed.withOpacity(0.12)
-        : (isDanger
-            ? AppColors.dangerRed.withOpacity(0.18)
-            : AppColors.safeEmerald.withOpacity(0.10));
-    final borderColor = isOffline
-        ? AppColors.dangerRed
-        : (isDanger ? AppColors.dangerRed : AppColors.safeEmerald);
-    final icon = isOffline
-        ? Icons.cloud_off_rounded
-        : (isDanger ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded);
-    final title = isOffline
-        ? 'PERINGATAN: KONEKSI IOT TERPUTUS'
-        : (isDanger ? 'PERINGATAN: KONDISI BENGKEL KRITIS!' : 'Bengkel Terpantau Aman');
-    final desc = isOffline
-        ? 'Koneksi ke node ESS terputus. Menampilkan data fallback simulasi. Periksa koneksi Wi-Fi dan catu daya perangkat!'
-        : (isDanger
-            ? 'Sensor mendeteksi anomali: Suhu, Gas CO, atau Asap melebihi batas K3. LED Merah & Kipas Aktif!'
-            : 'Parameter atmosfer ruangan dalam ambang baku mutu K3 & OSHA. Tidak ada kebocoran gas.');
+    final isWarmup = statusText == 'WARMUP';
+
+    Color themeColor;
+    IconData icon;
+    String title;
+    String description;
+    String badge;
+
+    if (isOffline) {
+      themeColor = AppColors.dangerRed;
+      icon = Icons.wifi_off_rounded;
+      title = 'KONEKSI NODE IOT TERPUTUS';
+      description = 'Node tidak mengirim telemetri >15 detik. Periksa daya & Wi-Fi perangkat.';
+      badge = 'OFFLINE';
+    } else if (isDanger) {
+      themeColor = AppColors.dangerRed;
+      icon = Icons.warning_amber_rounded;
+      title = 'STATUS K3: BAHAYA KRITIS!';
+      description = 'Kadar gas/asap melebihi ambang batas. Kipas darurat & LED merah aktif.';
+      badge = 'DANGER';
+    } else if (isWarmup) {
+      themeColor = AppColors.primaryLight;
+      icon = Icons.hourglass_top_rounded;
+      title = 'Pemanasan Sensor (Warmup)';
+      description = 'Stabilisasi koil pemanas SnO2 MQ-7/MQ-2 selama 45 detik untuk mencegah alarm palsu.';
+      badge = 'WARMUP';
+    } else {
+      themeColor = AppColors.safeEmerald;
+      icon = Icons.verified_user_rounded;
+      title = 'Laboratorium Terpantau Aman';
+      description = 'Parameter gas, asap, dan suhu ruangan berada di bawah baku mutu K3 & OSHA.';
+      badge = 'NORMAL';
+    }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: themeColor.withValues(alpha: 0.40), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: themeColor.withValues(alpha: 0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: borderColor.withOpacity(0.2),
-              shape: BoxShape.circle,
+              color: themeColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: themeColor.withValues(alpha: 0.35)),
             ),
-            child: Icon(icon, color: borderColor, size: 28),
+            child: Icon(icon, color: themeColor, size: 20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: borderColor,
-                        letterSpacing: 0.5,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: themeColor,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: borderColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(4),
+                        color: themeColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: themeColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
-                        statusText,
+                        badge,
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: borderColor,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: themeColor,
                           fontFamily: 'monospace',
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
-                  desc,
+                  description,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 10.5,
                     color: AppColors.textSecondary,
                     height: 1.3,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

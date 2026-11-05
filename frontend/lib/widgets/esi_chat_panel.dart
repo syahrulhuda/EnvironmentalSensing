@@ -3,8 +3,7 @@ import '../core/constants/app_colors.dart';
 import '../models/chat_message_model.dart';
 import '../services/esi_chat_service.dart';
 
-/// Panel Chat ESI AI Reusable & Auto-scrollable (TD-F09)
-/// Digunakan sebagai Pinned Panel pada Desktop/Web (Opsi A) dan Bottom Sheet pada Mobile (Opsi B)
+/// Panel Chat ESI AI Modern Glass & Auto-scrollable (TD-F09)
 class EsiChatPanel extends StatefulWidget {
   final EsiChatService chatService;
   final VoidCallback? onClose;
@@ -79,15 +78,21 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.cardOutline, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header ESI Assistant
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -97,11 +102,11 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.18),
+                      color: AppColors.primaryLight.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.35)),
                     ),
-                    child: const Icon(Icons.smart_toy_rounded, color: AppColors.accent, size: 20),
+                    child: const Icon(Icons.smart_toy_rounded, color: AppColors.primaryLight, size: 19),
                   ),
                   const SizedBox(width: 10),
                   const Column(
@@ -109,15 +114,11 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
                     children: [
                       Text(
                         'ESI Safety Assistant',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       ),
                       Text(
-                        'Gemini AI • K3 Guidance',
-                        style: TextStyle(fontSize: 10, color: AppColors.tertiary),
+                        'Gemini AI • Analitik K3 Bengkel',
+                        style: TextStyle(fontSize: 10, color: AppColors.textMuted),
                       ),
                     ],
                   ),
@@ -125,7 +126,7 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
               ),
               if (widget.showHeaderClose && widget.onClose != null)
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
+                  icon: const Icon(Icons.close_rounded, color: AppColors.textMuted, size: 20),
                   onPressed: widget.onClose,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -133,8 +134,7 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.border, height: 1),
-          // Chat Feed (Scrollable & Auto-scroll)
+          const Divider(color: Color(0x2038BDF8), height: 1),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -148,16 +148,18 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     padding: const EdgeInsets.all(12),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * (widget.showHeaderClose ? 0.75 : 0.85),
+                      maxWidth: MediaQuery.of(context).size.width * (widget.showHeaderClose ? 0.78 : 0.85),
                     ),
                     decoration: BoxDecoration(
-                      color: m.isUser ? AppColors.primary.withOpacity(0.2) : AppColors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: m.isUser ? AppColors.primary.withOpacity(0.4) : AppColors.border),
+                      color: m.isUser ? AppColors.primary.withValues(alpha: 0.28) : AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: m.isUser ? AppColors.primaryLight.withValues(alpha: 0.45) : AppColors.border,
+                      ),
                     ),
                     child: Text(
                       m.text,
-                      style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, height: 1.35),
+                      style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, height: 1.38),
                     ),
                   ),
                 );
@@ -165,15 +167,17 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
             ),
           ),
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 6),
-              child: LinearProgressIndicator(
-                backgroundColor: AppColors.card,
-                valueColor: AlwaysStoppedAnimation(AppColors.primary),
-                minHeight: 3,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: const LinearProgressIndicator(
+                  backgroundColor: AppColors.surface,
+                  valueColor: AlwaysStoppedAnimation(AppColors.primaryLight),
+                  minHeight: 2.5,
+                ),
               ),
             ),
-          // Quick Question Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -187,23 +191,22 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
             ),
           ),
           const SizedBox(height: 8),
-          // Input Form
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _textController,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                  style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Tanyakan keselamatan bengkel...',
                     hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                     filled: true,
-                    fillColor: AppColors.card,
+                    fillColor: AppColors.surface,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryLight)),
                   ),
                   onSubmitted: _sendMessage,
                 ),
@@ -214,8 +217,9 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.all(10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                icon: const Icon(Icons.send_rounded, size: 16),
+                icon: const Icon(Icons.send_rounded, size: 17),
                 onPressed: () => _sendMessage(_textController.text),
               ),
             ],
@@ -229,10 +233,11 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ActionChip(
-        backgroundColor: AppColors.card,
-        side: const BorderSide(color: AppColors.border),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        label: Text(label, style: const TextStyle(fontSize: 10.5, color: AppColors.tertiary)),
+        backgroundColor: AppColors.surface,
+        side: const BorderSide(color: Color(0x3038BDF8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+        label: Text(label, style: const TextStyle(fontSize: 10.5, color: AppColors.primaryLight, fontWeight: FontWeight.w600)),
         onPressed: () => _sendMessage(label),
       ),
     );
