@@ -11,8 +11,8 @@ import '../widgets/telemetry_chart_widget.dart';
 import '../widgets/campus_carousel_slider.dart';
 import '../widgets/esi_fab_button.dart';
 import '../widgets/esi_chat_bottom_sheet.dart';
+import '../widgets/node_selector_sheet.dart';
 import '../widgets/update_dialog.dart';
-import 'settings_dialog.dart';
 
 /// Halaman Dashboard Utama ESS: Full Dart Native 100% Web Parity (TD-F20)
 /// Menghadirkan performa 120 FPS native tanpa lag WebView dengan visual 100% identik Web Dashboard
@@ -28,7 +28,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final EsiChatService _chatService = EsiChatService();
   TelemetryModel _current = TelemetryModel.initial();
   final List<TelemetryModel> _history = [];
-  bool _isDangerSimulated = false;
 
   @override
   void initState() {
@@ -36,9 +35,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _telemetryService.telemetryStream.listen((data) {
       if (!mounted) return;
       setState(() {
-        _current = _isDangerSimulated ? _getDangerMock() : data;
-        _history.add(_current);
-        if (_history.length > 25) _history.removeAt(0);
+        _current = data;
+        // Hanya rekam ke riwayat grafik jika data benar-benar aktif (bukan offline kosong)
+        if (data.isOnline) {
+          _history.add(_current);
+          if (_history.length > 25) _history.removeAt(0);
+        }
       });
     });
     _telemetryService.startPolling();
@@ -56,12 +58,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  TelemetryModel _getDangerMock() => TelemetryModel(
-    temperature: 42.0, humidity: 35.0, mq7CoPpm: 85, mq2SmokePpm: 520,
-    mq7Volt: 1.45, mq7Raw: 1420, nodeId: _current.nodeId, status: 'DANGER',
-    timestamp: DateTime.now(), isOnline: _current.isOnline,
-  );
-
   @override
   void dispose() {
     _telemetryService.dispose();
@@ -70,7 +66,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDanger = _current.status == 'DANGER' || _current.mq7CoPpm >= 50 || _current.mq2SmokePpm >= 300;
+    final isDanger = _current.isOnline &&
+        (_current.status == 'DANGER' || _current.mq7CoPpm >= 50 || _current.mq2SmokePpm >= 300);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -104,9 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   nodeId: _current.nodeId,
                   isOnline: _current.isOnline,
                   isDanger: isDanger,
-                  isDangerSimulated: _isDangerSimulated,
-                  onToggleSimulation: () => setState(() => _isDangerSimulated = !_isDangerSimulated),
-                  onOpenSettings: _openSettings,
+                  onSelectNode: _openNodeSelector,
                 ),
               ],
               body: ListView(
@@ -137,6 +132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildSensorCards() {
+    final isOnline = _current.isOnline;
     final t = _current.temperature;
     final co = _current.mq7CoPpm;
     final smoke = _current.mq2SmokePpm;
@@ -145,17 +141,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final coHist = _history.map((e) => e.mq7CoPpm.toDouble()).toList();
     final smokeHist = _history.map((e) => e.mq2SmokePpm.toDouble()).toList();
 
+    final tempDisplay = (t > 0 || isOnline) ? '${t.toStringAsFixed(1)}°C' : '--°C';
+    final humDisplay = (t > 0 || isOnline) ? '${_current.humidity.toStringAsFixed(0)}% RH' : '--% RH';
+    final coDisplay = (co > 0 || isOnline) ? '$co' : '--';
+    final smokeDisplay = (smoke > 0 || isOnline) ? '$smoke' : '--';
+
     return Column(
       children: [
         SensorMetricCard(
           title: 'Suhu & Kelembapan',
           pinLabel: 'DHT22 • GPIO 10',
-          value: '${t.toStringAsFixed(1)}°C',
-          unit: '${_current.humidity.toStringAsFixed(0)}% RH',
+          value: tempDisplay,
+          unit: humDisplay,
           badgeText: t >= 35 ? 'Overheat' : (t >= 30 ? 'Hangat' : 'Optimal'),
           thresholdInfo: 'Batas K3: < 35.0°C',
-          isDanger: t >= 35,
-          isWarning: t >= 30 && t < 35,
+          isDanger: isOnline && t >= 35,
+          isWarning: isOnline && t >= 30 && t < 35,
+          isOnline: isOnline,
           icon: Icons.thermostat_rounded,
           sparklineTitle: 'TREN SUHU REAL-TIME',
           sparklineValues: tempHist,
@@ -163,12 +165,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SensorMetricCard(
           title: 'Karbon Monoksida (CO)',
           pinLabel: 'MQ-7 • GPIO 1',
-          value: '$co',
+          value: coDisplay,
           unit: 'PPM',
           badgeText: co >= 50 ? 'Bahaya' : (co >= 25 ? 'Waspada' : 'Aman'),
           thresholdInfo: 'Batas K3: < 50 PPM',
-          isDanger: co >= 50,
-          isWarning: co >= 25 && co < 50,
+          isDanger: isOnline && co >= 50,
+          isWarning: isOnline && co >= 25 && co < 50,
+          isOnline: isOnline,
           icon: Icons.crisis_alert_rounded,
           sparklineTitle: 'TREN GAS CO REAL-TIME',
           sparklineValues: coHist,
@@ -176,12 +179,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SensorMetricCard(
           title: 'Gas Asap & Pengelasan',
           pinLabel: 'MQ-2 • GPIO 0',
-          value: '$smoke',
+          value: smokeDisplay,
           unit: 'PPM',
           badgeText: smoke >= 300 ? 'Bahaya' : (smoke >= 150 ? 'Waspada' : 'Clean Air'),
           thresholdInfo: 'Batas K3: < 150 PPM',
-          isDanger: smoke >= 300,
-          isWarning: smoke >= 150 && smoke < 300,
+          isDanger: isOnline && smoke >= 300,
+          isWarning: isOnline && smoke >= 150 && smoke < 300,
+          isOnline: isOnline,
           icon: Icons.cloud_outlined,
           sparklineTitle: 'TREN GAS & ASAP REAL-TIME',
           sparklineValues: smokeHist,
@@ -190,20 +194,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _openSettings() {
-    showDialog(
+  void _openNodeSelector() {
+    showModalBottomSheet(
       context: context,
-      builder: (_) => SettingsDialog(
-        currentFirebaseUrl: _telemetryService.firebaseUrl,
-        currentBackendUrl: _telemetryService.backendUrl,
-        currentNodeId: _telemetryService.nodeId,
-        onSave: (fb, be, node) {
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => NodeSelectorSheet(
+        currentNodeId: _current.nodeId,
+        onNodeSelected: (newNode) {
           setState(() {
-            _telemetryService.firebaseUrl = fb;
-            _telemetryService.backendUrl = be;
-            _telemetryService.nodeId = node;
-            _chatService.backendUrl = be;
+            _telemetryService.nodeId = newNode;
+            _history.clear();
           });
+          _telemetryService.fetchLatest();
         },
       ),
     );

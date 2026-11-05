@@ -6,7 +6,7 @@ import 'mini_sparkline_painter.dart';
 /// Menampilkan nilai telemetri 2-baris, status badge K3, dan drawer grafik sparkline mini real-time
 class SensorMetricCard extends StatelessWidget {
   final String title, pinLabel, value, unit, badgeText, thresholdInfo, sparklineTitle;
-  final bool isDanger, isWarning;
+  final bool isDanger, isWarning, isOnline;
   final IconData icon;
   final List<double> sparklineValues;
 
@@ -20,6 +20,7 @@ class SensorMetricCard extends StatelessWidget {
     this.thresholdInfo = '',
     required this.isDanger,
     this.isWarning = false,
+    this.isOnline = true,
     required this.icon,
     this.sparklineValues = const [],
     this.sparklineTitle = 'TREN REAL-TIME',
@@ -27,9 +28,19 @@ class SensorMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = isDanger ? AppColors.dangerRed : (isWarning ? AppColors.warningAmber : AppColors.safeEmerald);
-    final cardBorder = isDanger ? AppColors.dangerRed.withValues(alpha: 0.70) : (isWarning ? AppColors.warningAmber.withValues(alpha: 0.60) : AppColors.cardOutline);
+    final statusColor = !isOnline
+        ? AppColors.textMuted
+        : (isDanger ? AppColors.dangerRed : (isWarning ? AppColors.warningAmber : AppColors.safeEmerald));
+
+    final cardBorder = !isOnline
+        ? AppColors.cardOutline
+        : (isDanger
+            ? AppColors.dangerRed.withValues(alpha: 0.70)
+            : (isWarning ? AppColors.warningAmber.withValues(alpha: 0.60) : AppColors.cardOutline));
+
     final hasSecondaryMetric = unit.contains('% RH');
+    final effectiveBadge = isOnline ? badgeText : 'OFFLINE';
+    final effectiveThreshold = isOnline ? thresholdInfo : 'Node Tidak Aktif';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -40,7 +51,8 @@ class SensorMetricCard extends StatelessWidget {
         border: Border.all(color: cardBorder, width: 1.2),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 6)),
-          if (isDanger) BoxShadow(color: AppColors.dangerRed.withValues(alpha: 0.18), blurRadius: 16, spreadRadius: 2),
+          if (isDanger && isOnline)
+            BoxShadow(color: AppColors.dangerRed.withValues(alpha: 0.18), blurRadius: 16, spreadRadius: 2),
         ],
       ),
       child: Column(
@@ -78,7 +90,7 @@ class SensorMetricCard extends StatelessWidget {
                   children: [
                     Container(width: 5, height: 5, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
                     const SizedBox(width: 5),
-                    Text(badgeText, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: statusColor)),
+                    Text(effectiveBadge, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: statusColor)),
                   ],
                 ),
               ),
@@ -119,7 +131,7 @@ class SensorMetricCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(sparklineTitle, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.textMuted, fontFamily: 'monospace')),
-                  Text(thresholdInfo, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w500, color: Color(0x9038BDF8))),
+                  Text(effectiveThreshold, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w500, color: Color(0x9038BDF8))),
                 ],
               ),
               const SizedBox(height: 6),
@@ -136,6 +148,7 @@ class SensorMetricCard extends StatelessWidget {
                   painter: MiniSparklinePainter(
                     values: sparklineValues.isNotEmpty ? sparklineValues : [0.0, 0.0],
                     lineColor: statusColor,
+                    isOnline: isOnline,
                   ),
                 ),
               ),

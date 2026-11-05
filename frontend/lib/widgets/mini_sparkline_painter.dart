@@ -7,12 +7,14 @@ import '../core/constants/app_colors.dart';
 class MiniSparklinePainter extends CustomPainter {
   final List<double> values;
   final Color lineColor;
+  final bool isOnline;
   final double? minVal;
   final double? maxVal;
 
   MiniSparklinePainter({
     required this.values,
     required this.lineColor,
+    this.isOnline = true,
     this.minVal,
     this.maxVal,
   });
@@ -32,6 +34,10 @@ class MiniSparklinePainter extends CustomPainter {
     );
 
     if (values.length < 2) return;
+
+    final effectiveColor = isOnline
+        ? lineColor
+        : AppColors.textMuted.withValues(alpha: 0.35);
 
     // 2. Tentukan range nilai min dan max
     double computedMin = minVal ?? values.reduce((a, b) => a < b ? a : b);
@@ -68,48 +74,54 @@ class MiniSparklinePainter extends CustomPainter {
       path.cubicTo(controlX, p0.dy, controlX, p1.dy, p1.dx, p1.dy);
     }
 
-    // 4. Gambar Area Gradient di Bawah Kurva
-    final fillPath = Path.from(path)
-      ..lineTo(points.last.dx, size.height)
-      ..lineTo(points.first.dx, size.height)
-      ..close();
+    // 4. Gambar Area Gradient di Bawah Kurva (Hanya jika alat online)
+    if (isOnline) {
+      final fillPath = Path.from(path)
+        ..lineTo(points.last.dx, size.height)
+        ..lineTo(points.first.dx, size.height)
+        ..close();
 
-    final fillPaint = Paint()
-      ..shader = ui.Gradient.linear(
-        const Offset(0, padY),
-        Offset(0, size.height),
-        [
-          lineColor.withValues(alpha: 0.28),
-          lineColor.withValues(alpha: 0.02),
-        ],
-      )
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(fillPath, fillPaint);
+      final fillPaint = Paint()
+        ..shader = ui.Gradient.linear(
+          const Offset(0, padY),
+          Offset(0, size.height),
+          [
+            effectiveColor.withValues(alpha: 0.28),
+            effectiveColor.withValues(alpha: 0.02),
+          ],
+        )
+        ..style = PaintingStyle.fill;
+      canvas.drawPath(fillPath, fillPaint);
+    }
 
     // 5. Gambar Garis Kurva Utama
     final strokePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.0
+      ..color = effectiveColor
+      ..strokeWidth = isOnline ? 2.0 : 1.2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(path, strokePaint);
 
-    // 6. Gambar Dot Glowing pada Titik Terakhir (Real-Time Current Point)
-    final lastPoint = points.last;
-    final glowPaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.35)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(lastPoint, 5.0, glowPaint);
+    // 6. Gambar Dot Glowing pada Titik Terakhir (Hanya jika online)
+    if (isOnline) {
+      final lastPoint = points.last;
+      final glowPaint = Paint()
+        ..color = effectiveColor.withValues(alpha: 0.35)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 5.0, glowPaint);
 
-    final dotPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(lastPoint, 2.5, dotPaint);
+      final dotPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 2.5, dotPaint);
+    }
   }
 
   @override
   bool shouldRepaint(covariant MiniSparklinePainter oldDelegate) {
-    return oldDelegate.values != values || oldDelegate.lineColor != lineColor;
+    return oldDelegate.values != values ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.isOnline != isOnline;
   }
 }
