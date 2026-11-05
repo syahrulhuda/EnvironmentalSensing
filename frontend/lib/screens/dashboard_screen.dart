@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import '../core/constants/app_colors.dart';
+import '../models/telemetry_model.dart';
+import '../services/telemetry_service.dart';
+import '../services/esi_chat_service.dart';
 import '../services/ota_update_service.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/emergency_banner_widget.dart';
+import '../widgets/sensor_metric_card.dart';
+import '../widgets/telemetry_chart_widget.dart';
+import '../widgets/campus_carousel_slider.dart';
+import '../widgets/esi_fab_button.dart';
+import '../widgets/esi_chat_bottom_sheet.dart';
 import '../widgets/update_dialog.dart';
+import 'settings_dialog.dart';
 
-/// Halaman Dashboard Utama ESS: Hybrid Container yang Memuat Langsung Web Dashboard (Opsi A)
-/// Memadukan kesempurnaan 100% UI/UX Web Dashboard dengan In-App OTA Update Engine Android.
+/// Halaman Dashboard Utama ESS: Full Dart Native 100% Web Parity (TD-F20)
+/// Menghadirkan performa 120 FPS native tanpa lag WebView dengan visual 100% identik Web Dashboard
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -14,43 +24,25 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  late final WebViewController _controller;
-  bool _isLoading = true;
-  double _loadingProgress = 0.0;
+  final TelemetryService _telemetryService = TelemetryService();
+  final EsiChatService _chatService = EsiChatService();
+  TelemetryModel _current = TelemetryModel.initial();
+  final List<TelemetryModel> _history = [];
+  bool _isDangerSimulated = false;
 
   @override
   void initState() {
     super.initState();
-    _initWebView();
+    _telemetryService.telemetryStream.listen((data) {
+      if (!mounted) return;
+      setState(() {
+        _current = _isDangerSimulated ? _getDangerMock() : data;
+        _history.add(_current);
+        if (_history.length > 25) _history.removeAt(0);
+      });
+    });
+    _telemetryService.startPolling();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkOtaUpdate());
-  }
-
-  void _initWebView() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(AppColors.background)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            if (mounted) {
-              setState(() {
-                _loadingProgress = progress / 100.0;
-                if (progress >= 100) _isLoading = false;
-              });
-            }
-          },
-          onPageStarted: (String url) {
-            if (mounted) setState(() => _isLoading = true);
-          },
-          onPageFinished: (String url) {
-            if (mounted) setState(() => _isLoading = false);
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('[WebView Error] ${error.errorCode}: ${error.description}');
-          },
-        ),
-      )
-      ..loadFlutterAsset('index.html');
   }
 
   Future<void> _checkOtaUpdate() async {
@@ -64,34 +56,155 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  TelemetryModel _getDangerMock() => TelemetryModel(
+    temperature: 42.0, humidity: 35.0, mq7CoPpm: 85, mq2SmokePpm: 520,
+    mq7Volt: 1.45, mq7Raw: 1420, nodeId: _current.nodeId, status: 'DANGER',
+    timestamp: DateTime.now(), isOnline: _current.isOnline,
+  );
+
+  @override
+  void dispose() {
+    _telemetryService.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        if (await _controller.canGoBack()) {
-          await _controller.goBack();
-        } else {
-          if (context.mounted) Navigator.of(context).maybePop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              WebViewWidget(controller: _controller),
-              if (_isLoading)
-                LinearProgressIndicator(
-                  value: _loadingProgress > 0 ? _loadingProgress : null,
-                  backgroundColor: AppColors.card,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
-                  minHeight: 2.5,
-                ),
-            ],
+    final isDanger = _current.status == 'DANGER' || _current.mq7CoPpm >= 50 || _current.mq2SmokePpm >= 300;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Atmosfer Background: bg_campus.jpg + Deep Midnight Navy Gradient
+          Image.asset(
+            'assets/bg_campus.jpg',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
           ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.background.withValues(alpha: 0.88),
+                  AppColors.background.withValues(alpha: 0.96),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. Konten Utama Dashboard
+          SafeArea(
+            child: NestedScrollView(
+              headerSliverBuilder: (context, _) => [
+                DashboardHeader(
+                  nodeId: _current.nodeId,
+                  isOnline: _current.isOnline,
+                  isDanger: isDanger,
+                  isDangerSimulated: _isDangerSimulated,
+                  onToggleSimulation: () => setState(() => _isDangerSimulated = !_isDangerSimulated),
+                  onOpenSettings: _openSettings,
+                ),
+              ],
+              body: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 90),
+                children: [
+                  const CampusCarouselSlider(),
+                  const SizedBox(height: 12),
+                  EmergencyBannerWidget(isDanger: isDanger, statusText: _current.status),
+                  const SizedBox(height: 12),
+                  _buildSensorCards(),
+                  const SizedBox(height: 6),
+                  TelemetryChartWidget(history: _history),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: EsiFabButton(
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => EsiChatBottomSheet(chatService: _chatService),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSensorCards() {
+    final t = _current.temperature;
+    final co = _current.mq7CoPpm;
+    final smoke = _current.mq2SmokePpm;
+
+    final tempHist = _history.map((e) => e.temperature).toList();
+    final coHist = _history.map((e) => e.mq7CoPpm.toDouble()).toList();
+    final smokeHist = _history.map((e) => e.mq2SmokePpm.toDouble()).toList();
+
+    return Column(
+      children: [
+        SensorMetricCard(
+          title: 'Suhu & Kelembapan',
+          pinLabel: 'DHT22 • GPIO 10',
+          value: '${t.toStringAsFixed(1)}°C',
+          unit: '${_current.humidity.toStringAsFixed(0)}% RH',
+          badgeText: t >= 35 ? 'Overheat' : (t >= 30 ? 'Hangat' : 'Optimal'),
+          thresholdInfo: 'Batas K3: < 35.0°C',
+          isDanger: t >= 35,
+          isWarning: t >= 30 && t < 35,
+          icon: Icons.thermostat_rounded,
+          sparklineTitle: 'TREN SUHU REAL-TIME',
+          sparklineValues: tempHist,
+        ),
+        SensorMetricCard(
+          title: 'Karbon Monoksida (CO)',
+          pinLabel: 'MQ-7 • GPIO 1',
+          value: '$co',
+          unit: 'PPM',
+          badgeText: co >= 50 ? 'Bahaya' : (co >= 25 ? 'Waspada' : 'Aman'),
+          thresholdInfo: 'Batas K3: < 50 PPM',
+          isDanger: co >= 50,
+          isWarning: co >= 25 && co < 50,
+          icon: Icons.crisis_alert_rounded,
+          sparklineTitle: 'TREN GAS CO REAL-TIME',
+          sparklineValues: coHist,
+        ),
+        SensorMetricCard(
+          title: 'Gas Asap & Pengelasan',
+          pinLabel: 'MQ-2 • GPIO 0',
+          value: '$smoke',
+          unit: 'PPM',
+          badgeText: smoke >= 300 ? 'Bahaya' : (smoke >= 150 ? 'Waspada' : 'Clean Air'),
+          thresholdInfo: 'Batas K3: < 150 PPM',
+          isDanger: smoke >= 300,
+          isWarning: smoke >= 150 && smoke < 300,
+          icon: Icons.cloud_outlined,
+          sparklineTitle: 'TREN GAS & ASAP REAL-TIME',
+          sparklineValues: smokeHist,
+        ),
+      ],
+    );
+  }
+
+  void _openSettings() {
+    showDialog(
+      context: context,
+      builder: (_) => SettingsDialog(
+        currentFirebaseUrl: _telemetryService.firebaseUrl,
+        currentBackendUrl: _telemetryService.backendUrl,
+        currentNodeId: _telemetryService.nodeId,
+        onSave: (fb, be, node) {
+          setState(() {
+            _telemetryService.firebaseUrl = fb;
+            _telemetryService.backendUrl = be;
+            _telemetryService.nodeId = node;
+            _chatService.backendUrl = be;
+          });
+        },
       ),
     );
   }
