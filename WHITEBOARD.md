@@ -463,6 +463,72 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[DEVOPS-05]** Setup GitHub Actions Release Workflow untuk kompilasi APK otomatis saat git tag rilis (`.github/workflows/release-mobile.yml`). *(Selesai - Cloud Build Ubuntu, Java 17, Flutter SDK Stable, Artifact Upload, & Auto-Publish GitHub Release)*
 - [x] **[AI-06]** ESI Multi-Node Context-Aware & Offline Watchdog Upgrade: Injeksi `active_node_id` otomatis dari frontend dropdown ke `/api/chat`, Heartbeat Watchdog offline awareness (`is_online`, `age_seconds`) pada `get_telemetry`, tool `get_fleet_summary` (overview kesehatan seluruh armada sensor dalam 1 kali panggil), dan tool `get_devices` (metadata resmi armada dari Supabase).
 
+---
+
+# 🔒 Section 4: Pre-Public Release Security & Readiness Audit
+> `[06-11-2026]` **6-Stage Pre-Public Repository Audit** — Persiapan sebelum repositori `syahrulhuda/EnvironmentalSensing` diubah dari **Private** menjadi **Public** pasca penyerahan ke dosen penguji — **Zaki**.
+
+> [!CAUTION]
+> **STATUS KELAYAKAN PUBLIKASI: BELUM AMAN UNTUK DIUBAH KE PUBLIC (`HOLD`)**  
+> Seluruh berkas pada commit terbaru (`HEAD`) sudah bersih dari kredensial, namun pemindaian mendalam pada **riwayat commit masa lalu (`git log -p --no-textconv`)** menemukan **1 Kunci Rahasia Produksi (Supabase Secret Key)** yang masih aktif di server produksi serta beberapa poin konfigurasi yang wajib diselesaikan sebelum repositori dibuka ke publik.
+
+## 📊 Ringkasan Skor Audit Pra-Publikasi (6 Tahap)
+
+| Tahap | Area Audit | Status | Ringkasan Temuan |
+| :---: | :--- | :---: | :--- |
+| **1** | **Riwayat Git (*Git History Deep Scan*)** | ❌ **BAHAYA** | Ditemukan **Supabase Secret Key aktif (`sb_secret_...`)** & jejak password Wi-Fi kampus pada riwayat commit lama. |
+| **2** | **File Aktif & Cloud Database** | ⚠️ **PERLU TINDAKAN** | Berkas aktif (`HEAD`) bersih, namun aturan `database.rules.json` perlu dipastikan terkunci pada sisi `.write` di Firebase Console. |
+| **3** | **Keamanan Endpoint Backend & AI** | ⚠️ **1 CELAH** | `ADMIN_API_KEY` masih memiliki nilai fallback default terbuka di `config.py`. Rate limiter `/api/chat` & `GEMINI_API_KEY` 100% aman. |
+| **4** | **CI/CD & Raspi Self-Hosted Runner** | ✅ **AMAN** | Ketiga workflow (`deploy-backend`, `deploy-web`, `release-mobile`) hanya memicu pada `push` & `workflow_dispatch` (aman dari PR fork luar). |
+| **5** | **Kebersihan Berkas (*Repo Hygiene*)** | ⚠️ **PERLU DIRAPIKAN** | Terdapat 3 subfolder DXF tumpang tindih/duplikat di dalam `schematics/` (total 57 berkas CAD duplikat). |
+| **6** | **Dokumentasi Akademik (Dosen)** | ✅ **SIAP (95%)** | `README.md`, `RULEBOOK.md`, dan `WHITEBOARD.md` sangat rapi, berbobot akademik, dan berstandar industri. |
+
+---
+
+## 🔍 Rincian Temuan Audit Pra-Publikasi (`PUB-01` s/d `PUB-06`)
+
+1. **`[PUB-01]` 🚨 [CRITICAL] Supabase Secret Key (`sb_secret_...`) Bocor di Riwayat Commit Masa Lalu & Masih Aktif di Produksi**
+   - **Lokasi Riwayat:** Commit `51183bb`, `bb5e8ac`, dan `367c216` (23–24 Sep 2026) pada berkas `backend/etl_worker.py`.
+   - **Detail Temuan:** Meskipun sudah dihapus pada commit berikutnya, riwayat diff Git masih menyimpan string `SUPABASE_KEY` dengan awalan `sb_secret_hRgIlTrb..._uMB82nAW` untuk project `lrnmbhobpymxmzocrfto.supabase.co`. Hasil verifikasi *read-only* menunjukkan kunci tersebut **masih aktif (`HTTP 200 OK`)** di server Supabase produksi.
+   - **Risiko:** Kunci `sb_secret_` memiliki hak akses *Service Role / Superuser* yang mem-bypass *Row Level Security (RLS)*. Jika repositori diubah menjadi Public tanpa rotasi kunci, bot pemindai GitHub akan mendeteksinya dalam hitungan detik dan dapat memanipulasi/menghapus seluruh tabel database.
+   - **Mitigasi Wajib:**
+     1. **Revoke / Roll Key** `sb_secret_...` tersebut di Dashboard Supabase dan perbarui `.env` di Raspberry Pi 3B dengan kunci baru.
+     2. Bersihkan riwayat commit Git (`git filter-repo` / *orphan branch* bersih) sebelum repositori dibuka ke publik.
+
+2. **`[PUB-02]` 🚨 [HIGH] Jejak SSID & Password Hotspot Kampus pada Riwayat Commit Lama**
+   - **Lokasi Riwayat:** Commit `298d645` (`hardware/test/tes_wroom/tes_wroom.ino`) dan commit `b5099d0` / `c76c5ba` (`WHITEBOARD.md`).
+   - **Detail Temuan:** Berkas aktif saat ini sudah menggunakan `#include "secrets.h"`, tetapi riwayat diff commit lama masih memuat teks SSID dan password Wi-Fi pengujian.
+   - **Mitigasi Wajib:** Akan otomatis terhapus permanen bersamaan dengan pembersihan riwayat commit pada langkah mitigasi `[PUB-01]`.
+
+3. **`[PUB-03]` ⚠️ [MEDIUM-HIGH] Default Fallback `ADMIN_API_KEY` Terbuka di `backend/app/core/config.py`**
+   - **Lokasi:** `backend/app/core/config.py:62` (`ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "ess-secret-admin-key-2026")`).
+   - **Risiko:** Jika variabel `ADMIN_API_KEY` pada `.env` server Raspberry Pi tidak disetel atau masih memakai nilai contoh bawaan, pihak luar yang membaca kode sumber publik dapat memicu endpoint `POST /api/etl/trigger` secara paksa.
+   - **Mitigasi:** Ubah default fallback di `config.py` menjadi string kosong `""`, dan tolak request pada `/api/etl/trigger` apabila `settings.ADMIN_API_KEY` belum dikonfigurasi di `.env`.
+
+4. **`[PUB-04]` ⚠️ [MEDIUM] Verifikasi Aturan `.write` Firebase RTDB di Cloud Console**
+   - **Detail Temuan:** Karena Web Dashboard (`frontend/config.js`) membaca buffer telemetri secara langsung dari browser pengunjung, akses `.read: true` pada `telemetry/buffer` memang diperlukan. Namun sebelum repositori dibuka ke publik, aturan `.write` di Firebase Realtime Database Console wajib dipastikan terkunci (`auth != null`) agar pihak luar tidak dapat mengirim `POST`/`DELETE` liar ke URL RTDB yang tertera di `config.js`.
+
+5. **`[PUB-05]` 🟡 [LOW-MEDIUM] Duplikasi 3 Subfolder CAD/DXF di Dalam `schematics/`**
+   - **Detail Temuan:** Folder `schematics/` saat ini memuat 3 subfolder yang sebagian isinya berulang (`schematics/dxf/`, `schematics/dxf_v2/`, dan `schematics/dxf_desain_3d_enclosure_v2/`).
+   - **Mitigasi:** Merapikan struktur folder `schematics/` agar hanya menyisakan berkas gambar kerja kanonik tanpa duplikasi sebelum dinilai oleh dosen.
+
+6. **`[PUB-06]` ✅ [SAFE] Evaluasi Keamanan CI/CD Self-Hosted Runner & Kuota Gemini AI**
+   - **Hasil Verifikasi:**
+     - `GEMINI_API_KEY` **100% aman** (tidak pernah ter-commit sepanjang sejarah repositori).
+     - Endpoint `/api/chat` terlindungi oleh `InMemoryRateLimiter` (15 request/menit/IP).
+     - Seluruh workflow GitHub Actions (`.github/workflows/deploy-backend.yml`, `deploy-web.yml`, `release-mobile.yml`) hanya menggunakan trigger `on: push` dan `workflow_dispatch` (tidak menggunakan `pull_request` / `pull_request_target`), sehingga **Raspberry Pi 3B Self-Hosted Runner aman dari eksekusi kode berbahaya via Pull Request publik**.
+
+---
+
+### 🛡️ Checklist Persiapan Sebelum Klik "Make Public" (Zaki & Huda)
+- [ ] **[PUB-01]** Rotasi/Revoke `sb_secret_...` lama di Dashboard Supabase dan pasang key baru di `.env` Raspberry Pi 3B.
+- [ ] **[PUB-02]** Bersihkan riwayat commit Git (`git filter-repo` / squash history) dari jejak `sb_secret_` dan password Wi-Fi lama.
+- [ ] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan pastikan key unik terpasang di `.env` Raspi.
+- [ ] **[PUB-04]** Pastikan aturan `.write` pada Firebase RTDB Console terkunci (`auth != null`) sambil mempertahankan akses baca dashboard.
+- [ ] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/`.
+- [ ] **[PUB-06]** Aktifkan *Branch Protection Rule* pada branch `main` di pengaturan GitHub sebelum mengubah visibilitas repositori menjadi **Public**.
+
+
 
 
 
