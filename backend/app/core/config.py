@@ -63,15 +63,15 @@ class Settings:
     CHAT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "15"))
 
     # Mobile In-App OTA Update Engine (DEVOPS-03 / DEVOPS-04)
-    APP_LATEST_VERSION: str = os.getenv("APP_LATEST_VERSION", "2.2.2")
+    APP_LATEST_VERSION: str = os.getenv("APP_LATEST_VERSION", "2.2.3")
     APP_MIN_REQUIRED_VERSION: str = os.getenv("APP_MIN_REQUIRED_VERSION", "1.0.0")
     APP_DOWNLOAD_URL: str = os.getenv(
         "APP_DOWNLOAD_URL",
-        "https://github.com/syahrulhuda/EnvironmentalSensing/releases/latest/download/app-release.apk"
+        "https://github.com/syahrulhuda/EnvironmentalSensing/releases/latest"
     )
     APP_RELEASE_NOTES: str = os.getenv(
         "APP_RELEASE_NOTES",
-        "Pembaruan ESS v2.2.2: Keyboard-aware bottom sheet pada chat ESI (anti-tertutup) dan Markdown Renderer penuh untuk bubble teks AI."
+        "Pembaruan ESS v2.2.3: Penghapusan izin sensitif REQUEST_INSTALL_PACKAGES (bebas bendera Google Play Protect) dan integrasi unduhan aman via browser."
     )
     APP_FORCE_UPDATE: bool = os.getenv("APP_FORCE_UPDATE", "false").lower() in ("true", "1", "yes")
 
