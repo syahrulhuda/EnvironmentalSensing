@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../models/chat_message_model.dart';
 import '../services/esi_chat_service.dart';
+import 'esi_message_bubble.dart';
 
-/// Panel Chat ESI AI Modern Glass & Auto-scrollable (TD-F09)
+/// Panel Chat ESI AI Modern Glass & Auto-scrollable dengan Markdown Renderer (TD-F09 / TD-F14)
 class EsiChatPanel extends StatefulWidget {
   final EsiChatService chatService;
   final VoidCallback? onClose;
@@ -25,7 +26,7 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessageModel> _messages = [
     ChatMessageModel.esi(
-      'Halo! Saya ESI, asisten AI keselamatan bengkel mekatronika POLTEKOM. '
+      'Halo! Saya **ESI**, asisten AI keselamatan bengkel mekatronika POLTEKOM. '
       'Saya memantau sensor DHT22, MQ-7 (CO), dan MQ-2 secara real-time. Ada yang bisa saya bantu?',
     ),
   ];
@@ -140,30 +141,7 @@ class _EsiChatPanelState extends State<EsiChatPanel> {
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _messages.length,
-              itemBuilder: (context, i) {
-                final m = _messages[i];
-                return Align(
-                  alignment: m.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.all(12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * (widget.showHeaderClose ? 0.78 : 0.85),
-                    ),
-                    decoration: BoxDecoration(
-                      color: m.isUser ? AppColors.primary.withValues(alpha: 0.28) : AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: m.isUser ? AppColors.primaryLight.withValues(alpha: 0.45) : AppColors.border,
-                      ),
-                    ),
-                    child: Text(
-                      m.text,
-                      style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, height: 1.38),
-                    ),
-                  ),
-                );
-              },
+              itemBuilder: (context, i) => EsiMessageBubble(message: _messages[i]),
             ),
           ),
           if (_isLoading)
