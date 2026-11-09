@@ -523,10 +523,10 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 ### 🛡️ Checklist Persiapan Sebelum Klik "Make Public" (Zaki & Huda)
 - [ ] **[PUB-01]** Rotasi/Revoke `sb_secret_...` lama di Dashboard Supabase dan pasang key baru di `.env` Raspberry Pi 3B.
-- [ ] **[PUB-02]** Bersihkan riwayat commit Git (`git filter-repo` / squash history) dari jejak `sb_secret_` dan password Wi-Fi lama.
-- [ ] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan pastikan key unik terpasang di `.env` Raspi.
+- [ ] **[PUB-02]** Keputusan Git History: Kunci Supabase lama dirotasi/dimatikan di cloud (aman 100%), history commit dipertahankan untuk penilaian portofolio akademik.
+- [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553).
 - [ ] **[PUB-04]** Pastikan aturan `.write` pada Firebase RTDB Console terkunci (`auth != null`) sambil mempertahankan akses baca dashboard.
-- [ ] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/`.
+- [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
 - [ ] **[PUB-06]** Aktifkan *Branch Protection Rule* pada branch `main` di pengaturan GitHub sebelum mengubah visibilitas repositori menjadi **Public**.
 
 
