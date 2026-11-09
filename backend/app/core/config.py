@@ -59,7 +59,7 @@ class Settings:
 
     PORT: int = int(os.getenv("PORT", 8000))
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "ess-secret-admin-key-2026")
+    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "").strip()
     CHAT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("CHAT_RATE_LIMIT_PER_MINUTE", "15"))
 
     # Mobile In-App OTA Update Engine (DEVOPS-03 / DEVOPS-04)

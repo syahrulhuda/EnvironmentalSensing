@@ -118,10 +118,10 @@ async def chat_endpoint(request: ChatRequest):
 @router.post("/api/etl/trigger", tags=["System"])
 async def trigger_etl(x_ess_admin_key: Optional[str] = Header(None, alias="X-ESS-Admin-Key")):
     """Memicu siklus ETL secara manual dengan proteksi API Key (SEC-05)."""
-    if not x_ess_admin_key or x_ess_admin_key != settings.ADMIN_API_KEY:
+    if not settings.ADMIN_API_KEY or not x_ess_admin_key or x_ess_admin_key != settings.ADMIN_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Akses ditolak: Header 'X-ESS-Admin-Key' tidak valid atau tidak disertakan."
+            detail="Akses ditolak: Endpoint admin belum dikonfigurasi di server atau Header 'X-ESS-Admin-Key' tidak valid."
         )
     success = run_etl()
     return {"status": "success" if success else "failed", "timestamp": datetime.now(timezone.utc).isoformat()}

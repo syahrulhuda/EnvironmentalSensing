@@ -170,4 +170,20 @@ def test_tools_schema_and_watchdog():
     assert isinstance(sop_raw, str)
     assert len(sop_raw) > 0
 
+def test_trigger_etl_security():
+    """Memverifikasi bahwa trigger_etl menolak request tanpa API Key valid (SEC-05)."""
+    import asyncio
+    from app.api.routes import trigger_etl
+    from fastapi import HTTPException
+
+    # Request tanpa key harus ditolak
+    rejected = False
+    try:
+        asyncio.run(trigger_etl(x_ess_admin_key=None))
+    except HTTPException as exc:
+        rejected = True
+        assert exc.status_code == 401
+    assert rejected, "trigger_etl without admin key must raise HTTP 401"
+
+
 
