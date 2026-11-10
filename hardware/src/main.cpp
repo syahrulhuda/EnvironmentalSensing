@@ -11,7 +11,7 @@
     1. FreeRTOS Decoupled Cloud Task (HTTPS POST terisolasi, zero loop-jitter)
     2. Empirical Baseline Calibrated (MQ7: 420 ADC, MQ2: 360 ADC)
     3. 1:1 Cadence Synchronization (Sampling 3s -> Push Cloud 3s via Queue)
-    4. 45s Thermal Warmup Shield (Proteksi false alarm & fan screaming saat cold boot)
+    4. 15s Thermal Warmup Shield (Proteksi false alarm & fan screaming saat cold boot)
     5. 8x ADC Hardware Oversampling (Filter peredam ripple daya & derau analog)
 
   Pinout Resmi Prototype:
@@ -104,7 +104,7 @@
 const unsigned long INTERVAL_SENSOR   = 3000;   // Baca sensor & picu cloud tiap 3 detik (1:1 cadence)
 const unsigned long INTERVAL_DISPLAY  = 1000;   // Refresh tampilan OLED tiap 1 detik (Tanpa switching)
 const unsigned long INTERVAL_STROBE   = 150;    // Kecepatan kedip LED merah bahaya (ms)
-const unsigned long WARMUP_DURATION   = 45000;  // 45 Detik Thermal Warmup Shield untuk koil MQ
+const unsigned long WARMUP_DURATION   = 15000;  // 15 Detik Thermal Warmup Shield untuk koil MQ
 
 // =============================================================================
 // 5. STRUKTUR DATA TELEMETRI & FREERTOS
@@ -152,6 +152,7 @@ TaskHandle_t  firebaseTaskHandle = NULL;
 unsigned long lastSensorRead  = 0;
 unsigned long lastDisplayPage = 0;
 unsigned long lastStrobeTick  = 0;
+unsigned long lastOledRetry   = 0;
 unsigned long sampleCount     = 0;
 
 bool oledReady      = false;
@@ -162,6 +163,8 @@ bool strobeState    = false;
 // 6. PROTOTIPE FUNGSI
 // =============================================================================
 void initHardware();
+void recoverI2CBus();
+bool tryInitOled();
 void initWiFi();
 void readSensors();
 void evaluateK3Status();
@@ -275,52 +278,39 @@ void loop() {
 // 9. IMPLEMENTASI MODUL-MODUL FUNGSIONAL
 // =============================================================================
 
-// --- Modul A: Inisialisasi Perangkat Keras ---
-void initHardware() {
-  Serial.println("[INIT] Mempersiapkan GPIO, PWM, & Bus I2C...");
+// Prosedur pemulihan bus I2C (9 SCL Clock Pulses) jika SDA tertahan LOW oleh slave saat reset
+void recoverI2CBus() {
+  pinMode(I2C_SDA_PIN, INPUT_PULLUP);
+  pinMode(I2C_SCL_PIN, OUTPUT);
+  digitalWrite(I2C_SCL_PIN, HIGH);
+  delayMicroseconds(10);
 
-  // 1. Konfigurasi Pin LED RGB (Common Cathode)
-  pinMode(LED_RED_PIN, OUTPUT);
-  pinMode(LED_GREEN_PIN, OUTPUT);
-  pinMode(LED_BLUE_PIN, OUTPUT);
-  setRgbColor(0, 0, 0);
+  // Jika SDA ditarik LOW oleh slave (misal OLED tertahan di tengah transmisi):
+  if (digitalRead(I2C_SDA_PIN) == LOW) {
+    Serial.println("[I2C] Bus I2C terkunci (SDA LOW). Menjalankan 9 SCL clock pulses recovery...");
+    for (int i = 0; i < 9; i++) {
+      digitalWrite(I2C_SCL_PIN, LOW);
+      delayMicroseconds(10);
+      digitalWrite(I2C_SCL_PIN, HIGH);
+      delayMicroseconds(10);
+      if (digitalRead(I2C_SDA_PIN) == HIGH) {
+        break; // Slave telah melepaskan jalur SDA
+      }
+    }
+    // Kirim sinyal STOP kondisional I2C: SDA LOW -> SCL HIGH -> SDA HIGH
+    pinMode(I2C_SDA_PIN, OUTPUT);
+    digitalWrite(I2C_SDA_PIN, LOW);
+    delayMicroseconds(10);
+    digitalWrite(I2C_SCL_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(I2C_SDA_PIN, HIGH);
+    delayMicroseconds(10);
+    pinMode(I2C_SDA_PIN, INPUT_PULLUP);
+  }
+}
 
-  // 2. Konfigurasi Driver Kipas PWM (SS8050 NPN)
-  pinMode(FAN_PWM_PIN, OUTPUT);
-  setFanPwm(FAN_PWM_STOP);
-
-  // 3. Self-Test Diagnostik LED & Driver Kipas (Bertahap)
-  Serial.println("[TEST] Uji Mandiri LED & Kipas PWM...");
-  
-  // Tahap 1: Hijau + Fan 75%
-  setRgbColor(0, 1, 0);
-  setFanPwm(FAN_PWM_LOW);
-  delay(1200);
-
-  // Tahap 2: Kuning + Fan 90%
-  setRgbColor(1, 1, 0);
-  setFanPwm(FAN_PWM_MED);
-  delay(1200);
-
-  // Tahap 3: Merah + Fan 100%
-  setRgbColor(1, 0, 0);
-  setFanPwm(FAN_PWM_HIGH);
-  delay(1200);
-
-  // Tahap 4: Biru Standby
-  setRgbColor(0, 0, 1);
-  setFanPwm(FAN_PWM_STOP); // Matikan kipas agar jalur daya 5V bebas ripple selama boot & WiFi
-  delay(800);
-
-  setRgbColor(0, 0, 0);
-  Serial.println("[TEST] Uji Mandiri Selesai.");
-
-  // 4. Inisialisasi I2C Bus dengan Proteksi Timeout Anti-Freeze
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
-  Wire.setTimeOut(50);   // Timeout 50ms mencegah lockup strapping pin GPIO 9
-  Wire.setClock(100000); // 100 kHz Standard Mode (Stabil & imun derau di breadboard)
-
-  // 5. Inisialisasi OLED Display SSD1306 (0x3C) dengan I2C Hardware Ping Sejati
+// Inisialisasi OLED Display SSD1306 (0x3C) dengan I2C Hardware Ping Sejati
+bool tryInitOled() {
   Wire.beginTransmission(OLED_I2C_ADDR);
   byte i2cErr = Wire.endTransmission();
 
@@ -341,12 +331,49 @@ void initHardware() {
     display.println("Preheating Sensors...");
     display.display();
     Serial.println("[INIT] OLED Display 128x64 Terdeteksi (0x3C).");
+    return true;
   } else {
     oledReady = false;
     Serial.printf("[WARN] OLED Display TIDAK terdeteksi di jalur I2C (Kode Error: %d)! Berjalan dalam Mode Headless.\n", i2cErr);
+    return false;
   }
+}
 
-  // 6. Inisialisasi Sensor DHT22 & ADC 12-bit
+// --- Modul A: Inisialisasi Perangkat Keras ---
+void initHardware() {
+  Serial.println("[INIT] Mempersiapkan GPIO, PWM, & Bus I2C...");
+
+  // 1. Konfigurasi Pin LED RGB (Common Cathode)
+  pinMode(LED_RED_PIN, OUTPUT);
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_BLUE_PIN, OUTPUT);
+  setRgbColor(0, 0, 0);
+
+  // 2. Konfigurasi Driver Kipas PWM (SS8050 NPN) - Pastikan mati sebelum I2C aktif
+  pinMode(FAN_PWM_PIN, OUTPUT);
+  setFanPwm(FAN_PWM_STOP);
+
+  // 3. Pemulihan & Inisialisasi Bus I2C + Layar OLED (Saat rel daya 5V bersih tanpa beban kipas)
+  recoverI2CBus();
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+  Wire.setTimeOut(50);   // Timeout 50ms mencegah lockup strapping pin GPIO 9
+  Wire.setClock(100000); // 100 kHz Standard Mode (Stabil & imun derau pada PCB)
+  tryInitOled();
+
+  // 4. Swift & Silent Self-Test (< 1s, tidak mengganggu)
+  Serial.println("[TEST] Uji Mandiri Senyap (RGB Sweep & Fan Kick)...");
+  setRgbColor(1, 0, 0); delay(150); // Merah
+  setRgbColor(0, 1, 0); delay(150); // Hijau
+  setRgbColor(0, 0, 1); delay(150); // Biru
+  setRgbColor(0, 0, 0);
+
+  // Kickstart kipas singkat (300ms @ 40% duty) untuk uji bearing tanpa kebisingan
+  setFanPwm(100);
+  delay(300);
+  setFanPwm(FAN_PWM_STOP); // Matikan kembali kipas agar rel daya tetap stabil untuk WiFi
+  Serial.println("[TEST] Uji Mandiri Selesai.");
+
+  // 5. Inisialisasi Sensor DHT22 & ADC 12-bit
   dht.begin();
   analogReadResolution(12);
 
@@ -543,7 +570,21 @@ void updateRgbIndicator() {
 
 // --- Modul G: Pembaruan Tampilan Layar OLED 128x64 (Single Clean Dashboard) ---
 void updateOledDisplay() {
-  if (!oledReady) return;
+  // Mekanisme Pemulihan Mandiri (Self-Healing) jika bus I2C sempat glitch/tercabut
+  if (!oledReady) {
+    unsigned long now = millis();
+    if (now - lastOledRetry >= 5000) {
+      lastOledRetry = now;
+      recoverI2CBus();
+      Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+      Wire.setTimeOut(50);
+      Wire.setClock(100000);
+      if (tryInitOled()) {
+        Serial.println("[OLED] Self-healing berhasil! Layar OLED aktif kembali.");
+      }
+    }
+    return;
+  }
 
   display.clearDisplay();
   drawDashboardScreen();
