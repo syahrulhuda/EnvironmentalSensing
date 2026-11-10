@@ -93,10 +93,10 @@
 // =============================================================================
 // 3. DEFINISI LEVEL DAYA KIPAS PWM (30x30 mm 5V)
 // =============================================================================
-#define FAN_PWM_STOP   0    // 0%   (0.00V) - Mati
-#define FAN_PWM_LOW    191  // 75%  (~3.70V) - Mode Senyap / Sirkulasi Normal
-#define FAN_PWM_MED    230  // 90%  (~4.50V) - Mode Sedang / Waspada
-#define FAN_PWM_HIGH   255  // 100% (~4.95V) - Mode Purge Maksimal / Bahaya
+#define FAN_PWM_STOP   0    // 0%   (0.00V) - Mati Total
+#define FAN_PWM_LOW    128  // 50%  (~2.50V) - Mode Normal & Warmup (Senyap, Aman Arus Rel 5V)
+#define FAN_PWM_MED    191  // 75%  (~3.75V) - Mode Waspada K3 (Sirkulasi Sedang)
+#define FAN_PWM_HIGH   255  // 100% (~5.00V) - Mode Bahaya K3 (Purge Maksimal)
 
 // =============================================================================
 // 4. INTERVAL WAKTU NON-BLOCKING & WARMUP SHIELD
@@ -360,17 +360,14 @@ void initHardware() {
   Wire.setClock(100000); // 100 kHz Standard Mode (Stabil & imun derau pada PCB)
   tryInitOled();
 
-  // 4. Swift & Silent Self-Test (< 1s, tidak mengganggu)
-  Serial.println("[TEST] Uji Mandiri Senyap (RGB Sweep & Fan Kick)...");
+  // 4. Swift & Silent Self-Test (< 500ms, RGB Sweep murni tanpa beban kipas)
+  Serial.println("[TEST] Uji Mandiri Senyap (RGB Sweep murni, kipas ditahan mati)...");
   setRgbColor(1, 0, 0); delay(150); // Merah
   setRgbColor(0, 1, 0); delay(150); // Hijau
   setRgbColor(0, 0, 1); delay(150); // Biru
   setRgbColor(0, 0, 0);
-
-  // Kickstart kipas singkat (300ms @ 40% duty) untuk uji bearing tanpa kebisingan
-  setFanPwm(100);
-  delay(300);
-  setFanPwm(FAN_PWM_STOP); // Matikan kembali kipas agar rel daya tetap stabil untuk WiFi
+  // Kipas DITAHAN MATI (0%) sepanjang fase boot & negosiasi Wi-Fi untuk mencegah inrush surge pada rel 5V
+  setFanPwm(FAN_PWM_STOP);
   Serial.println("[TEST] Uji Mandiri Selesai.");
 
   // 5. Inisialisasi Sensor DHT22 & ADC 12-bit
@@ -498,10 +495,10 @@ void readSensors() {
 
 // --- Modul D: Evaluasi Tingkat Bahaya K3 & Thermal Warmup Shield ---
 void evaluateK3Status() {
-  // Proteksi Fase Pemanasan (Warmup Shield - 45 Detik Pertama)
+  // Proteksi Fase Pemanasan (Warmup Shield - 15 Detik Pertama)
   if (millis() < WARMUP_DURATION) {
     telemetry.status = "WARMUP";
-    telemetry.fanPwm = FAN_PWM_LOW; // Kipas 75% tenang, mencegah lonjakan 100% false alarm
+    telemetry.fanPwm = FAN_PWM_LOW; // Kipas 50% (~2.5V) halus, senyap, & bebas lonjakan inrush
     telemetry.hazardScore = 0.0;
     // Tahan nilai estimasi PPM pada batas aman saat koil SnO2 menstabilkan suhu
     telemetry.mq7Ppm = 5;
@@ -513,13 +510,13 @@ void evaluateK3Status() {
   // Evaluasi Normal K3 setelah sensor stabil
   if (telemetry.mq7Ppm >= MQ7_DANGER_PPM || telemetry.mq2Ppm >= MQ2_DANGER_PPM) {
     telemetry.status = "DANGER";
-    telemetry.fanPwm = FAN_PWM_HIGH; // 100% (5.0V Purge)
+    telemetry.fanPwm = FAN_PWM_HIGH; // 100% (5.0V Purge Maksimal)
   } else if (telemetry.mq7Ppm >= MQ7_WARN_PPM || telemetry.mq2Ppm >= MQ2_WARN_PPM) {
     telemetry.status = "WARNING";
-    telemetry.fanPwm = FAN_PWM_MED;  // 90% (~4.5V Sedang)
+    telemetry.fanPwm = FAN_PWM_MED;  // 75% (~3.75V Mode Waspada)
   } else {
     telemetry.status = "NORMAL";
-    telemetry.fanPwm = FAN_PWM_LOW;  // 75% (~3.7V Senyap)
+    telemetry.fanPwm = FAN_PWM_LOW;  // 50% (~2.5V Sirkulasi Normal Senyap)
   }
 
   // Terapkan kecepatan kipas ke pin PWM
@@ -570,7 +567,7 @@ void updateRgbIndicator() {
 
 // --- Modul G: Pembaruan Tampilan Layar OLED 128x64 (Single Clean Dashboard) ---
 void updateOledDisplay() {
-  // Mekanisme Pemulihan Mandiri (Self-Healing) jika bus I2C sempat glitch/tercabut
+  // 1. Mekanisme Pemulihan Mandiri (Self-Healing) jika bus I2C sempat glitch/tercabut
   if (!oledReady) {
     unsigned long now = millis();
     if (now - lastOledRetry >= 5000) {
@@ -586,6 +583,17 @@ void updateOledDisplay() {
     return;
   }
 
+  // 2. Active Heartbeat Check (Deteksi instan jika kabel kendor / lepas di tengah operasi)
+  Wire.beginTransmission(OLED_I2C_ADDR);
+  byte i2cErr = Wire.endTransmission();
+  if (i2cErr != 0) {
+    Serial.printf("[OLED] Koneksi I2C terputus di tengah jalan! (I2C Err: %d). Masuk mode pemulihan...\n", i2cErr);
+    oledReady = false;
+    lastOledRetry = millis();
+    return;
+  }
+
+  // 3. Render Dashboard jika koneksi fisik terverifikasi sehat
   display.clearDisplay();
   drawDashboardScreen();
   display.display();
