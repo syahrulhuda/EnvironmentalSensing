@@ -478,12 +478,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 | Tahap | Area Audit | Status | Ringkasan Temuan |
 | :---: | :--- | :---: | :--- |
-| **1** | **Riwayat Git (*Git History Deep Scan*)** | ❌ **BAHAYA** | Ditemukan **Supabase Secret Key aktif (`sb_secret_...`)** & jejak password Wi-Fi kampus pada riwayat commit lama. |
-| **2** | **File Aktif & Cloud Database** | ⚠️ **PERLU TINDAKAN** | Berkas aktif (`HEAD`) bersih, namun aturan `database.rules.json` perlu dipastikan terkunci pada sisi `.write` di Firebase Console. |
-| **3** | **Keamanan Endpoint Backend & AI** | ⚠️ **1 CELAH** | `ADMIN_API_KEY` masih memiliki nilai fallback default terbuka di `config.py`. Rate limiter `/api/chat` & `GEMINI_API_KEY` 100% aman. |
+| **1** | **Riwayat Git (*Git History Deep Scan*)** | ✅ **RESOLVED** | Kunci Supabase lama telah dirotasi di cloud (`HTTP 401 UNAUTHORIZED_UNREGISTERED_API_KEY`), kunci baru aktif di Raspi (`HTTP 200`). |
+| **2** | **File Aktif & Cloud Database** | ✅ **TERKUNCI & TERUJI** | Aturan `database.rules.json` terpasang `.write: "auth != null"`. Akses baca dashboard `HTTP 200 OK`, write liar `HTTP 401 Permission denied`. |
+| **3** | **Keamanan Endpoint Backend & AI** | ✅ **TERLINDUNGI** | Fallback `ADMIN_API_KEY` dihapus total di `config.py`. Endpoint `POST /api/etl/trigger` menolak request tanpa key / key lama (`HTTP 401`). |
 | **4** | **CI/CD & Raspi Self-Hosted Runner** | ✅ **AMAN** | Ketiga workflow (`deploy-backend`, `deploy-web`, `release-mobile`) hanya memicu pada `push` & `workflow_dispatch` (aman dari PR fork luar). |
-| **5** | **Kebersihan Berkas (*Repo Hygiene*)** | ⚠️ **PERLU DIRAPIKAN** | Terdapat 3 subfolder DXF tumpang tindih/duplikat di dalam `schematics/` (total 57 berkas CAD duplikat). |
-| **6** | **Dokumentasi Akademik (Dosen)** | ✅ **SIAP (95%)** | `README.md`, `RULEBOOK.md`, dan `WHITEBOARD.md` sangat rapi, berbobot akademik, dan berstandar industri. |
+| **5** | **Kebersihan Berkas (*Repo Hygiene*)** | ✅ **SELESAI** | Subfolder CAD duplikat dibersihkan; 14 berkas DXF kanonik Enclosure V2 terkonsolidasi rapi (Commit 0a6891c). |
+| **6** | **Dokumentasi Akademik (Dosen)** | ✅ **SIAP (100%)** | `README.md`, `RULEBOOK.md`, dan `WHITEBOARD.md` sangat rapi, berbobot akademik, dan berstandar industri. |
 
 ---
 
@@ -507,12 +507,25 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
    - **Risiko:** Jika variabel `ADMIN_API_KEY` pada `.env` server Raspberry Pi tidak disetel atau masih memakai nilai contoh bawaan, pihak luar yang membaca kode sumber publik dapat memicu endpoint `POST /api/etl/trigger` secara paksa.
    - **Mitigasi:** Ubah default fallback di `config.py` menjadi string kosong `""`, dan tolak request pada `/api/etl/trigger` apabila `settings.ADMIN_API_KEY` belum dikonfigurasi di `.env`.
 
-4. **`[PUB-04]` ⚠️ [MEDIUM] Verifikasi Aturan `.write` Firebase RTDB di Cloud Console**
-   - **Detail Temuan:** Karena Web Dashboard (`frontend/config.js`) membaca buffer telemetri secara langsung dari browser pengunjung, akses `.read: true` pada `telemetry/buffer` memang diperlukan. Namun sebelum repositori dibuka ke publik, aturan `.write` di Firebase Realtime Database Console wajib dipastikan terkunci (`auth != null`) agar pihak luar tidak dapat mengirim `POST`/`DELETE` liar ke URL RTDB yang tertera di `config.js`.
+4. **`[PUB-04]` ✅ [RESOLVED & EMPIRICALLY VERIFIED] Penguncian Aturan `.write` Firebase RTDB via Database Secret**
+   - **Detail Temuan & Solusi:** Aturan Firebase Realtime Database pada path `telemetry/buffer` telah resmi dikunci menggunakan `".write": "auth != null"` dan `.read: true`.
+   - **Bukti Uji Empiris (10-Nov-2026):**
+     1. *Uji Tulis Tanpa Autentikasi (Penyerang Publik):*
+        - `POST https://environmental-sensing-f6e1c-default-rtdb.asia-southeast1.firebasedatabase.app/telemetry/buffer.json`
+        - Hasil: **`HTTP/1.1 401 Unauthorized`** (`{"error": "Permission denied"}`). Akses tulis liar berhasil dicegah 100%.
+     2. *Uji Baca Dashboard Publik:*
+        - `GET .../telemetry/buffer.json?shallow=true`
+        - Hasil: **`HTTP/1.1 200 OK`**. Web Dashboard (`poltekom-ess.web.app`) tetap membaca streaming grafik telemetri tanpa hambatan.
+     3. *Uji Tulis Terautentikasi (ESP32 via `?auth=`):*
+        - `POST .../telemetry/buffer.json?auth=<DATABASE_SECRET>`
+        - Hasil: **`HTTP/1.1 200 OK`** (Paket record berhasil dibuat).
+     4. *Uji Hapus Terautentikasi (ETL Worker Pruning):*
+        - `DELETE .../telemetry/buffer/<test_id>.json?auth=<DATABASE_SECRET>`
+        - Hasil: **`HTTP/1.1 200 OK`** (`null`). Raspberry Pi ETL worker dapat memangkas buffer sliding window 2 jam tanpa kendala izin.
 
 5. **`[PUB-05]` 🟡 [LOW-MEDIUM] Duplikasi 3 Subfolder CAD/DXF di Dalam `schematics/`**
    - **Detail Temuan:** Folder `schematics/` saat ini memuat 3 subfolder yang sebagian isinya berulang (`schematics/dxf/`, `schematics/dxf_v2/`, dan `schematics/dxf_desain_3d_enclosure_v2/`).
-   - **Mitigasi:** Merapikan struktur folder `schematics/` agar hanya menyisakan berkas gambar kerja kanonik tanpa duplikasi sebelum dinilai oleh dosen.
+   - **Mitigasi:** Merapikan struktur folder `schematics/` agar hanya menyisakan berkas gambar kerja kanonik tanpa duplikasi sebelum dinilai oleh dosen (Selesai - Commit 0a6891c).
 
 6. **`[PUB-06]` ✅ [SAFE] Evaluasi Keamanan CI/CD Self-Hosted Runner & Kuota Gemini AI**
    - **Hasil Verifikasi:**
@@ -525,8 +538,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 ### 🛡️ Checklist Persiapan Sebelum Klik "Make Public" (Zaki & Huda)
 - [x] **[PUB-01]** Rotasi/Revoke `sb_secret_...` lama di Dashboard Supabase dan pasang key baru di `.env` Raspberry Pi 3B (Selesai - Kunci lama terbukti mati HTTP 401 & endpoint /api/devices sukses HTTP 200).
 - [x] **[PUB-02]** Keputusan Git History: Kunci Supabase lama dirotasi/dimatikan di cloud (aman 100%), history commit dipertahankan untuk penilaian portofolio akademik.
-- [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553).
-- [ ] **[PUB-04]** Pastikan aturan `.write` pada Firebase RTDB Console terkunci (`auth != null`) sambil mempertahankan akses baca dashboard.
+- [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553, request tanpa key / key lama terbukti ditolak HTTP 401).
+- [x] **[PUB-04]** Kunci aturan `.write` pada Firebase RTDB Console (`auth != null`) sambil mempertahankan akses baca dashboard (Selesai - Teruji HTTP 401 write unauthorized, HTTP 200 read dashboard, HTTP 200 authenticated write/delete).
 - [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
 - [ ] **[PUB-06]** Aktifkan *Branch Protection Rule* pada branch `main` di pengaturan GitHub sebelum mengubah visibilitas repositori menjadi **Public**.
 
