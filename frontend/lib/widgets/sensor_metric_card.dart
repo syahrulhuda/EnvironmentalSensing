@@ -5,7 +5,8 @@ import 'mini_sparkline_painter.dart';
 /// Widget Kartu Metriks Sensor Desain Industri Modern (Identik 100% dengan Web Dashboard)
 /// Menampilkan nilai telemetri 2-baris, status badge K3, dan drawer grafik sparkline mini real-time
 class SensorMetricCard extends StatelessWidget {
-  final String title, pinLabel, value, unit, badgeText, thresholdInfo, sparklineTitle;
+  final String title, value, unit, badgeText, thresholdInfo, sparklineTitle;
+  final String? pinLabel;
   final bool isDanger, isWarning, isOnline;
   final IconData icon;
   final List<double> sparklineValues;
@@ -13,7 +14,7 @@ class SensorMetricCard extends StatelessWidget {
   const SensorMetricCard({
     super.key,
     required this.title,
-    required this.pinLabel,
+    this.pinLabel,
     required this.value,
     required this.unit,
     required this.badgeText,
@@ -154,21 +155,22 @@ class SensorMetricCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // 4. Baris 4: Pin Hardware Micro-Label
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0x2038BDF8)),
+          // 4. Baris 4: Pin Hardware Micro-Label (Opsional / Tersembunyi untuk Tampilan Bersih)
+          if (pinLabel != null && pinLabel!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0x2038BDF8)),
+              ),
+              child: Text(
+                pinLabel!,
+                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: AppColors.textMuted, fontFamily: 'monospace'),
+              ),
             ),
-            child: Text(
-              pinLabel,
-              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: AppColors.textMuted, fontFamily: 'monospace'),
-            ),
-          ),
+          ],
         ],
       ),
     );

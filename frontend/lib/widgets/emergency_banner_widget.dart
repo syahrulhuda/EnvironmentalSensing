@@ -39,7 +39,7 @@ class EmergencyBannerWidget extends StatelessWidget {
       themeColor = AppColors.primaryLight;
       icon = Icons.hourglass_top_rounded;
       title = 'Pemanasan Sensor (Warmup)';
-      description = 'Stabilisasi koil pemanas SnO2 MQ-7/MQ-2 selama 45 detik untuk mencegah alarm palsu.';
+      description = 'Stabilisasi koil pemanas SnO2 MQ-7/MQ-2 selama 15 detik untuk mencegah alarm palsu.';
       badge = 'WARMUP';
     } else {
       themeColor = AppColors.safeEmerald;

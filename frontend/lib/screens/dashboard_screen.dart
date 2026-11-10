@@ -150,7 +150,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         SensorMetricCard(
           title: 'Suhu & Kelembapan',
-          pinLabel: 'DHT22 • GPIO 10',
           value: tempDisplay,
           unit: humDisplay,
           badgeText: t >= 35 ? 'Overheat' : (t >= 30 ? 'Hangat' : 'Optimal'),
@@ -164,7 +163,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         SensorMetricCard(
           title: 'Karbon Monoksida (CO)',
-          pinLabel: 'MQ-7 • GPIO 1',
           value: coDisplay,
           unit: 'PPM',
           badgeText: co >= 50 ? 'Bahaya' : (co >= 25 ? 'Waspada' : 'Aman'),
@@ -178,7 +176,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         SensorMetricCard(
           title: 'Gas Asap & Pengelasan',
-          pinLabel: 'MQ-2 • GPIO 0',
           value: smokeDisplay,
           unit: 'PPM',
           badgeText: smoke >= 300 ? 'Bahaya' : (smoke >= 150 ? 'Waspada' : 'Clean Air'),

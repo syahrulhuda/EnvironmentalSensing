@@ -1,7 +1,7 @@
 name: environmental_sensing_frontend
 description: "Smart Environmental Sensing System (ESS) - Multiplatform Flutter Client for Bengkel Mekatronika POLTEKOM"
 publish_to: "none"
-version: 2.2.3+7
+version: 2.2.4+8
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
