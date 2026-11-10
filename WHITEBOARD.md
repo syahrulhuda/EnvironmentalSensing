@@ -572,12 +572,14 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553, request tanpa key / key lama terbukti ditolak HTTP 401).
 - [x] **[PUB-04]** Kunci aturan `.write` pada Firebase RTDB Console (`auth != null`) sambil mempertahankan akses baca dashboard (Selesai - Teruji HTTP 401 write unauthorized, HTTP 200 read dashboard, HTTP 200 authenticated write/delete).
 - [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
-- [x] **[PUB-06]** Setup & Aktivasi GitHub Ruleset 'production' pada branch `main` (`Restrict deletions`, `Block force pushes`, dan `Require PR` dengan bypass Admin). *(Selesai, Aktif, & APPROVED oleh Zaki per 10-Nov-2026 - Repositori Siap Diubah ke Public)*.
+- [x] **[PUB-06]** Setup & Aktivasi GitHub Ruleset 'production' pada branch `main` (`Restrict deletions`, `Block force pushes`, dan `Require PR` dengan bypass Admin). *(Selesai, Aktif, & APPROVED oleh Zaki per 10-Nov-2026)*.
+- [x] **[PUB-07]** Pemangkasan Rilis Mobile Lama & Public Release Launch: Rilis lama dipangkas, repositori `syahrulhuda/EnvironmentalSensing` resmi diubah menjadi **PUBLIC** (Status: LIVE & Verified via HTTP 200).
 
 ### 📝 Catatan Pengesahan Persetujuan Publikasi (Zaki & AI Pair - 10 November 2026):
-1. **Verifikasi Keamanan:** Supabase key lama terbukti mati (`HTTP 401`), Firebase RTDB terbukti menolak penulisan tanpa token (`HTTP 401`), dan Raspberry Pi Self-Hosted Runner aman dari eksekusi PR pihak luar.
+1. **Verifikasi Keamanan:** Supabase key lama terbukti mati (`HTTP 401`), Firebase RTDB terbukti menolak penulisan tanpa token (`HTTP 401`), endpoint ETL admin terkunci, dan Raspberry Pi Self-Hosted Runner terisolasi total dari PR luar.
 2. **Kesiapan Akademik:** Monorepo bersih, arsitektur 5-layer tervalidasi, firmware single-source `prodC3.cpp` operasional 100%, serta dokumentasi lengkap.
-3. **Keputusan Akhir:** **APPROVED / SETUJU 100% UNTUK DIPUBLIKASIKAN (MAKE PUBLIC).**
+3. **Keputusan Akhir:** **APPROVED & RESMI DIPUBLIKASIKAN (LIVE PUBLIC REPOSITORY).**
+
 
 
 
