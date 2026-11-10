@@ -79,14 +79,14 @@ environmentalsensing/
 │   └── SCH_ESS_*.json     # Skematik rangkaian resmi
 │
 ├── hardware/              # Layer 1: Edge Sensing Node (ESP32)
-│   ├── src/               # Kode sumber produksi C++ (PlatformIO / Arduino)
-│   │   ├── prodC3.cpp     # Firmware produksi resmi (OLED SSD1306 + RTDB Streaming)
+│   ├── prodC3/            # Sketch firmware produksi resmi (Dual-Support: Arduino IDE & PlatformIO)
+│   │   ├── prodC3.ino     # Firmware tunggal resmi (OLED SSD1306 + RTDB Streaming)
 │   │   └── secrets.example.h # Template kredensial Wi-Fi & Firebase
 │   ├── test/              # Skrip uji modular perangkat keras
 │   │   ├── tes_c3/        # Test bench offline mandiri ESP32-C3 SuperMini
 │   │   ├── tes_oled/      # Test bench I2C Bus & Display SSD1306
 │   │   └── tes_wroom/     # Test bench ESP32 WROOM-32 legacy
-│   └── platformio.ini     # Konfigurasi build PlatformIO (ESP32-C3 DIO & USB CDC)
+│   └── platformio.ini     # Konfigurasi build PlatformIO (ESP32-C3 DIO, USB CDC, & src_dir = prodC3)
 │
 ├── backend/               # Layer 3 & 4: FastAPI, ETL Worker & AI ESI
 │   ├── app/               # Modul Python Terstruktur
