@@ -6,16 +6,19 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Validasi prototipe breadboard ESP32-C3 SuperMini (OLED SSD1306, DHT22, MQ-7, MQ-2, LED RGB CC, Filter C1/C2) telah tuntas 100%. Fokus transisi berikutnya: pengujian beban inrush kipas DC 4010 + transistor SS8050 saat kipas tiba, persiapan cetak PCB `PCB_ESS_5`, serta integrasi streaming live ke Firebase RTDB buffer.
-> **Affected Areas:** `hardware/`, `schematics/`, `deploy/`, `.github/workflows/`, `frontend/`.
+> **Fokus Utama Saat Ini:** Seluruh integrasi fisik prototipe hardware ESP32-C3 SuperMini (PCB `PCB_ESS_5`, OLED SSD1306, DHT22, MQ-7, MQ-2, Fan PWM SS8050, Filter C1/C2) telah tuntas dan teruji fungsional 100%. Audit keamanan pra-rilis (`PUB-01` s/d `PUB-05`) telah selesai diverifikasi empiris. Fokus saat ini beralih ke: **Aktivasi Branch Protection Rule GitHub (`PUB-06`) dan Transisi Repositori ke Public untuk Portofolio Akademik & Penilaian Dosen Penguji**.
+> **Affected Areas:** `hardware/`, `backend/`, `schematics/`, `deploy/`, `.github/workflows/`, `frontend/`.
 > **Success Criteria:** 
-> 1. Verifikasi offline seluruh sensor & display via `tes_c3.ino` (SELESAI - Teruji fisik).
+> 1. Verifikasi offline & online seluruh sensor, OLED, & fan via `prodC3.cpp` (SELESAI - Teruji fisik).
 > 2. Proof of concept peredaman noise rangkaian filter C1/C2 (SELESAI - 5.10-5.15V diredam ke 5.13-5.14V).
-> 3. Standardisasi kurva & baseline kalibrasi ADC udara bersih MQ-7 (1550) & MQ-2 (460) (SELESAI).
+> 3. Standardisasi kurva & baseline kalibrasi ADC udara bersih MQ-7 (420) & MQ-2 (360) (SELESAI).
 > 4. Kompensasi mikroklimat thermal cross-heating DHT22 via `TEMP_OFFSET` (SELESAI).
-> 5. Uji inrush current & PWM kipas 4010 via transistor SS8050 & diode 1N4007 (Menunggu kedatangan kipas).
-> 6. Fabrikasi & penyolderan PCB single-layer 70x40 mm `PCB_ESS_5`.
+> 5. Uji inrush current & PWM kipas 4010 via transistor SS8050 & diode 1N4007 (SELESAI - Silent POST 750ms).
+> 6. Fabrikasi, perakitan, dan penyolderan PCB single-layer 70x40 mm `PCB_ESS_5` (SELESAI - 100% Operasional).
 > 7. Otomasi 3-Tier CI/CD: Pipeline Web Dashboard ke Firebase Hosting (`poltekom-ess.web.app`) via GitHub Actions (SELESAI - Operasional).
+> 8. Hardening Keamanan Pra-Publikasi (`PUB-01` s/d `PUB-05`: Rotasi Supabase, Firebase RTDB `.write: auth != null`, Admin Key, Sanitasi CAD) (SELESAI).
+> 9. Streamlining firmware ke `hardware/src/prodC3.cpp` & PlatformIO clean build (SELESAI).
+> 10. Proteksi branch `main` di GitHub (`PUB-06`) dan Make Public.
 
 ---
 
@@ -189,6 +192,26 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
   - **Opsi A (Web/Desktop, width > 900px):** Split-view di mana kolom kiri (metriks dan grafik) dapat di-scroll vertikal, sementara kolom kanan memuat `EsiChatPanel` yang dipin (*stay in place*) setinggi viewport tanpa ikut ter-scroll keluar layar.
   - **Opsi B (Mobile, width <= 900px):** Tampilan satu kolom dengan *floating action button* yang memicu *docked modal bottom sheet*.
 - **Keputusan:** `[27-10-2026]` - **[DITERIMA & IMPLEMENTED LENGKAP]** Diimplementasikan di `app_colors.dart`, `esi_chat_panel.dart`, `esi_chat_bottom_sheet.dart`, dan `dashboard_screen.dart` dengan auto-scroll bottom frame listener.
+
+### [Status: DITERIMA & SELESAI] Arsitektur I2C Bus Recovery (9 SCL Pulses) & Runtime Self-Healing OLED
+- **Tanggal & Inisiator:** `[10-11-2026]` - Huda & Zaki
+- **Masalah:** Pada implementasi PCB fisik, modul OLED SSD1306 terkadang mengalami ketidakstabilan (kadang tidak menyala saat boot) akibat inrush transient driver kipas dan potensi I2C bus lockup di mana OLED menahan jalur SDA LOW saat ESP32 me-reset.
+- **Solusi Rekayasa:**
+  1. *Prioritas Inisialisasi Bersih:* OLED diinisialisasi pertama kali pada startup sebelum driver motor/kipas aktif.
+  2. *9 SCL Clock Pulses Recovery (`recoverI2CBus()`):* Sebelum `Wire.begin()`, firmware mengecek status SDA. Jika LOW, ESP32 memompa 9 pulsa clock SCL dan mengirim sinyal STOP I2C kondisional untuk memaksa slave melepas bus.
+  3. *Mekanisme Self-Healing Non-Blocking:* Jika layar sempat terlepas atau mengalami error I2C di runtime, fungsi `updateOledDisplay()` secara otomatis mencoba re-inisialisasi bus tiap 5 detik tanpa membekukan loop utama.
+  4. *Silent & Swift POST (~750 ms):* Uji mandiri lampu RGB (450ms) dan sentakan kipas halus (300ms @ duty 40%) menggantikan raungan bising 4,4 detik lama.
+  5. *Warmup Shield 15 Detik:* Waktu pemanasan sensor gas diselaraskan dari 45s ke 15s.
+- **Keputusan:** `[10-11-2026]` - **[DITERIMA & IMPLEMENTED DI PRODC3.CPP]** Berhasil diuji fisik dan terbukti membuat OLED langsung aktif 100% stabil.
+
+### [Status: DITERIMA & SELESAI] Konsolidasi Single Source of Truth Firmware (`prodC3.cpp`) & PlatformIO Streamlining
+- **Tanggal & Inisiator:** `[10-11-2026]` - Huda
+- **Masalah:** Duplikasi dua berkas produksi (`main.cpp` di `src/` dan `prodC3.ino` di `prod/prodC3/`) menimbulkan ambiguitas dan beban sinkronisasi manual berulang.
+- **Solusi Rekayasa:**
+  1. Mengonsolidasi seluruh kode produksi ke satu file resmi: `hardware/src/prodC3.cpp`.
+  2. Menghapus folder `hardware/prod/` seutuhnya.
+  3. Memperbarui `hardware/platformio.ini` dengan flag `board_build.flash_mode = dio`, `ARDUINO_USB_MODE=1`, `ARDUINO_USB_CDC_ON_BOOT=1`, dan `upload_speed = 921600`.
+- **Keputusan:** `[10-11-2026]` - **[DITERIMA & IMPLEMENTED LENGKAP]** Teruji kompilasi PlatformIO bersih (Exit code 0, 19 detik, RAM 12.4%, Flash 71.6%).
 
 
 ---
@@ -390,7 +413,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 | **Backend (Python)** | 11 | ✅ Modular, type-hinted, rate-limited, fail-fast config, authenticated RTDB, resilient ETL | 0 items | 0 items | **10.0/10** |
 | **Frontend (Flutter)** | 16 | ✅ Clean architecture, single gateway, lean deps, accurate GPIO, 4-color palette, pinned responsive chat | 0 items | 0 items | **10.0/10** |
 | **Frontend (Web JS)** | 8 | ✅ Modular (<200 baris/file), zero-build, 3-color palette, real-time canvas chart, sticky ESI chat | 0 items | — | **10.0/10** |
-| **Hardware (C++)** | 3 | ✅ Hybrid FreeRTOS + non-blocking millis(), modular, clean secrets, empirical calibration, 45s warmup shield, 8x oversampling | 0 items | 0 items | **10.0/10** |
+| **Hardware (C++)** | 1 | ✅ Hybrid FreeRTOS + non-blocking millis(), single-source prodC3.cpp, clean secrets, 15s warmup shield, I2C bus recovery, 8x oversampling | 0 items | 0 items | **10.0/10** |
 | **DevOps/Infra** | 6 | ✅ Systemd, setup script, .gitignore, database.rules.json, firebase.json, deploy-web.yml CI/CD | 0 items | — | **10.0/10** |
 | **TOTAL** | **44 files** | **—** | **0 items** | **0 items** | **10.0/10** |
 
@@ -471,9 +494,9 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 # 🔒 Section 4: Pre-Public Release Security & Readiness Audit
 > `[06-11-2026]` **6-Stage Pre-Public Repository Audit** — Persiapan sebelum repositori `syahrulhuda/EnvironmentalSensing` diubah dari **Private** menjadi **Public** pasca penyerahan ke dosen penguji — **Zaki**.
 
-> [!CAUTION]
-> **STATUS KELAYAKAN PUBLIKASI: BELUM AMAN UNTUK DIUBAH KE PUBLIC (`HOLD`)**  
-> Seluruh berkas pada commit terbaru (`HEAD`) sudah bersih dari kredensial, namun pemindaian mendalam pada **riwayat commit masa lalu (`git log -p --no-textconv`)** menemukan **1 Kunci Rahasia Produksi (Supabase Secret Key)** yang masih aktif di server produksi serta beberapa poin konfigurasi yang wajib diselesaikan sebelum repositori dibuka ke publik.
+> [!NOTE]
+> **STATUS KELAYAKAN PUBLIKASI: SIAP RILIS KE PUBLIK (`READY`)**  
+> Seluruh 5 poin audit teknis & keamanan kritis (`PUB-01` s/d `PUB-05`) telah diselesaikan 100% dan terbukti aman lewat pengujian empiris langsung pada server produksi. Kunci Supabase lama telah dinonaktifkan di cloud (`HTTP 401`), Firebase RTDB telah terkunci (`auth != null`), fallback admin key telah dihapus, dan berkas CAD telah dirapikan. Hanya tersisa 1 langkah administratif eksternal: **Aktivasi Branch Protection Rule pada branch `main` di GitHub Settings (`PUB-06`)** sebelum repositori diubah menjadi **Public**.
 
 ## 📊 Ringkasan Skor Audit Pra-Publikasi (6 Tahap)
 
