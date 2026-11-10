@@ -456,6 +456,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] Fabrikasi, perakitan, dan penyolderan papan PCB single-layer 70x40 mm (`PCB_ESS_5`) tuntas dan teruji fungsional 100%.
 - [x] **[TD-H08]** Optimasi Tampilan OLED Statis Tunggal: Eliminasi rotasi halaman diagnostik RAW ADC; standardisasi tampilan menjadi 1 Dashboard Utama permanen (Suhu, RH, CO, Asap, Kipas PWM, Counter Paket `#sample`, dan Banner Status K3) dengan refresh rate non-blocking 1.000 ms.
 - [x] **[TD-H09]** Hardening Reliabilitas I2C & OLED Edge Node: Implementasi I2C Bus Recovery (9 SCL clock pulses untuk clearing bus lockup saat reboot), inisialisasi OLED pertama kali pada rel 5V bersih sebelum beban motor/kipas, modulasi Self-Healing runtime tiap 5s (`recoverI2CBus()` + `tryInitOled()`), redesign POST senyap & kilat (~750ms: RGB sweep 450ms + fan blip 300ms @ 40%), dan pemendekan thermal warmup shield menjadi 15 detik (Commit e55f627).
+- [x] **[TD-H10]** Streamline & Konsolidasi Arsitektur Firmware Edge: Penyatuan kode produksi menjadi single source of truth di `hardware/src/prodC3.cpp`, eliminasi folder redundan `hardware/prod/`, dan rekonfigurasi total `platformio.ini` dengan flash mode DIO, USB CDC on boot, dan upload speed 921600 (Teruji kompilasi PlatformIO sukses 100%).
 
 **5. 🚀 DevOps & CI/CD Pipelines Mandiri (Huda):**
 - [x] **[DEVOPS-01]** Setup GitHub Actions Workflow CI/CD Web ke Firebase Hosting (`.github/workflows/deploy-web.yml`) via Google ADC Service Account & multi-site `poltekom-ess`. *(Selesai - Commit 0190916)*
