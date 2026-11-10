@@ -551,11 +551,18 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
    - **Detail Temuan:** Folder `schematics/` saat ini memuat 3 subfolder yang sebagian isinya berulang (`schematics/dxf/`, `schematics/dxf_v2/`, dan `schematics/dxf_desain_3d_enclosure_v2/`).
    - **Mitigasi:** Merapikan struktur folder `schematics/` agar hanya menyisakan berkas gambar kerja kanonik tanpa duplikasi sebelum dinilai oleh dosen (Selesai - Commit 0a6891c).
 
-6. **`[PUB-06]` ✅ [SAFE] Evaluasi Keamanan CI/CD Self-Hosted Runner & Kuota Gemini AI**
-   - **Hasil Verifikasi:**
+6. **`[PUB-06]` ✅ [RESOLVED & ENFORCED] Evaluasi Keamanan CI/CD, Runner, & Branch Protection Ruleset**
+   - **Hasil Verifikasi CI/CD & Runner:**
      - `GEMINI_API_KEY` **100% aman** (tidak pernah ter-commit sepanjang sejarah repositori).
      - Endpoint `/api/chat` terlindungi oleh `InMemoryRateLimiter` (15 request/menit/IP).
-     - Seluruh workflow GitHub Actions (`.github/workflows/deploy-backend.yml`, `deploy-web.yml`, `release-mobile.yml`) hanya menggunakan trigger `on: push` dan `workflow_dispatch` (tidak menggunakan `pull_request` / `pull_request_target`), sehingga **Raspberry Pi 3B Self-Hosted Runner aman dari eksekusi kode berbahaya via Pull Request publik**.
+     - Seluruh workflow GitHub Actions (`deploy-backend.yml`, `deploy-web.yml`, `release-mobile.yml`) hanya menggunakan trigger `on: push` dan `workflow_dispatch` (aman dari PR fork luar).
+   - **Status GitHub Ruleset `production` (Aktif Terverifikasi 10-Nov-2026):**
+     - Target Branch: `main` (Default branch).
+     - Enforcement Status: **`Active`** (3 branch rules aktif).
+     - Aturan 1: **`Restrict deletions`** (Mencegah penghapusan branch `main`).
+     - Aturan 2: **`Block force pushes`** (Mencegah penimpaan riwayat commit historis portofolio).
+     - Aturan 3: **`Require a pull request before merging`** (Wajib Pull Request untuk kontributor baru POLTEKOM, dengan `Dismiss stale reviews`, `Require conversation resolution`, dan fleksibilitas metode merge `Merge, Squash, Rebase`).
+     - Bypass List: **`Repository admin`** (`syahrulhuda` - *Always allow*) untuk pemeliharaan langsung dan keadaan darurat.
 
 ---
 
@@ -565,7 +572,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553, request tanpa key / key lama terbukti ditolak HTTP 401).
 - [x] **[PUB-04]** Kunci aturan `.write` pada Firebase RTDB Console (`auth != null`) sambil mempertahankan akses baca dashboard (Selesai - Teruji HTTP 401 write unauthorized, HTTP 200 read dashboard, HTTP 200 authenticated write/delete).
 - [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
-- [x] **[PUB-06]** Setup GitHub Ruleset 'production' pada branch `main`: `Restrict deletions` & `Block force pushes` dikonfigurasi. (Status: STANDBY - Menunggu review & persetujuan Zaki sebelum klik 'Make Public').
+- [x] **[PUB-06]** Setup & Aktivasi GitHub Ruleset 'production' pada branch `main` (`Restrict deletions`, `Block force pushes`, dan `Require PR` dengan bypass Admin). *(Selesai & Aktif - Status: STANDBY Menunggu Review Zaki untuk Make Public)*.
 
 
 
