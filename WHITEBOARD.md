@@ -6,7 +6,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Seluruh integrasi fisik prototipe hardware ESP32-C3 SuperMini (PCB `PCB_ESS_5`, OLED SSD1306, DHT22, MQ-7, MQ-2, Fan PWM SS8050, Filter C1/C2) telah tuntas dan teruji fungsional 100%. Audit keamanan pra-rilis (`PUB-01` s/d `PUB-05`) telah selesai diverifikasi empiris. Fokus saat ini beralih ke: **Aktivasi Branch Protection Rule GitHub (`PUB-06`) dan Transisi Repositori ke Public untuk Portofolio Akademik & Penilaian Dosen Penguji**.
+> **Fokus Utama Saat Ini:** Seluruh integrasi fisik prototipe hardware ESP32-C3 SuperMini (PCB `PCB_ESS_5`, OLED SSD1306, DHT22, MQ-7, MQ-2, Fan PWM SS8050, Filter C1/C2) telah tuntas dan teruji fungsional 100%. Audit keamanan pra-rilis (`PUB-01` s/d `PUB-05`) serta aktivasi GitHub Ruleset (`PUB-06`) telah tuntas diverifikasi empiris. **Zaki & Tim Resmi Menyetujui (APPROVED) Pembukaan Visibilitas Repositori ke Public untuk Portofolio Akademik & Penilaian Dosen Penguji**.
 > **Affected Areas:** `hardware/`, `backend/`, `schematics/`, `deploy/`, `.github/workflows/`, `frontend/`.
 > **Success Criteria:** 
 > 1. Verifikasi offline & online seluruh sensor, OLED, & fan via `prodC3.cpp` (SELESAI - Teruji fisik).
@@ -18,7 +18,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 > 7. Otomasi 3-Tier CI/CD: Pipeline Web Dashboard ke Firebase Hosting (`poltekom-ess.web.app`) via GitHub Actions (SELESAI - Operasional).
 > 8. Hardening Keamanan Pra-Publikasi (`PUB-01` s/d `PUB-05`: Rotasi Supabase, Firebase RTDB `.write: auth != null`, Admin Key, Sanitasi CAD) (SELESAI).
 > 9. Streamlining firmware ke `hardware/src/prodC3.cpp` & PlatformIO clean build (SELESAI).
-> 10. Proteksi branch `main` via GitHub Ruleset aktif (`PUB-06`); repositori di-HOLD pada status Private hingga Zaki menyetujui perubahan ke Public.
+> 10. Proteksi branch `main` via GitHub Ruleset aktif (`PUB-06`); Persetujuan publikasi resmi disahkan oleh Zaki (10-Nov-2026); repositori berstatus APPROVED untuk transisi ke Public.
 
 ---
 
@@ -495,8 +495,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 > `[06-11-2026]` **6-Stage Pre-Public Repository Audit** — Persiapan sebelum repositori `syahrulhuda/EnvironmentalSensing` diubah dari **Private** menjadi **Public** pasca penyerahan ke dosen penguji — **Zaki**.
 
 > [!NOTE]
-> **STATUS KELAYAKAN PUBLIKASI: READY TO PUBLISH (STANDBY — MENUNGGU PERSETUJUAN ZAKI)**  
-> Seluruh 6 poin audit teknis & keamanan kritis (`PUB-01` s/d `PUB-06`) telah diselesaikan 100%. Kunci Supabase lama telah dinonaktifkan di cloud (`HTTP 401`), Firebase RTDB telah terkunci (`auth != null`), fallback admin key telah dihapus, berkas CAD telah dirapikan, dan GitHub Ruleset proteksi branch `main` (`Block force pushes` & `Restrict deletions`) telah terpasang. Repositori dipertahankan dalam status **Private (HOLD)** menunggu persetujuan akhir dari Zaki sebelum visibilitas diubah menjadi **Public**.
+> **STATUS KELAYAKAN PUBLIKASI: APPROVED & READY FOR PUBLIC RELEASE (DISETUJUI RESMI OLEH ZAKI - 10-NOV-2026)**  
+> Seluruh 6 poin audit teknis & keamanan kritis (`PUB-01` s/d `PUB-06`) telah diselesaikan 100% dan lolos verifikasi empiris. Kunci Supabase lama telah dinonaktifkan di cloud (`HTTP 401`), Firebase RTDB telah terkunci (`auth != null`), fallback admin key telah dihapus, berkas CAD telah dirapikan, dan GitHub Ruleset proteksi branch `main` (`Block force pushes` & `Restrict deletions`) telah terpasang aktif. **Zaki telah menyelesaikan review menyeluruh dan secara resmi MENYETUJUI (APPROVED) perubahan visibilitas repositori menjadi PUBLIC**.
 
 ## 📊 Ringkasan Skor Audit Pra-Publikasi (6 Tahap)
 
@@ -572,7 +572,12 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553, request tanpa key / key lama terbukti ditolak HTTP 401).
 - [x] **[PUB-04]** Kunci aturan `.write` pada Firebase RTDB Console (`auth != null`) sambil mempertahankan akses baca dashboard (Selesai - Teruji HTTP 401 write unauthorized, HTTP 200 read dashboard, HTTP 200 authenticated write/delete).
 - [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
-- [x] **[PUB-06]** Setup & Aktivasi GitHub Ruleset 'production' pada branch `main` (`Restrict deletions`, `Block force pushes`, dan `Require PR` dengan bypass Admin). *(Selesai & Aktif - Status: STANDBY Menunggu Review Zaki untuk Make Public)*.
+- [x] **[PUB-06]** Setup & Aktivasi GitHub Ruleset 'production' pada branch `main` (`Restrict deletions`, `Block force pushes`, dan `Require PR` dengan bypass Admin). *(Selesai, Aktif, & APPROVED oleh Zaki per 10-Nov-2026 - Repositori Siap Diubah ke Public)*.
+
+### 📝 Catatan Pengesahan Persetujuan Publikasi (Zaki & AI Pair - 10 November 2026):
+1. **Verifikasi Keamanan:** Supabase key lama terbukti mati (`HTTP 401`), Firebase RTDB terbukti menolak penulisan tanpa token (`HTTP 401`), dan Raspberry Pi Self-Hosted Runner aman dari eksekusi PR pihak luar.
+2. **Kesiapan Akademik:** Monorepo bersih, arsitektur 5-layer tervalidasi, firmware single-source `prodC3.cpp` operasional 100%, serta dokumentasi lengkap.
+3. **Keputusan Akhir:** **APPROVED / SETUJU 100% UNTUK DIPUBLIKASIKAN (MAKE PUBLIC).**
 
 
 
