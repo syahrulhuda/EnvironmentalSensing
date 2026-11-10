@@ -18,7 +18,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 > 7. Otomasi 3-Tier CI/CD: Pipeline Web Dashboard ke Firebase Hosting (`poltekom-ess.web.app`) via GitHub Actions (SELESAI - Operasional).
 > 8. Hardening Keamanan Pra-Publikasi (`PUB-01` s/d `PUB-05`: Rotasi Supabase, Firebase RTDB `.write: auth != null`, Admin Key, Sanitasi CAD) (SELESAI).
 > 9. Streamlining firmware ke `hardware/src/prodC3.cpp` & PlatformIO clean build (SELESAI).
-> 10. Proteksi branch `main` di GitHub (`PUB-06`) dan Make Public.
+> 10. Proteksi branch `main` via GitHub Ruleset aktif (`PUB-06`); repositori di-HOLD pada status Private hingga Zaki menyetujui perubahan ke Public.
 
 ---
 
@@ -495,8 +495,8 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 > `[06-11-2026]` **6-Stage Pre-Public Repository Audit** — Persiapan sebelum repositori `syahrulhuda/EnvironmentalSensing` diubah dari **Private** menjadi **Public** pasca penyerahan ke dosen penguji — **Zaki**.
 
 > [!NOTE]
-> **STATUS KELAYAKAN PUBLIKASI: SIAP RILIS KE PUBLIK (`READY`)**  
-> Seluruh 5 poin audit teknis & keamanan kritis (`PUB-01` s/d `PUB-05`) telah diselesaikan 100% dan terbukti aman lewat pengujian empiris langsung pada server produksi. Kunci Supabase lama telah dinonaktifkan di cloud (`HTTP 401`), Firebase RTDB telah terkunci (`auth != null`), fallback admin key telah dihapus, dan berkas CAD telah dirapikan. Hanya tersisa 1 langkah administratif eksternal: **Aktivasi Branch Protection Rule pada branch `main` di GitHub Settings (`PUB-06`)** sebelum repositori diubah menjadi **Public**.
+> **STATUS KELAYAKAN PUBLIKASI: READY TO PUBLISH (STANDBY — MENUNGGU PERSETUJUAN ZAKI)**  
+> Seluruh 6 poin audit teknis & keamanan kritis (`PUB-01` s/d `PUB-06`) telah diselesaikan 100%. Kunci Supabase lama telah dinonaktifkan di cloud (`HTTP 401`), Firebase RTDB telah terkunci (`auth != null`), fallback admin key telah dihapus, berkas CAD telah dirapikan, dan GitHub Ruleset proteksi branch `main` (`Block force pushes` & `Restrict deletions`) telah terpasang. Repositori dipertahankan dalam status **Private (HOLD)** menunggu persetujuan akhir dari Zaki sebelum visibilitas diubah menjadi **Public**.
 
 ## 📊 Ringkasan Skor Audit Pra-Publikasi (6 Tahap)
 
@@ -565,7 +565,7 @@ Dokumen kerja aktif untuk mencatat fokus berjalan, arsip ide tim, serta evaluasi
 - [x] **[PUB-03]** Hapus nilai default fallback `ADMIN_API_KEY` di `backend/app/core/config.py` dan validasi otentikasi di `routes.py` (Selesai - Commit 903a553, request tanpa key / key lama terbukti ditolak HTTP 401).
 - [x] **[PUB-04]** Kunci aturan `.write` pada Firebase RTDB Console (`auth != null`) sambil mempertahankan akses baca dashboard (Selesai - Teruji HTTP 401 write unauthorized, HTTP 200 read dashboard, HTTP 200 authenticated write/delete).
 - [x] **[PUB-05]** Bersihkan duplikasi subfolder DXF/STL di dalam `schematics/` (Selesai - Konsolidasi Part 1-14 Enclosure V2 - Commit 0a6891c).
-- [ ] **[PUB-06]** Aktifkan *Branch Protection Rule* pada branch `main` di pengaturan GitHub sebelum mengubah visibilitas repositori menjadi **Public**.
+- [x] **[PUB-06]** Setup GitHub Ruleset 'production' pada branch `main`: `Restrict deletions` & `Block force pushes` dikonfigurasi. (Status: STANDBY - Menunggu review & persetujuan Zaki sebelum klik 'Make Public').
 
 
 
