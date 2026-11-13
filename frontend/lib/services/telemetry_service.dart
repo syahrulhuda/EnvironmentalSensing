@@ -7,6 +7,8 @@ import '../models/telemetry_model.dart';
 /// Service untuk mengambil data telemetri ESS via FastAPI Gateway (Single Gateway)
 /// dengan secondary fallback ke Firebase RTDB buffer dan Heartbeat Watchdog 15 detik (TD-F17)
 class TelemetryService {
+  static const int heartbeatTimeoutMs = 15000;
+
   String backendUrl = ApiConstants.defaultBackendApiUrl;
   String firebaseUrl = ApiConstants.defaultFirebaseRtdbUrl;
   String nodeId = ApiConstants.defaultNodeId;
@@ -28,7 +30,6 @@ class TelemetryService {
   }
 
   Future<TelemetryModel> fetchLatest() async {
-    const int heartbeatTimeoutMs = 15000;
     final int nowMs = DateTime.now().millisecondsSinceEpoch;
 
     // 1. Jalur Utama: FastAPI Single Gateway (TD-F02)
@@ -44,10 +45,9 @@ class TelemetryService {
         final decoded = json.decode(res.body);
         if (decoded != null && decoded is Map<String, dynamic>) {
           if (decoded['status'] == 'success' || decoded['temperature_celsius'] != null || decoded['temp'] != null) {
-            final int recordTs = _extractTimestampMs(decoded);
-            final bool isFresh = recordTs > 0 && (nowMs - recordTs).abs() <= heartbeatTimeoutMs;
+            final bool isOnline = isGatewayPayloadOnline(decoded, nowMs: nowMs);
 
-            final model = TelemetryModel.fromJson(decoded, isOnline: isFresh);
+            final model = TelemetryModel.fromJson(decoded, isOnline: isOnline);
             _lastKnownModel = model;
             _controller.add(model);
             return model;
@@ -71,7 +71,7 @@ class TelemetryService {
             for (final item in entries) {
               if (item is Map) {
                 final m = Map<String, dynamic>.from(item);
-                final curTs = _extractTimestampMs(m);
+                final curTs = extractTimestampMs(m);
                 if (curTs >= maxTs) {
                   maxTs = curTs;
                   latestEntry = m;
@@ -103,7 +103,30 @@ class TelemetryService {
     return offlineModel;
   }
 
-  int _extractTimestampMs(Map data) {
+  /// Mengevaluasi status online payload FastAPI Gateway (/api/telemetry/latest).
+  /// Mengutamakan timestamp epoch/ISO, lalu fallback ke is_online + age_seconds backend
+  /// agar kompatibel bila gateway tidak mengirim timestamp atau jam client berbeda.
+  static bool isGatewayPayloadOnline(
+    Map<String, dynamic> decoded, {
+    int? nowMs,
+  }) {
+    final int currentMs = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final int recordTs = extractTimestampMs(decoded);
+    if (recordTs > 0 && (currentMs - recordTs).abs() <= heartbeatTimeoutMs) {
+      return true;
+    }
+
+    final dynamic ageSec = decoded['age_seconds'];
+    if (decoded['is_online'] == true) {
+      if (ageSec is num) {
+        return ageSec >= 0 && (ageSec * 1000) <= heartbeatTimeoutMs;
+      }
+      return recordTs == 0;
+    }
+    return false;
+  }
+
+  static int extractTimestampMs(Map data) {
     final ts = data['created_at'] ?? data['timestamp'];
     if (ts is int) {
       return ts > 1000000000000 ? ts : ts * 1000;

@@ -74,6 +74,11 @@ def get_telemetry(device_id: str = settings.DEFAULT_NODE_ID) -> str:
     ts_ms = latest.get("created_at")
     tz_wib = timezone(timedelta(hours=settings.TIMEZONE_OFFSET_HOURS))
     watchdog = _compute_watchdog(ts_ms, tz_wib)
+    ts_iso = (
+        datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc).isoformat()
+        if isinstance(ts_ms, (int, float)) and ts_ms > 0
+        else None
+    )
 
     return json.dumps({
         "status": "success",
@@ -82,6 +87,8 @@ def get_telemetry(device_id: str = settings.DEFAULT_NODE_ID) -> str:
         "status_koneksi": watchdog["koneksi"],
         "age_seconds": watchdog["age_seconds"],
         "waktu_lokal_wib": watchdog["waktu_lokal_wib"],
+        "created_at": ts_ms,
+        "timestamp": ts_iso,
         "temperature_celsius": latest.get("temp"),
         "humidity_percent": latest.get("hum"),
         "mq7_raw_adc": latest.get("mq7_raw"),

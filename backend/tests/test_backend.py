@@ -186,4 +186,45 @@ def test_trigger_etl_security():
     assert rejected, "trigger_etl without admin key must raise HTTP 401"
 
 
+def test_get_telemetry_includes_heartbeat_timestamps():
+    """Memverifikasi get_telemetry menyertakan created_at (epoch ms) dan timestamp ISO untuk client mobile."""
+    import json
+    from datetime import datetime, timezone
+    from unittest.mock import patch
+    from app.tools.telemetry_tool import get_telemetry
+
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    fresh_rtdb = {
+        "-mock1": {
+            "node_id": "NODE-MRS01",
+            "temp": 28.0,
+            "hum": 55.0,
+            "mq7_ppm": 5,
+            "mq2_ppm": 5,
+            "status": "NORMAL",
+            "created_at": now_ms - 2000,
+        }
+    }
+    with patch("app.tools.telemetry_tool.fetch_rtdb", return_value=fresh_rtdb):
+        res_fresh = json.loads(get_telemetry("NODE-MRS01"))
+    assert res_fresh["status"] == "success"
+    assert res_fresh["is_online"] is True
+    assert res_fresh["created_at"] == now_ms - 2000
+    assert isinstance(res_fresh["timestamp"], str) and res_fresh["timestamp"].endswith("+00:00")
+
+    stale_rtdb = {
+        "-mock2": {
+            "node_id": "NODE-MRS01",
+            "temp": 28.0,
+            "hum": 55.0,
+            "created_at": now_ms - 60000,
+        }
+    }
+    with patch("app.tools.telemetry_tool.fetch_rtdb", return_value=stale_rtdb):
+        res_stale = json.loads(get_telemetry("NODE-MRS01"))
+    assert res_stale["is_online"] is False
+    assert res_stale["created_at"] == now_ms - 60000
+
+
+
 
